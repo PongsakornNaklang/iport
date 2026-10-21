@@ -73,7 +73,11 @@ player.setShuffle('off'|'songs'|'albums') / setRepeat('off'|'one'|'all')
 player.enqueueNext(ids) / enqueue(ids) / jumpTo(i) / setSleepTimer(min|null)
 usePlayer(s => s.status)  // 'idle'|'loading'|'playing'|'paused'
 usePlayer(s => s.position), s.duration, s.queue, s.index, s.currentId, s.kind ('html5'|'youtube'|'soundcloud')
+usePlayer(s => s.hasVideo)   // current item has a picture (local video / YouTube)
 ```
+
+The queue and position are saved to localStorage and restored (paused) on the
+next visit; `player.play()` loads the media on demand.
 
 **MediaLayer**: every device with a screen renders exactly one
 `<MediaLayer visible={…} style={…}/>` inside its screen and keeps it mounted

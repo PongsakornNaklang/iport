@@ -7,6 +7,8 @@ export interface AdapterCallbacks {
   onLoading(): void;
   onEnded(): void;
   onError(message: string): void;
+  /** Whether the current media has a picture (local video / YouTube). */
+  onVideo(hasVideo: boolean): void;
   /** Metadata discovered while playing (YouTube title, SoundCloud artwork…) */
   onMeta(meta: Partial<Pick<Track, 'title' | 'artist' | 'duration' | 'artwork'>>): void;
 }

@@ -30,6 +30,7 @@ export function Stage() {
   const zoom = useStage((s) => s.zoom);
   const target = useStage((s) => s.target);
   const spinning = useStage((s) => s.spinning);
+  const inset = useStage((s) => s.inset);
 
   const wrapRef = useRef<HTMLDivElement>(null);
   const rotRef = useRef<HTMLDivElement>(null);
@@ -52,21 +53,24 @@ export function Stage() {
     py: 0,
   });
 
-  // Fit to the available area.
+  // Fit to the available area (minus any side panel).
   useEffect(() => {
     const el = wrapRef.current;
     if (!el) return;
-    const ro = new ResizeObserver(() => {
+    const measure = () => {
       const r = el.getBoundingClientRect();
       const fh = model.fitHeight ?? 0.86;
       // leave room for the view controls at the bottom
       const usableH = Math.max(200, r.height - 70);
-      const f = Math.min((usableH * fh) / model.size.height, (r.width * 0.86) / model.size.width);
+      const usableW = Math.max(200, r.width - inset.left - inset.right);
+      const f = Math.min((usableH * fh) / model.size.height, (usableW * 0.86) / model.size.width);
       setFit(clamp(f, 0.2, 3));
-    });
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
     ro.observe(el);
     return () => ro.disconnect();
-  }, [model]);
+  }, [model, inset]);
 
   // Toolbar-requested views.
   useEffect(() => {
@@ -206,6 +210,7 @@ export function Stage() {
 
   const Device = useMemo(() => deviceComponent(model), [model]);
   const scale = fit * zoom;
+  const shiftX = (inset.left - inset.right) / 2;
 
   return (
     <div
@@ -225,10 +230,10 @@ export function Stage() {
         <div
           className="stage-shadow"
           ref={shadowRef}
-          style={{ transform: `translate(-50%, ${(model.size.height / 2) * scale - 10}px) scale(${scale})` }}
+          style={{ transform: `translate(calc(-50% + ${shiftX}px), ${(model.size.height / 2) * scale - 10}px) scale(${scale})` }}
         />
       )}
-      <div className="stage-center" style={{ transform: `translateY(-28px) scale(${scale})` }}>
+      <div className="stage-center" style={{ transform: `translate(${shiftX}px, -28px) scale(${scale})` }}>
         <div className="stage-rot" ref={rotRef}>
           <div className="device-enter" key={model.id} style={{ width: model.size.width, height: model.size.height }}>
             <Suspense fallback={<div className="device-loading" style={{ width: model.size.width, height: model.size.height }} />}>

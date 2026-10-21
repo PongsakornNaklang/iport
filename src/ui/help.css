@@ -1,0 +1,45 @@
+.help h3 {
+  font-size: 13px;
+  font-weight: 650;
+  margin: 20px 0 8px;
+}
+.help ul {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13.5px;
+  color: var(--ui-text-2);
+  line-height: 1.45;
+}
+.help b {
+  color: var(--ui-text);
+  font-weight: 600;
+}
+.kbd {
+  display: inline-block;
+  min-width: 22px;
+  padding: 1px 6px;
+  border-radius: 6px;
+  border: 1px solid var(--ui-line-strong);
+  border-bottom-width: 2px;
+  background: rgba(255, 255, 255, 0.06);
+  font: 600 11.5px/18px var(--ui-font);
+  text-align: center;
+  color: var(--ui-text);
+}
+.keys {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 13px;
+}
+.keys td {
+  padding: 5px 0;
+  border-bottom: 1px solid var(--ui-line);
+  color: var(--ui-text-2);
+}
+.keys td:first-child {
+  width: 40%;
+  white-space: nowrap;
+}

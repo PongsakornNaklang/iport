@@ -62,6 +62,18 @@ export function App() {
 
   const toggle = (p: Exclude<PanelId, null>) => setPanel((cur) => (cur === p ? null : p));
 
+  // Slide the iPod over so an open side panel doesn't cover it (desktop only).
+  useEffect(() => {
+    const update = () => {
+      const wide = window.innerWidth > 900;
+      const w = Math.min(400, window.innerWidth - 20) + 20;
+      useStage.getState().setInset(wide && panel === 'library' ? w : 0, wide && (panel === 'customize' || panel === 'help') ? w : 0);
+    };
+    update();
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, [panel]);
+
   return (
     <div className="app">
       <header className="topbar">

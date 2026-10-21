@@ -294,6 +294,7 @@ button {
   width: 0;
   height: 0;
   transform-style: preserve-3d;
+  transition: transform 420ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 .stage-rot {
   position: absolute;
@@ -325,6 +326,7 @@ button {
 }
 
 .stage-shadow {
+  transition: transform 420ms cubic-bezier(0.2, 0.8, 0.2, 1);
   position: absolute;
   left: 50%;
   top: 50%;

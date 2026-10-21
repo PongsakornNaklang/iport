@@ -120,7 +120,7 @@ export const MODELS: DeviceModel[] = [
   {
     id: 'classic',
     name: 'iPod classic',
-    generation: '160GB · late 2009',
+    generation: '6th generation · 160GB',
     year: 2009,
     blurb: 'The legend. Click Wheel, Cover Flow, 40,000 songs in your pocket.',
     family: 'clickwheel',

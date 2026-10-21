@@ -35,6 +35,8 @@ export interface PlayerState {
   sleepAt: number | null;
   /** bumps whenever a new track starts (for UI animations) */
   trackSerial: number;
+  /** the current media has a picture (local video or YouTube) */
+  hasVideo: boolean;
 }
 
 export const usePlayer = create<PlayerState>(() => ({
@@ -49,6 +51,7 @@ export const usePlayer = create<PlayerState>(() => ({
   kind: null,
   sleepAt: null,
   trackSerial: 0,
+  hasVideo: false,
 }));
 
 const get = usePlayer.getState;
@@ -61,6 +64,8 @@ let youtube: YouTubeAdapter | null = null;
 let soundcloud: SoundCloudAdapter | null = null;
 let active: MediaAdapter | null = null;
 let consecutiveErrors = 0;
+/** true after restoring a session: the queue is known but no media is loaded */
+let needsLoad = false;
 let lastBookmarkSave = 0;
 let errorTimer: number | undefined;
 
@@ -96,6 +101,10 @@ function makeCallbacks(kind: MediaAdapter['kind']): AdapterCallbacks {
     onError(message) {
       if (!isActive()) return;
       handleError(message);
+    },
+    onVideo(hasVideo) {
+      if (!isActive()) return;
+      if (get().hasVideo !== hasVideo) set({ hasVideo });
     },
     onMeta(meta) {
       if (!isActive()) return;
@@ -212,6 +221,7 @@ function buildOrder(base: string[], startId: string | null, mode: ShuffleMode): 
 // ---------------------------------------------------------------- core flow
 
 async function loadIndex(index: number, autoplay: boolean, startAt?: number) {
+  needsLoad = false;
   const { queue } = get();
   const id = queue[index];
   const t = track(id);
@@ -231,6 +241,7 @@ async function loadIndex(index: number, autoplay: boolean, startAt?: number) {
     duration: t.duration ?? 0,
     error: null,
     kind: next.kind,
+    hasVideo: false,
     status: autoplay ? 'loading' : 'paused',
     trackSerial: get().trackSerial + 1,
   });
@@ -343,7 +354,13 @@ export const player = {
       if (queue.length) void loadIndex(get().index, true);
       return;
     }
-    active?.play();
+    // Restored from a previous visit: nothing is loaded yet.
+    if (!active || needsLoad) {
+      needsLoad = false;
+      void loadIndex(get().index, true, get().position);
+      return;
+    }
+    active.play();
   },
 
   pause() {
@@ -388,8 +405,7 @@ export const player = {
   },
 
   seek(seconds: number) {
-    if (!active) return;
-    active.seek(Math.max(0, seconds));
+    if (active && !needsLoad) active.seek(Math.max(0, seconds));
     set({ position: Math.max(0, seconds) });
   },
 
@@ -491,6 +507,54 @@ if (typeof window !== 'undefined') {
       if (status === 'playing') player.pause();
     }
   }, 1000);
+}
+
+// Remember the queue and position across visits, like a real iPod.
+const SESSION_KEY = 'iport-player-v1';
+if (typeof window !== 'undefined') {
+  try {
+    const raw = localStorage.getItem(SESSION_KEY);
+    if (raw) {
+      const s = JSON.parse(raw) as Pick<PlayerState, 'queue' | 'baseQueue' | 'index' | 'currentId' | 'position' | 'duration'>;
+      if (s.currentId && Array.isArray(s.queue) && s.queue.length) {
+        needsLoad = true;
+        set({
+          queue: s.queue,
+          baseQueue: s.baseQueue ?? s.queue,
+          index: Math.max(0, Math.min(s.index ?? 0, s.queue.length - 1)),
+          currentId: s.currentId,
+          position: s.position ?? 0,
+          duration: s.duration ?? 0,
+          status: 'paused',
+        });
+      }
+    }
+  } catch {
+    /* corrupt or unavailable storage */
+  }
+  let lastSave = 0;
+  let pending: number | undefined;
+  const save = () => {
+    lastSave = Date.now();
+    const { queue, baseQueue, index, currentId, position, duration } = get();
+    try {
+      if (!currentId) localStorage.removeItem(SESSION_KEY);
+      else localStorage.setItem(SESSION_KEY, JSON.stringify({ queue, baseQueue, index, currentId, position, duration }));
+    } catch {
+      /* quota */
+    }
+  };
+  usePlayer.subscribe((s, prev) => {
+    const structural = s.currentId !== prev.currentId || s.queue !== prev.queue || s.index !== prev.index;
+    if (structural || Date.now() - lastSave > 4000) {
+      window.clearTimeout(pending);
+      save();
+    } else {
+      window.clearTimeout(pending);
+      pending = window.setTimeout(save, 4000);
+    }
+  });
+  window.addEventListener('pagehide', save);
 }
 
 /** Convenience hook: the current track object. */

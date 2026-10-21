@@ -88,13 +88,5 @@ export function VideoCanvas({ fit = 'contain', style }: { fit?: 'contain' | 'cov
 
 /** True when the current item has a picture (local video or YouTube). */
 export function useHasVideo(): boolean {
-  const kind = usePlayer((s) => s.kind);
-  const id = usePlayer((s) => s.currentId);
-  void id;
-  if (kind === 'youtube') return true;
-  if (kind === 'html5') {
-    const v = getHtml5Element();
-    return !!v && v.videoWidth > 0;
-  }
-  return false;
+  return usePlayer((s) => s.hasVideo);
 }

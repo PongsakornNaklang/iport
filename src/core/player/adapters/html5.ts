@@ -48,6 +48,9 @@ export class Html5Adapter implements MediaAdapter {
     el.addEventListener('pause', () => isActive() && !el.ended && this.cb.onPaused());
     el.addEventListener('waiting', () => isActive() && this.cb.onLoading());
     el.addEventListener('ended', () => isActive() && this.cb.onEnded());
+    const video = () => isActive() && this.cb.onVideo(el.videoWidth > 0 && el.videoHeight > 0);
+    el.addEventListener('loadedmetadata', video);
+    el.addEventListener('resize', video);
     return el;
   }
 

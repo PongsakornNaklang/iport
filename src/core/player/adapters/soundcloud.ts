@@ -138,6 +138,7 @@ export class SoundCloudAdapter implements MediaAdapter {
     this.duration = track.duration ?? 0;
     this.position = 0;
     this.cb.onLoading();
+    this.cb.onVideo(false);
     let w: SCWidget;
     try {
       w = await this.ensure(currentHost(), url);

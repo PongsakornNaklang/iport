@@ -180,6 +180,7 @@ export class YouTubeAdapter implements MediaAdapter {
     this.rate = opts.rate ?? 1;
     this.metaSent = false;
     this.cb.onLoading();
+    this.cb.onVideo(true);
     let p: YTPlayer;
     try {
       p = await this.ensure(currentHost());
