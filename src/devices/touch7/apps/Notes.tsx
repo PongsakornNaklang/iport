@@ -16,12 +16,13 @@ const snippet = (n: Note) => n.body.split('\n').find((l) => l.trim())?.trim() ??
 
 export default function Notes() {
   const api = useRef<NavApi | null>(null);
-  const [ready, setReady] = useState(false);
+  const ready = useRef(false);
   useEffect(() => {
-    if (ready || !api.current) return;
+    // open straight into the Notes folder, like iOS remembers
+    if (ready.current || !api.current) return;
+    ready.current = true;
     api.current.push(<NotesList />, 'Notes');
-    setReady(true);
-  }, [ready]);
+  }, []);
   useIntent((d) => {
     if (d === 'new') api.current?.push(<Editor id={null} />, '');
   });

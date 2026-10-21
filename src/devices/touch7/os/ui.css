@@ -361,7 +361,7 @@
   color: var(--t7-label2);
   font-size: 17px;
   white-space: nowrap;
-  max-width: 55%;
+  max-width: 66%;
   overflow: hidden;
   text-overflow: ellipsis;
 }
@@ -526,6 +526,7 @@
 }
 .t7-search-box {
   flex: 1;
+  min-width: 0;
   height: 36px;
   border-radius: 10px;
   background: var(--t7-fill3);
@@ -539,6 +540,7 @@
 .t7-search-box input {
   flex: 1;
   min-width: 0;
+  width: 0;
   border: 0;
   outline: none;
   background: transparent;
