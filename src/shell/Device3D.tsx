@@ -1,12 +1,15 @@
-import type { CSSProperties, ReactNode } from 'react';
+import { useMemo, type CSSProperties, type ReactNode } from 'react';
+import { buildShell, liningSlices } from './edgeShell';
 
 /**
  * A device body with real thickness, built from CSS 3D planes.
  *
  *  - `front` and `back` are ordinary DOM (fully interactive on the front).
- *  - The sides are a stack of rounded "slices" between them. Varying each
- *    slice's inset and color gives curved/chamfered edges (iPod classic's
- *    chrome back, iPod touch's rounded aluminium sides…).
+ *  - The sides follow an edge profile: each depth has an inset and a color,
+ *    which gives curved/chamfered edges (iPod classic's chrome back, iPod
+ *    touch's rounded aluminium sides…). With a numeric corner radius the
+ *    sides are one continuous faceted surface (see edgeShell.ts); otherwise
+ *    they are a stack of rounded slices.
  *
  * The coordinate origin is the centre of the device; +z points at the viewer.
  */
@@ -27,6 +30,12 @@ export interface Device3DProps {
   back: ReactNode;
   /** Edge profile from the front (t=0) to the back (t=1). */
   edge: (t: number) => EdgeSlice;
+  /**
+   * Depths (0–1) where the profile or the finish changes abruptly (a seam,
+   * the edge of the cover glass), so the surface breaks exactly there.
+   */
+  breaks?: number[];
+  /** slice count, only used for non-numeric radii */
   slices?: number;
   /** Inset of the front/back faces (when the edge curves in towards a face). */
   frontInset?: number;
@@ -37,8 +46,9 @@ export interface Device3DProps {
   children?: ReactNode;
   /**
    * Flat parts just outside the outline (ports, edge labels). Painted before
-   * the slices so Chrome's 3D depth sort doesn't cut them along every slice
-   * plane (which shows up as hairline stripes).
+   * the sides so Chrome's 3D depth sort uses them as the first planes and
+   * never cuts them along the planes of the sides (which shows up as
+   * hairline stripes).
    */
   decals?: ReactNode;
   className?: string;
@@ -56,6 +66,7 @@ export function Device3D({
   front,
   back,
   edge,
+  breaks,
   slices,
   frontInset = 0,
   backInset = 0,
@@ -65,32 +76,22 @@ export function Device3D({
   decals,
   className,
 }: Device3DProps) {
-  const n = slices ?? Math.max(6, Math.min(28, Math.round(depth / 2.2)));
   const half = depth / 2;
-  const sliceEls: ReactNode[] = [];
-  for (let i = 0; i < n; i++) {
-    const t = (i + 0.5) / n;
-    const z = half - t * depth;
-    const s = edge(t);
-    const inset = s.inset ?? 0;
-    sliceEls.push(
-      <div
-        key={i}
-        className="d3-slice"
-        style={{
-          inset,
-          borderRadius: radiusMinus(radius, inset),
-          background: s.color,
-          transform: `translateZ(${z.toFixed(2)}px)`,
-        }}
-      />,
-    );
-  }
+  const breakKey = breaks?.join(',') ?? '';
+  const sides = useMemo(
+    () =>
+      typeof radius === 'number' ? (
+        <Shell width={width} height={height} depth={depth} radius={radius} edge={edge} breaks={breakKey} frontInset={frontInset} backInset={backInset} />
+      ) : (
+        <Slices width={width} height={height} depth={depth} radius={radius} edge={edge} slices={slices} />
+      ),
+    [width, height, depth, radius, edge, breakKey, slices, frontInset, backInset],
+  );
 
   return (
     <div className={`d3-root ${className ?? ''}`} style={{ width, height }}>
       {decals}
-      {sliceEls}
+      {sides}
       <div
         className="d3-face d3-back"
         style={{
@@ -116,6 +117,123 @@ export function Device3D({
       {children}
     </div>
   );
+}
+
+/** The sides as one faceted surface (no gaps at any angle). */
+function Shell({
+  width,
+  height,
+  depth,
+  radius,
+  edge,
+  breaks,
+  frontInset,
+  backInset,
+}: {
+  width: number;
+  height: number;
+  depth: number;
+  radius: number;
+  edge: (t: number) => EdgeSlice;
+  breaks: string;
+  frontInset: number;
+  backInset: number;
+}) {
+  const facets = useMemo(
+    () => buildShell(width, height, depth, radius, edge, breaks ? breaks.split(',').map(Number) : []),
+    [width, height, depth, radius, edge, breaks],
+  );
+  const lining = useMemo(() => liningSlices(edge, depth, radius), [edge, depth, radius]);
+  const half = depth / 2;
+  const front = edge(0);
+  const back = edge(1);
+  // Where a face overhangs the sides (it is wider than the outline at that
+  // depth) its underside would be see-through: give it a backing that faces
+  // the other way. Where the face is narrower, fill the ring around it.
+  const cap = (z: number, faceInset: number, s: EdgeSlice, facing: 1 | -1) => {
+    const edgeInset = s.inset ?? 0;
+    if (Math.abs(faceInset - edgeInset) < 0.05) return null; // the sides meet the face exactly
+    const overhang = faceInset < edgeInset;
+    const inset = Math.min(faceInset, edgeInset);
+    const turn = overhang ? facing === 1 : facing === -1; // a backing faces away from the face it backs
+    return (
+      <div
+        className="d3-cap"
+        style={{
+          inset,
+          borderRadius: Math.max(0, radius - inset),
+          background: s.color,
+          transform: `translateZ(${z}px)${turn ? ' rotateY(180deg)' : ''}`,
+        }}
+      />
+    );
+  };
+  return (
+    <>
+      {/* just inside each face, never in its plane (coplanar layers flicker) */}
+      {cap(half - 0.04, frontInset, front, 1)}
+      {cap(-half + 0.04, backInset, back, -1)}
+      {lining.map((l) => (
+        <div
+          key={l.t}
+          className="d3-slice"
+          style={{ inset: l.inset, borderRadius: Math.max(0, radius - l.inset), background: l.color, transform: `translateZ(${(half - l.t * depth).toFixed(2)}px)` }}
+        />
+      ))}
+      {facets.map((fa) => (
+        <div key={fa.key} className="d3-facet" style={{ width: fa.w, height: fa.h, transform: fa.matrix, clipPath: fa.clip }}>
+          <i style={{ width: fa.base.w, height: fa.base.h, background: fa.base.color, transform: fa.base.matrix }} />
+          {fa.blend && (
+            <b style={{ maskImage: fa.blend.mask, WebkitMaskImage: fa.blend.mask }}>
+              <i style={{ width: fa.blend.w, height: fa.blend.h, background: fa.blend.color, transform: fa.blend.matrix }} />
+            </b>
+          )}
+        </div>
+      ))}
+    </>
+  );
+}
+
+/** The sides as a stack of rounded slices (for elliptical corner radii). */
+function Slices({
+  width,
+  height,
+  depth,
+  radius,
+  edge,
+  slices,
+}: {
+  width: number;
+  height: number;
+  depth: number;
+  radius: number | string;
+  edge: (t: number) => EdgeSlice;
+  slices?: number;
+}) {
+  void width;
+  void height;
+  const n = slices ?? Math.max(6, Math.min(28, Math.round(depth / 2.2)));
+  const half = depth / 2;
+  const els: ReactNode[] = [];
+  for (let i = 0; i < n; i++) {
+    const t = (i + 0.5) / n;
+    const z = half - t * depth;
+    const s = edge(t);
+    const inset = s.inset ?? 0;
+    els.push(
+      <div
+        key={i}
+        className="d3-slice"
+        style={{
+          inset,
+          borderRadius: radiusMinus(radius, inset),
+          background: s.color,
+          transform: `translateZ(${z.toFixed(2)}px)`,
+        }}
+      />,
+    );
+  }
+  return <>{els}</>;
 }
 
 /**

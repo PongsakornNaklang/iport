@@ -169,9 +169,9 @@ export default function IpodShuffle({ model, appearance }: DeviceProps) {
         {/*
          * The flat parts on the top edge are painted BEFORE the body. Chrome
          * depth-sorts a 3D scene with a BSP tree built in paint order: as the
-         * first planes, they split nothing (the body's slices lie entirely
+         * first planes, they split nothing (the body's sides lie entirely
          * below them). Painted after the body, each of them would be cut
-         * along every slice plane, leaving hairline seams across the
+         * along the planes of the sides, leaving hairline seams across the
          * VoiceOver button and the switch.
          */}
         <TopEdge H={H} switchPos={switchPos} led={led} voDown={!!pressed.vo} zone={zone} brain={brainRef} />
@@ -180,7 +180,7 @@ export default function IpodShuffle({ model, appearance }: DeviceProps) {
           height={H}
           depth={BODY_D}
           radius={RADIUS}
-          slices={22}
+          breaks={BODY_BREAKS}
           frontInset={1}
           backInset={1}
           edge={bodyEdge}
@@ -206,6 +206,9 @@ export default function IpodShuffle({ model, appearance }: DeviceProps) {
 
 // ---------------------------------------------------------------- body
 
+/** where bodyEdge's darker rim line starts and ends, from the front and from the back */
+const BODY_BREAKS = [5.5, 8.6].flatMap((d) => [d / BODY_D, 1 - d / BODY_D]);
+
 /** Slightly rounded front/back edges (r ≈ 0.6 mm) with a polished catch-light. */
 function bodyEdge(t: number): EdgeSlice {
   const r = 6;
@@ -222,7 +225,7 @@ function bodyEdge(t: number): EdgeSlice {
     inset,
     color: [
       // the side turned towards the light is brighter
-      `linear-gradient(90deg, rgba(0,0,0,calc(0.2 - var(--lx, 0) * 0.2)), rgba(0,0,0,0) 14%, rgba(0,0,0,0) 86%, rgba(0,0,0,calc(0.2 + var(--lx, 0) * 0.2)))`,
+      `linear-gradient(90deg, rgba(0,0,0,calc(0.2 - var(--elx, 0) * 0.2)), rgba(0,0,0,0) 14%, rgba(0,0,0,0) 86%, rgba(0,0,0,calc(0.2 + var(--elx, 0) * 0.2)))`,
       `linear-gradient(180deg, ${top} 0%, color-mix(in srgb, var(--s4-body) ${nearFront ? 94 : 90}%, #000) 46%, color-mix(in srgb, var(--s4-body) ${rim ? 70 : 76 + shine / 2}%, #000) 100%)`,
     ].join(', '),
   };

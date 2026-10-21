@@ -28,7 +28,6 @@ const FRONT_T = 0.17;
 const SEAM_T = 0.03;
 /** how far the steel back curves in at the back face */
 const CURVE = 15;
-const SLICES = 34;
 
 const INFO_BASE: DeviceInfo = {
   product: 'iPod classic',
@@ -146,8 +145,8 @@ export default function IpodClassic({ model, appearance }: DeviceProps) {
       height={H}
       depth={D}
       radius={RADIUS}
-      slices={SLICES}
       edge={edge}
+      breaks={[FRONT_T * 0.2, FRONT_T, FRONT_T + SEAM_T]}
       backInset={backInset}
       frontStyle={frontStyle}
       className="cl-device"

@@ -40,6 +40,7 @@ export function Stage() {
 
   const wrapRef = useRef<HTMLDivElement>(null);
   const rotRef = useRef<HTMLDivElement>(null);
+  const edgeLight = useRef({ x: '', y: '' });
   const shadowRef = useRef<HTMLDivElement>(null);
   const backCanvas = useRef<HTMLCanvasElement>(null);
   const frontCanvas = useRef<HTMLCanvasElement>(null);
@@ -147,6 +148,12 @@ export function Stage() {
     el.style.setProperty('--ry', (((ry % 360) + 540) % 360 - 180).toFixed(1));
     el.style.setProperty('--lx', Math.sin(ryRad).toFixed(3));
     el.style.setProperty('--ly', Math.sin(rxRad).toFixed(3));
+    // A coarse copy for the device edges: their surface is hundreds of small
+    // pieces, which only need repainting when the light has moved a step.
+    const elx = (Math.round(Math.sin(ryRad) * 20) / 20).toFixed(2);
+    const ely = (Math.round(Math.sin(rxRad) * 20) / 20).toFixed(2);
+    if (elx !== edgeLight.current.x) el.style.setProperty('--elx', (edgeLight.current.x = elx));
+    if (ely !== edgeLight.current.y) el.style.setProperty('--ely', (edgeLight.current.y = ely));
     const sh = shadowRef.current;
     if (sh) {
       const m = modelRef.current;

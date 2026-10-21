@@ -195,7 +195,7 @@ export default function IpodTouch({ model, appearance }: DeviceProps) {
       const tone = u < 0 ? `color-mix(in srgb, ${back} ${100 - shade}%, #fff)` : `color-mix(in srgb, ${back} ${100 - shade}%, #000)`;
       return {
         inset,
-        color: `linear-gradient(90deg, rgb(255 255 255 / calc(0.06 - var(--lx, 0) * 0.22)) 0%, transparent 9%, transparent 91%, rgb(255 255 255 / calc(0.06 + var(--lx, 0) * 0.22)) 100%), linear-gradient(180deg, rgb(255 255 255 / calc(0.10 + var(--ly, 0) * 0.2)) 0%, transparent 6%, transparent 94%, rgb(0 0 0 / 0.14) 100%), ${tone}`,
+        color: `linear-gradient(90deg, rgb(255 255 255 / calc(0.06 - var(--elx, 0) * 0.22)) 0%, transparent 9%, transparent 91%, rgb(255 255 255 / calc(0.06 + var(--elx, 0) * 0.22)) 100%), linear-gradient(180deg, rgb(255 255 255 / calc(0.10 + var(--ely, 0) * 0.2)) 0%, transparent 6%, transparent 94%, rgb(0 0 0 / 0.14) 100%), ${tone}`,
       };
     };
   }, [back, front, darkFront]);
@@ -217,7 +217,7 @@ export default function IpodTouch({ model, appearance }: DeviceProps) {
         height={height}
         depth={depth}
         radius={RADIUS}
-        slices={28}
+        breaks={[0.085]}
         frontInset={FRONT_INSET}
         backInset={BACK_INSET}
         edge={edge}

@@ -14,6 +14,13 @@ The running app shows its version and build in the Help panel (?).
 
 ## [Unreleased]
 
+### Fixed
+- The sides of every iPod are now one continuous surface. Seen edge-on or
+  zoomed in they no longer show stripes, gaps or saw-tooth corners, and their
+  shading (the iPod classic's mirror-steel back especially) is smooth instead
+  of banded.
+- Spinning the iPod classic and iPod nano is noticeably smoother.
+
 ## [1.0.0] - 2026-10-21
 
 First release.

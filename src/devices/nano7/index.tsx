@@ -23,6 +23,8 @@ const W = 308;
 const H = 595;
 const D = 42;
 const R = 38;
+/** chamfer → side, side → shaded back curve (where k = 0.6 below) */
+const NANO_BREAKS = [0.1, 0.6 + 0.4 * Math.sqrt(0.6)];
 const SCREEN = { left: 34, top: 60, width: 240, height: 432 };
 const HOME = { x: 154, y: 544, d: 44 };
 
@@ -291,7 +293,7 @@ export default function IpodNano7({ appearance }: DeviceProps) {
       depth={D}
       radius={R}
       backInset={3.5}
-      slices={30}
+      breaks={NANO_BREAKS}
       edge={(t) => {
         if (t < 0.1) return { inset: (1 - t / 0.1) * 1.4, color: chamfer };
         const k = t > 0.6 ? Math.pow((t - 0.6) / 0.4, 2) : 0;

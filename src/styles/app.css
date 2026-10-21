@@ -500,6 +500,33 @@ button {
   position: absolute;
   pointer-events: none;
 }
+/* one flat strip of the device's side (see edgeShell.ts) */
+.d3-facet {
+  position: absolute;
+  left: 0;
+  top: 0;
+  overflow: hidden;
+  transform-origin: 0 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  pointer-events: none;
+}
+.d3-facet > b {
+  position: absolute;
+  inset: 0;
+}
+.d3-facet i {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 0 0;
+}
+.d3-cap {
+  position: absolute;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  pointer-events: none;
+}
 .d3-face {
   position: absolute;
   overflow: hidden;
