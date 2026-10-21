@@ -341,7 +341,7 @@ export const player = {
     const queue = buildOrder(base, startId, mode);
     consecutiveErrors = 0;
     set({ baseQueue: base, queue });
-    void loadIndex(0, true, opts.startAt);
+    void loadIndex(startId ? Math.max(0, queue.indexOf(startId)) : 0, true, opts.startAt);
   },
 
   playTrack(id: string) {
