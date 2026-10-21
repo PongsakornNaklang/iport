@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
+import { SegTabs } from '../SegTabs';
 import {
   DEFAULT_SCENE,
   defaultAppearance,
@@ -36,19 +37,15 @@ export default function CustomizePanel({ onClose }: { onClose: () => void }) {
       side="right"
       onClose={onClose}
       tabs={
-        <div className="panel-tabs" role="tablist">
-          {(
-            [
-              ['design', 'Design'],
-              ['scene', 'Scene'],
-              ['presets', 'Presets'],
-            ] as const
-          ).map(([id, label]) => (
-            <button key={id} role="tab" aria-selected={tab === id} className={tab === id ? 'on' : ''} onClick={() => setTab(id)}>
-              {label}
-            </button>
-          ))}
-        </div>
+        <SegTabs
+          items={[
+            { id: 'design', label: 'Design' },
+            { id: 'scene', label: 'Scene' },
+            { id: 'presets', label: 'Presets' },
+          ]}
+          value={tab}
+          onChange={setTab}
+        />
       }
     >
       {tab === 'design' && <DesignTab model={model} />}

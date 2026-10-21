@@ -1081,6 +1081,7 @@
   overflow-y: auto;
   -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 12px, #000 calc(100% - 18px), transparent 100%);
   mask-image: linear-gradient(to bottom, transparent 0, #000 12px, #000 calc(100% - 18px), transparent 100%);
+  scrollbar-width: none;
 }
 .t7np-qrow {
   display: flex;
@@ -1127,6 +1128,7 @@
   overflow-y: auto;
   -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 22px, #000 calc(100% - 30px), transparent 100%);
   mask-image: linear-gradient(to bottom, transparent 0, #000 22px, #000 calc(100% - 30px), transparent 100%);
+  scrollbar-width: none;
 }
 .t7np-lines {
   padding: 18px 24px 120px;
@@ -1194,4 +1196,10 @@
 }
 .t7m-libmenu.editing .t7m-librow-main {
   color: var(--t7-label);
+}
+
+/* like iOS: no persistent scrollbars */
+.t7np-queue-list::-webkit-scrollbar,
+.t7np-lyrics::-webkit-scrollbar {
+  display: none;
 }

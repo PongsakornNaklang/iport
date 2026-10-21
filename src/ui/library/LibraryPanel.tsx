@@ -4,6 +4,7 @@
  * contacts, calendars, alarms) is added and managed here.
  */
 import { useEffect, useState } from 'react';
+import { SegTabs } from '../SegTabs';
 import { useLibrary } from '@/core/library/store';
 import { Panel } from '../Panel';
 import { IconMusic, IconPlus } from '../icons';
@@ -34,20 +35,17 @@ export default function LibraryPanel({ onClose }: { onClose: () => void }) {
   };
 
   const tabs = (
-    <div className="panel-tabs lib-tabs" role="tablist">
-      <button role="tab" aria-selected={tab === 'library'} className={tab === 'library' ? 'on' : ''} onClick={() => go('library')}>
-        <IconMusic /> Library {trackCount > 0 && <span className="lib-tab-n">{trackCount}</span>}
-      </button>
-      <button role="tab" aria-selected={tab === 'add'} className={tab === 'add' ? 'on' : ''} onClick={() => go('add')}>
-        <IconPlus /> Add Music
-      </button>
-      <button role="tab" aria-selected={tab === 'photos'} className={tab === 'photos' ? 'on' : ''} onClick={() => go('photos')}>
-        <IconPhoto /> Photos {photoCount > 0 && <span className="lib-tab-n">{photoCount}</span>}
-      </button>
-      <button role="tab" aria-selected={tab === 'info'} className={tab === 'info' ? 'on' : ''} onClick={() => go('info')}>
-        <IconNote /> Info
-      </button>
-    </div>
+    <SegTabs
+      className="lib-tabs"
+      items={[
+        { id: 'library', label: <><IconMusic /> Library {trackCount > 0 && <span className="lib-tab-n">{trackCount}</span>}</> },
+        { id: 'add', label: <><IconPlus /> Add Music</> },
+        { id: 'photos', label: <><IconPhoto /> Photos {photoCount > 0 && <span className="lib-tab-n">{photoCount}</span>}</> },
+        { id: 'info', label: <><IconNote /> Info</> },
+      ]}
+      value={tab}
+      onChange={go}
+    />
   );
 
   return (

@@ -15,6 +15,10 @@ The running app shows its version and build in the Help panel (?).
 ## [Unreleased]
 
 ### Changed
+- Panel tabs (Customize, Library) have a white thumb that slides to the
+  chosen tab, and clicking a tab no longer leaves a focus ring on it.
+- Scrollbars in panels and menus are thin and light instead of the system's
+  dark bar.
 - The view controls (Front, Back, Side, 360°, zoom) are a slim pill on the
   right edge of the window instead of a bar along the bottom, leaving room
   for the iPod and its EarPods cable. Phones keep them along the bottom.
