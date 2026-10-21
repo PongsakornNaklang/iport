@@ -68,28 +68,27 @@ export function extractJsonAfter(html: string, marker: string | RegExp): unknown
 
 type Obj = Record<string, unknown>;
 
-/** Visit every object under `root` that is the value of one of `keys`. */
+/** Collect (in document order) every object stored under one of `keys`; does not descend into matches. */
 export function collect(root: unknown, keys: string[], limit = 2000): { key: string; value: Obj }[] {
   const want = new Set(keys);
   const out: { key: string; value: Obj }[] = [];
-  const stack: unknown[] = [root];
+  const stack: [string, unknown][] = [['', root]];
   let seen = 0;
   while (stack.length && out.length < limit && seen < 2_000_000) {
-    const node = stack.pop();
+    const [key, node] = stack.pop()!;
     seen++;
     if (!node || typeof node !== 'object') continue;
     if (Array.isArray(node)) {
-      for (let i = node.length - 1; i >= 0; i--) stack.push(node[i]);
+      for (let i = node.length - 1; i >= 0; i--) stack.push(['', node[i]]);
+      continue;
+    }
+    if (want.has(key)) {
+      out.push({ key, value: node as Obj });
       continue;
     }
     const entries = Object.entries(node as Obj);
-    for (let i = entries.length - 1; i >= 0; i--) {
-      const [k, v] = entries[i];
-      if (want.has(k) && v && typeof v === 'object' && !Array.isArray(v)) out.push({ key: k, value: v as Obj });
-      else stack.push(v);
-    }
+    for (let i = entries.length - 1; i >= 0; i--) stack.push(entries[i]);
   }
-  // stack order is depth-first left-to-right; collected order matches document order
   return out;
 }
 
