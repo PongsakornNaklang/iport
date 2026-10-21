@@ -113,22 +113,6 @@ To release:
    This bumps `package.json`, commits "Release vX.Y.Z" and creates the `vX.Y.Z` tag.
 3. Push the commit and the tag: `git push && git push --tags`.
 
-## Deploy to Vercel
-
-1. Push this repository to GitHub.
-2. Go to <https://vercel.com/new>, choose **Import Git Repository**, and pick this repo.
-3. Vercel detects **Vite** automatically (`vercel.json` sets build command `npm run build` and output `dist`). Click **Deploy**.
-4. Every push to the default branch redeploys; pull requests get preview URLs.
-
-No environment variables or API keys are needed.
-
-### วิธี deploy ขึ้น Vercel (ภาษาไทย)
-
-1. เข้า <https://vercel.com/new> แล้วล็อกอินด้วย GitHub
-2. กด **Import** ที่ repo นี้
-3. Vercel จะตรวจเจอว่าเป็นโปรเจกต์ **Vite** เอง (ตั้งค่าไว้ใน `vercel.json` แล้ว) กด **Deploy** ได้เลย
-4. หลังจากนั้นทุกครั้งที่ push โค้ดขึ้น branch หลัก Vercel จะ deploy ใหม่ให้อัตโนมัติ — ไม่ต้องตั้งค่า API key ใด ๆ
-
 ## License and copyright
 
 Copyright © 2026 Pongsakorn Naklang. All rights reserved.
