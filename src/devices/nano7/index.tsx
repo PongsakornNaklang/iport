@@ -307,6 +307,19 @@ export default function IpodNano7({ appearance }: DeviceProps) {
         </div>
       }
       back={<Back body={body} engraving={appearance.engraving} />}
+      decals={
+        <>
+          {/* bottom: headphone jack (centre x = -86, matches registry `jack`) + Lightning */}
+          <EdgeDecal side="bottom" offset={-86} length={26} thickness={26} width={W} height={H} depth={D}>
+            <div className="n7-jack" />
+          </EdgeDecal>
+          <EdgeDecal side="bottom" offset={0} length={56} thickness={14} width={W} height={H} depth={D}>
+            <div className="n7-lightning">
+              <div />
+            </div>
+          </EdgeDecal>
+        </>
+      }
     >
       {/* left edge: volume up, play/pause, volume down */}
       <SideButton axis="x" x={-W / 2 - 0.4} y={-H / 2 + 128} w={4} h={34} d={15} color={bodyHi} faces={btnFaces} onPress={() => buttons.volume(1)} title="Volume Up (+)" />
@@ -314,15 +327,6 @@ export default function IpodNano7({ appearance }: DeviceProps) {
       <SideButton axis="x" x={-W / 2 - 0.4} y={-H / 2 + 212} w={4} h={34} d={15} color={bodyHi} faces={btnFaces} onPress={() => buttons.volume(-1)} title="Volume Down (−)" />
       {/* top edge: Sleep/Wake */}
       <SideButton axis="y" x={W / 2 - 66} y={-H / 2 - 0.4} w={44} h={4} d={15} color={bodyHi} faces={btnFaces} onPress={buttons.sleepWake} title="Sleep/Wake (L)" />
-      {/* bottom: headphone jack + Lightning */}
-      <EdgeDecal side="bottom" offset={-86} length={26} thickness={26} width={W} height={H} depth={D}>
-        <div className="n7-jack" />
-      </EdgeDecal>
-      <EdgeDecal side="bottom" offset={0} length={56} thickness={14} width={W} height={H} depth={D}>
-        <div className="n7-lightning">
-          <div />
-        </div>
-      </EdgeDecal>
     </Device3D>
   );
 }

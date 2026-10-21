@@ -363,11 +363,11 @@ function Playlists() {
 
   const playlistRow = (p: Playlist) => {
     const ids = playlistTracks(tracks, p);
-    const isOpen = open === p.id && !p.smart;
+    const isOpen = open === p.id;
     const otg = p.id === ON_THE_GO_ID;
     return (
       <div key={p.id}>
-        <div className={`list-item lib-row clickable`} onClick={() => !p.smart && setOpen(isOpen ? null : p.id)}>
+        <div className={`list-item lib-row clickable`} onClick={() => setOpen(isOpen ? null : p.id)}>
           <div className={`lib-pl-icon ${p.smart ? 'smart' : otg ? 'otg' : ''}`}>
             {p.smart ? (
               <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
@@ -429,34 +429,56 @@ function Playlists() {
               ]}
             />
           )}
-          {!p.smart && <span className="lib-chev" style={{ transform: isOpen ? 'rotate(90deg)' : undefined }}>›</span>}
+          <span className="lib-chev" style={{ transform: isOpen ? 'rotate(90deg)' : undefined }}>
+            ›
+          </span>
         </div>
         {isOpen && (
           <div className="lib-pl-tracks">
-            {ids.length === 0 && <div className="list-item muted" style={{ fontSize: 12.5 }}>Empty — use ⋯ → Add to Playlist on any song.</div>}
-            {p.trackIds.map((id, i) => {
-              const t = tracks[id];
-              if (!t) return null;
-              return (
-                <div key={`${id}-${i}`} className="list-item lib-row clickable" onClick={() => player.playTracks(ids, ids.indexOf(id))}>
-                  <span className="num">{i + 1}</span>
-                  <Artwork src={t.artwork} size={30} radius={4} />
-                  <div className="li-text">
-                    <div className="li-title">{t.title}</div>
-                    <div className="li-sub">{t.artist}</div>
+            {ids.length === 0 && (
+              <div className="list-item lib-row-plain muted" style={{ fontSize: 13 }}>
+                {p.smart ? 'Nothing matches yet — it fills itself as you play, rate and add music.' : 'Empty — use ⋯ → Add to Playlist on any song.'}
+              </div>
+            )}
+            {p.smart &&
+              ids.slice(0, 100).map((id, i) => {
+                const t = tracks[id];
+                if (!t) return null;
+                return (
+                  <div key={id} className="list-item lib-row clickable" onClick={() => player.playTracks(ids, i)}>
+                    <span className="num">{i + 1}</span>
+                    <Artwork src={t.artwork} size={30} radius={4} />
+                    <div className="li-text">
+                      <div className="li-title">{t.title}</div>
+                      <div className="li-sub">{t.artist}</div>
+                    </div>
                   </div>
-                  <RowBtn title="Move up" disabled={i === 0} onClick={() => useLibrary.getState().movePlaylistItem(p.id, i, i - 1)}>
-                    <IconUp width={15} height={15} />
-                  </RowBtn>
-                  <RowBtn title="Move down" disabled={i === p.trackIds.length - 1} onClick={() => useLibrary.getState().movePlaylistItem(p.id, i, i + 1)}>
-                    <IconDown width={15} height={15} />
-                  </RowBtn>
-                  <RowBtn title="Remove from playlist" onClick={() => useLibrary.getState().removeFromPlaylist(p.id, i)}>
-                    <IconClose width={12} height={12} />
-                  </RowBtn>
-                </div>
-              );
-            })}
+                );
+              })}
+            {!p.smart &&
+              p.trackIds.map((id, i) => {
+                const t = tracks[id];
+                if (!t) return null;
+                return (
+                  <div key={`${id}-${i}`} className="list-item lib-row clickable" onClick={() => player.playTracks(ids, ids.indexOf(id))}>
+                    <span className="num">{i + 1}</span>
+                    <Artwork src={t.artwork} size={30} radius={4} />
+                    <div className="li-text">
+                      <div className="li-title">{t.title}</div>
+                      <div className="li-sub">{t.artist}</div>
+                    </div>
+                    <RowBtn title="Move up" disabled={i === 0} onClick={() => useLibrary.getState().movePlaylistItem(p.id, i, i - 1)}>
+                      <IconUp width={15} height={15} />
+                    </RowBtn>
+                    <RowBtn title="Move down" disabled={i === p.trackIds.length - 1} onClick={() => useLibrary.getState().movePlaylistItem(p.id, i, i + 1)}>
+                      <IconDown width={15} height={15} />
+                    </RowBtn>
+                    <RowBtn title="Remove from playlist" onClick={() => useLibrary.getState().removeFromPlaylist(p.id, i)}>
+                      <IconClose width={12} height={12} />
+                    </RowBtn>
+                  </div>
+                );
+              })}
           </div>
         )}
       </div>
@@ -502,29 +524,37 @@ function Playlists() {
 
 // ------------------------------------------------------------------ manage
 
+const DEMO_ARTIST = 'iPort Demo Band';
+
 function Manage() {
   const tracks = useLibrary((s) => s.tracks);
   const [confirm, setConfirm] = useState(false);
-  const hasDemo = useMemo(() => Object.values(tracks).some((t) => t.artist === 'iPort Demo Band'), [tracks]);
+  const hasDemo = useMemo(() => Object.values(tracks).some((t) => t.artist === DEMO_ARTIST), [tracks]);
 
+  const [restoring, setRestoring] = useState(false);
   const restore = async () => {
-    const before = Object.keys(useLibrary.getState().tracks).length;
-    const p = seedDemoLibrary();
-    // seedDemoLibrary adds its YouTube picks synchronously; if nothing changed it already ran this session
-    if (Object.keys(useLibrary.getState().tracks).length === before) {
-      useLibrary.getState().setSeeded(false);
-      toast('The demo songs will be added the next time you open iPort');
+    setRestoring(true);
+    toast('Restoring demo songs…');
+    try {
+      await seedDemoLibrary();
+    } catch {
+      /* reported below */
+    }
+    setRestoring(false);
+    if (Object.values(useLibrary.getState().tracks).some((t) => t.artist === DEMO_ARTIST)) {
+      toast('Demo songs restored');
       return;
     }
-    toast('Restoring demo songs…');
-    await p;
-    toast('Demo songs restored');
+    // seeding already ran in this tab; it runs again on the next visit
+    useLibrary.getState().setSeeded(false);
+    toast('The demo songs will be added the next time you open iPort');
   };
 
   const erase = async () => {
     player.stop();
     stopPreview();
     await useLibrary.getState().resetLibrary();
+    document.querySelector('.panel.left .panel-body')?.scrollTo({ top: 0, behavior: 'smooth' });
     toast('All content erased');
   };
 
@@ -532,7 +562,7 @@ function Manage() {
     <div className="section lib-manage">
       <div className="section-title">Manage</div>
       <div className="list">
-        <button className="list-item" disabled={hasDemo} onClick={() => void restore()} title={hasDemo ? 'The demo songs are already in your library' : undefined}>
+        <button className="list-item" disabled={hasDemo || restoring} onClick={() => void restore()} title={hasDemo ? 'The demo songs are already in your library' : undefined}>
           <IconMusic /> Restore Demo Songs
         </button>
         <button className="list-item danger" onClick={() => setConfirm(true)}>

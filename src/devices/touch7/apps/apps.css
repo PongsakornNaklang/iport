@@ -857,3 +857,336 @@
     0 0 0 2px var(--t7-cell),
     0 0 0 3.5px var(--t7-label2);
 }
+
+/* ================================================================== Contacts */
+.t7p-root {
+  position: absolute;
+  inset: 0;
+}
+.t7p-wrap {
+  position: absolute;
+  inset: 0;
+}
+.t7p-avatar {
+  font-family: -apple-system, 'SF Pro Rounded', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  letter-spacing: 0.5px;
+}
+.t7p-me {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 16px 12px;
+  border-bottom: 0.5px solid var(--t7-sep);
+  margin-bottom: 6px;
+}
+.t7p-me-n {
+  font-size: 20px;
+  font-weight: 600;
+}
+.t7p-me-s {
+  font-size: 13px;
+  color: var(--t7-label2);
+}
+.t7p-letter {
+  padding: 4px 16px 2px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--t7-label2);
+  background: var(--t7-bg2);
+  position: sticky;
+  top: 0;
+}
+.t7-dark .t7p-letter {
+  background: #1c1c1e;
+}
+.t7p-row {
+  padding: 11px 32px 11px 16px;
+  font-size: 17px;
+  border-bottom: 0.5px solid var(--t7-sep);
+  margin-left: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+.t7p-row:active {
+  background: var(--t7-cell-hi);
+}
+.t7p-row b {
+  font-weight: 600;
+}
+.t7p-count {
+  text-align: center;
+  font-size: 15px;
+  color: var(--t7-label2);
+  padding: 18px 0;
+}
+.t7p-index {
+  position: absolute;
+  right: 1px;
+  top: 150px;
+  bottom: 20px;
+  width: 15px;
+  z-index: 11;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--t7-tint);
+  line-height: 12.5px;
+}
+.t7p-index span {
+  cursor: pointer;
+}
+.t7p-card-head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 16px 18px;
+}
+.t7p-card-name {
+  font-size: 26px;
+  font-weight: 400;
+  margin-top: 10px;
+  text-align: center;
+}
+.t7p-card-co {
+  font-size: 15px;
+  color: var(--t7-label2);
+}
+.t7p-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+  width: 100%;
+}
+.t7p-actions button {
+  flex: 1;
+  height: 52px;
+  border-radius: 10px;
+  background: var(--t7-cell) !important;
+  color: var(--t7-tint) !important;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  font-size: 11px !important;
+}
+.t7p-actions button.off {
+  color: var(--t7-label3) !important;
+  cursor: default;
+}
+.t7p-field .t7-cell-icon {
+  position: absolute;
+  top: 8px;
+  left: 16px;
+}
+.t7p-field .t7-cell-main {
+  padding-top: 14px;
+}
+.t7p-lbl {
+  font-size: 13px;
+  color: var(--t7-label);
+}
+.t7p-val {
+  color: var(--t7-tint);
+  font-size: 17px;
+}
+.t7p-val.wrap {
+  white-space: normal;
+  color: var(--t7-label);
+}
+.t7p-notes {
+  padding: 8px 16px 34px;
+  background: var(--t7-cell);
+  font-size: 17px;
+}
+.t7p-edit-head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 6px 0 18px;
+}
+.t7p-edit-head .t7-tbtn {
+  font-size: 15px !important;
+  height: 30px;
+}
+.t7p-in {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.t7p-plus {
+  color: var(--t7-green);
+}
+
+/* ================================================================== Voice Memos */
+.t7v-root,
+.t7v-wrap {
+  position: absolute;
+  inset: 0;
+}
+.t7v-page .t7-page-pad {
+  height: 130px;
+}
+.t7v-row {
+  margin-left: 16px;
+  border-bottom: 0.5px solid var(--t7-sep);
+}
+.t7v-row-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px 10px 0;
+  cursor: pointer;
+}
+.t7v-row-main {
+  flex: 1;
+  min-width: 0;
+}
+.t7v-name {
+  font-size: 17px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.t7v-row.open .t7v-name {
+  font-size: 20px;
+}
+.t7v-sub {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  color: var(--t7-label2);
+  margin-top: 3px;
+}
+.t7v-player {
+  padding: 0 16px 12px 0;
+  animation: t7-fade-in 250ms;
+}
+.t7v-scrub .t7-slider-fill {
+  background: var(--t7-label2);
+}
+.t7v-scrub .t7-slider-thumb {
+  width: 8px;
+  height: 8px;
+  margin-left: -4px;
+  top: calc(50% - 4px);
+  background: var(--t7-label2);
+  box-shadow: none;
+}
+.t7v-times {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--t7-label2);
+  margin-top: -6px;
+  font-variant-numeric: tabular-nums;
+}
+.t7v-ctrls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 6px;
+}
+.t7v-ctrls button {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  color: var(--t7-label) !important;
+}
+.t7v-ctrls button.side {
+  color: var(--t7-tint) !important;
+}
+.t7v-ctrls button.del {
+  color: var(--t7-tint) !important;
+}
+.t7v-ctrls button:disabled {
+  opacity: 0.4;
+}
+.t7v-panel {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 112px;
+  z-index: 12;
+  background: var(--t7-bar);
+  -webkit-backdrop-filter: blur(20px) saturate(1.8);
+  backdrop-filter: blur(20px) saturate(1.8);
+  box-shadow: 0 -0.5px 0 var(--t7-bar-line);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  padding-bottom: 22px;
+  transition: height 380ms var(--t7-ease);
+}
+.t7v-panel.rec {
+  height: 330px;
+  border-radius: 12px 12px 0 0;
+  background: var(--t7-bg2);
+}
+.t7-dark .t7v-panel.rec {
+  background: #1c1c1e;
+}
+.t7v-live {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 22px;
+  animation: t7-fade-in 300ms;
+}
+.t7v-live-name {
+  font-size: 20px;
+  font-weight: 600;
+}
+.t7v-live-date {
+  font-size: 14px;
+  color: var(--t7-label2);
+  margin-top: 2px;
+}
+.t7v-wave {
+  width: 288px;
+  height: 60px;
+  margin-top: 26px;
+}
+.t7v-live-time {
+  margin-top: 16px;
+  font-size: 20px;
+  font-variant-numeric: tabular-nums;
+}
+.t7v-rec {
+  width: 66px;
+  height: 66px;
+  border-radius: 50%;
+  border: 3.5px solid #c7c7cc !important;
+  display: grid;
+  place-items: center;
+  flex: none;
+}
+.t7-dark .t7v-rec {
+  border-color: #fff !important;
+}
+.t7v-rec span {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: #ff3b30;
+  transition:
+    width 260ms var(--t7-ease),
+    height 260ms var(--t7-ease),
+    border-radius 260ms var(--t7-ease);
+}
+.t7v-rec.on span {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+}

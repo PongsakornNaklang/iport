@@ -301,6 +301,9 @@
 .lib-root .btn.block {
   width: 100%;
 }
+.lib-root a.btn {
+  text-decoration: none;
+}
 .btn .lib-spinner {
   border-color: rgba(255, 255, 255, 0.4);
   border-top-color: #fff;

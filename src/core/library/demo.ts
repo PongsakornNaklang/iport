@@ -29,6 +29,7 @@ const SONGS: SongSpec[] = [
   { title: 'Cover Flow', bpm: 90, bars: 16, roots: [8, 5, 1, 3], minor: false, genre: 'Chillwave', lead: [4, -1, 2, 4, 5, -1, 4, 2, 0, -1, 2, -1, 4, 2, 1, -1], hue: 280, style: 'chill', swing: 0.12 },
   { title: 'Hold Switch', bpm: 128, bars: 20, roots: [3, 8, 0, 10], minor: false, genre: 'Pop', lead: [0, 0, 4, 4, 5, 4, 2, -1, 2, 2, 4, 2, 0, -1, -1, -1], hue: 340, style: 'pop' },
   { title: 'Shuffle Songs', bpm: 78, bars: 12, roots: [5, 3, 0, 0], minor: true, genre: 'Hip Hop', lead: [7, -1, 4, -1, 5, 4, 2, -1, 4, -1, 2, 0, -1, -1, 2, -1], hue: 30, style: 'lofi', swing: 0.2 },
+  { title: 'On-The-Go', bpm: 104, bars: 16, roots: [0, 7, 9, 5], minor: false, genre: 'Pop', lead: [4, 4, 5, 7, -1, 7, 5, 4, 2, -1, 0, 2, 4, -1, 2, -1], hue: 160, style: 'chill', swing: 0.08 },
 ];
 
 const MAJOR = [0, 2, 4, 5, 7, 9, 11, 12, 14, 16];

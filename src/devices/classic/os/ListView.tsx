@@ -94,7 +94,7 @@ export function ListView({ rows, indexed, variant = 'plain', height, initial = 0
       if (ns < nt) nt = ns;
       if (ns >= nt + visible) nt = ns - visible + 1;
       setState({ sel: ns, top: nt });
-      if (indexed && v > 16 && rows.length > visible * 2) {
+      if (indexed && v >= 14 && rows.length > visible * 2) {
         const r = rows[ns];
         setLetter(indexLetter(r.sort ?? r.label));
         window.clearTimeout(letterTimer.current);

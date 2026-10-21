@@ -5,6 +5,7 @@ import {
   isAlbumList,
   isExpandableList,
   parseYouTubeUrl,
+  splitArtistTitle,
   youtubePlaylist,
   youtubeSearch,
   youtubeTrack,
@@ -137,17 +138,21 @@ export function YouTubeSource({ intent }: { intent: Extract<Intent, { kind: 'yt-
         <LoadingRows n={6} />
       ) : items.length ? (
         <div className="list">
-          {items.map((it, i) => (
-            <ResultRow
-              key={it.id}
-              art={it.thumbnail}
-              title={it.title}
-              sub={[it.channel, it.duration].filter(Boolean).join(' · ') || undefined}
-              added={isInLibrary(keys, { source: 'youtube', ref: it.id })}
-              onPlay={() => addToLibrary([trackOf(it, i)], { play: true })}
-              onAdd={() => addToLibrary([trackOf(it, i)])}
-            />
-          ))}
+          {items.map((it, i) => {
+            // show what will land in the library: "Song" by "Artist" (tidied from the video title)
+            const named = splitArtistTitle(it.title, it.channel);
+            return (
+              <ResultRow
+                key={it.id}
+                art={it.thumbnail}
+                title={named.title}
+                sub={[named.artist, it.duration].filter(Boolean).join(' · ') || undefined}
+                added={isInLibrary(keys, { source: 'youtube', ref: it.id })}
+                onPlay={() => addToLibrary([trackOf(it, i)], { play: true })}
+                onAdd={() => addToLibrary([trackOf(it, i)])}
+              />
+            );
+          })}
         </div>
       ) : results && !playlist ? (
         <Empty title="No videos found">Try other words.</Empty>
