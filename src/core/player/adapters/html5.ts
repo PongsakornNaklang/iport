@@ -148,6 +148,21 @@ export class Html5Adapter implements MediaAdapter {
     this.active.pause();
   }
 
+  prime(): void {
+    const el = this.active;
+    if (!el.currentSrc) return;
+    resumeAudio();
+    const wasMuted = el.muted;
+    el.muted = true;
+    const restore = () => {
+      if (!this.wantPlay) el.pause();
+      el.muted = wasMuted;
+    };
+    const p = el.play();
+    if (p) p.then(restore, () => (el.muted = wasMuted));
+    else restore();
+  }
+
   seek(seconds: number): void {
     const el = this.active;
     if (!isFinite(el.duration)) return;

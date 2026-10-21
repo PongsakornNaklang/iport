@@ -28,7 +28,11 @@ The running app shows its version and build in the Help panel (?).
 - iPod nano: the side and top buttons are rounded pills without the stray
   dash above and below them.
 - EarPods: the plug and cable grow with the zoom, and the cable is stiffer
-  (especially at the plug) so it no longer droops and wobbles like string.
+  (especially at the plug) so it no longer droops, loops or wobbles like
+  string when you shake the iPod.
+- EarPods: pressing play starts the music with the click of the plug, not
+  before; the part of the plug inside the jack is no longer drawn over the
+  iPod while it goes in, and the stray line across the plug is gone.
 
 ## [1.0.0] - 2026-10-21
 

@@ -69,6 +69,16 @@ let consecutiveErrors = 0;
 let needsLoad = false;
 let lastBookmarkSave = 0;
 let errorTimer: number | undefined;
+/**
+ * While set, nothing is heard: a play request shows as playing but the media
+ * stays paused until the hold is released (the EarPods are still on their
+ * way into the headphone jack).
+ */
+let outputHeld = false;
+const wantsSound = () => {
+  const s = get().status;
+  return s === 'playing' || s === 'loading';
+};
 
 function makeCallbacks(kind: MediaAdapter['kind']): AdapterCallbacks {
   const isActive = () => active?.kind === kind;
@@ -81,12 +91,19 @@ function makeCallbacks(kind: MediaAdapter['kind']): AdapterCallbacks {
     },
     onPlaying() {
       if (!isActive()) return;
+      if (outputHeld) {
+        // started on its own (autoplay): hold it until the EarPods are in
+        active?.pause();
+        return;
+      }
       consecutiveErrors = 0;
       set({ status: 'playing', error: null });
       updateMediaSessionState();
     },
     onPaused() {
       if (!isActive()) return;
+      // paused by the hold, not by the listener: still "playing"
+      if (outputHeld && wantsSound()) return;
       set({ status: get().currentId ? 'paused' : 'idle' });
       saveBookmarkNow();
       updateMediaSessionState();
@@ -255,7 +272,7 @@ async function loadIndex(index: number, autoplay: boolean, startAt?: number) {
     trackSerial: get().trackSerial + 1,
   });
   updateMediaSessionMeta();
-  await next.load(t, { autoplay, startAt: start, volume: effectiveVolume(), rate: rateFor(t) });
+  await next.load(t, { autoplay: autoplay && !outputHeld, startAt: start, volume: effectiveVolume(), rate: rateFor(t) });
 }
 
 function handleEnded() {
@@ -369,11 +386,36 @@ export const player = {
       void loadIndex(get().index, true, get().position);
       return;
     }
+    if (outputHeld) {
+      // shown as playing; the sound starts when the hold is released
+      set({ status: 'playing', error: null });
+      active.prime?.();
+      return;
+    }
     active.play();
   },
 
   pause() {
     active?.pause();
+    if (outputHeld && wantsSound()) {
+      set({ status: 'paused' });
+      saveBookmarkNow();
+      updateMediaSessionState();
+    }
+  },
+
+  /**
+   * Hold or release the sound (see `outputHeld`). The EarPods hold it while
+   * they are not plugged in, so music starts with the click of the plug.
+   */
+  setOutputHold(on: boolean) {
+    if (outputHeld === on) return;
+    outputHeld = on;
+    if (on) {
+      if (wantsSound()) active?.pause();
+    } else if (wantsSound() && active && !needsLoad) {
+      active.play();
+    }
   },
 
   toggle() {

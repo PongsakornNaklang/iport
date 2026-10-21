@@ -190,7 +190,8 @@ export class YouTubeAdapter implements MediaAdapter {
     }
     if (this.videoId !== track.ref) return; // superseded
     p.setVolume(Math.round(this.volume * 100));
-    if (opts.autoplay) p.loadVideoById({ videoId: track.ref, startSeconds: opts.startAt ?? 0 });
+    // play() may have been called while the player was being created
+    if (this.wantPlay) p.loadVideoById({ videoId: track.ref, startSeconds: opts.startAt ?? 0 });
     else {
       p.cueVideoById({ videoId: track.ref, startSeconds: opts.startAt ?? 0 });
       this.cb.onTime(opts.startAt ?? 0, track.duration ?? 0);

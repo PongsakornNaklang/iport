@@ -35,4 +35,10 @@ export interface MediaAdapter {
   getDuration(): number;
   /** The host element changed (device switched); re-create iframes if needed. */
   rehost?(host: HTMLElement): void;
+  /**
+   * Called from a click while the sound is held back: lets the browser count
+   * a play() a moment later as started by the listener (Safari requires that),
+   * without making a sound.
+   */
+  prime?(): void;
 }

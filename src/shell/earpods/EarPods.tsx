@@ -12,7 +12,7 @@ import { player, usePlayer } from '../../core/player/player';
 import { playTone } from '../../core/sound/click';
 import type { DeviceModel } from '../../devices/types';
 import { liveOrientation, useStage } from '../stageStore';
-import { Rope } from './rope';
+import { Rope, type RopeOptions } from './rope';
 
 // EarPods dimensions in millimetres
 const MM = {
@@ -25,6 +25,22 @@ const MM = {
   tipWidth: 3.5,
 };
 const POINTS = 34;
+/**
+ * How the cable moves: fairly stiff (it resists every bend, and sharp ones
+ * strongly), stiffer still at the strain relief, and well damped, so shaking
+ * the iPod swings it rather than sending waves down it.
+ */
+const CABLE = (floor?: number): RopeOptions => ({
+  gravity: 2400,
+  damping: 0.955,
+  iterations: 30,
+  bend: 0.5,
+  maxBend: 25,
+  straighten: 0.3,
+  stiffTail: 5,
+  floor,
+  floorFrom: 4,
+});
 const MARK = 20; // marker offset, device px
 const MAX_PX_PER_MM = 7.5;
 
@@ -39,6 +55,7 @@ const sub = (a: Vec, b: Vec): Vec => ({ x: a.x - b.x, y: a.y - b.y });
 const add = (a: Vec, b: Vec): Vec => ({ x: a.x + b.x, y: a.y + b.y });
 const mul = (a: Vec, k: number): Vec => ({ x: a.x * k, y: a.y * k });
 const len = (a: Vec) => Math.hypot(a.x, a.y);
+const dot = (a: Vec, b: Vec) => a.x * b.x + a.y * b.y;
 const norm = (a: Vec): Vec => {
   const l = len(a) || 1;
   return { x: a.x / l, y: a.y / l };
@@ -115,6 +132,8 @@ export function useEarPods({
     from: { x: 0, y: 0 },
     fromAxis: { x: 0, y: -1 },
     insertOnly: false,
+    /** entering because play was pressed: hold the music until the click */
+    forPlay: false,
     drag: null as null | { id: number; index: number; plug: boolean; off: Vec; start: Vec; wasPlugged: boolean },
     yank: 0,
     idleSince: 0,
@@ -129,7 +148,7 @@ export function useEarPods({
       const s = sim.current;
       if (!enabledRef.current || !modelRef.current.jack) return;
       if (s.phase === 'plugged' || s.phase === 'entering') return;
-      beginEnter(false);
+      beginEnter(false, true);
     };
     if (usePlayer.getState().status === 'playing') start();
     return usePlayer.subscribe((st, prev) => {
@@ -165,16 +184,19 @@ export function useEarPods({
     return r ? { x: r.pts[r.count - 1].x, y: r.pts[r.count - 1].y } : null;
   }
 
-  function beginEnter(insertOnly: boolean) {
+  function beginEnter(insertOnly: boolean, forPlay = false) {
     const s = sim.current;
     const { w, h } = stageSize();
     const j = s.lastJack;
     if (!s.rope || s.phase === 'hidden') {
       const ax = Math.max(40, Math.min(w - 40, (j?.p.x ?? w / 2) + (modelRef.current.jack?.ny === -1 ? -60 : 70)));
       s.anchor = { x: ax, y: h + 40 };
-      const r = new Rope(POINTS, ax, h + 40, 18, 0, 1);
-      // start coiled just below the window so the plug appears right away
-      for (let i = 1; i < r.count; i++) r.place(i, ax + Math.sin(i * 0.9) * 10, h + 40 + i * 2);
+      // Short to begin with: the cable pays out as the plug rises (see
+      // `want` below). Starting with more cable than the distance it spans
+      // would fold the excess into loops.
+      const r = new Rope(POINTS, ax, h + 40, 2, 0, 1);
+      // start hanging straight down below the window: pulling the plug up
+      // then folds it into one smooth U out of view (a coil would snap into loops)
       r.pts[0].pinned = true;
       s.rope = r;
     }
@@ -185,6 +207,7 @@ export function useEarPods({
     s.fromAxis = wasHidden ? { x: 0, y: 1 } : plugAxis();
     s.t0 = performance.now();
     s.insertOnly = insertOnly;
+    s.forPlay = forPlay;
     s.phase = 'entering';
   }
 
@@ -360,6 +383,13 @@ export function useEarPods({
       gb.clearRect(0, 0, W, H);
       gf.clearRect(0, 0, W, H);
 
+      // No EarPods in, no sound: a play request waits for the plug's click.
+      // (Not while the plug just moves to another iPod's jack, and never for
+      // long: if the jack can't be found the music plays anyway.)
+      const canPlug = enabledRef.current && !!modelRef.current.jack;
+      const waiting = s.phase === 'entering' && s.forPlay && now - s.t0 < 2500;
+      player.setOutputHold(canPlug && (s.phase === 'hidden' || s.phase === 'free' || waiting));
+
       if (s.phase === 'hidden' || !s.rope) return;
       const r = s.rope;
       const jk = s.lastJack;
@@ -379,7 +409,7 @@ export function useEarPods({
         const dp = r.pts[s.drag.index];
         want = Math.max(want, (len(sub(dp, s.anchor)) + len(sub(dp, end))) * 1.05);
       }
-      r.rest += (want / (n - 1) - r.rest) * 0.06;
+      r.rest += (want / (n - 1) - r.rest) * 0.15;
 
       let axis: Vec = plugAxis();
       let axisMm: Vec = mul(axis, mm);
@@ -410,6 +440,8 @@ export function useEarPods({
           if (k >= 1) {
             s.phase = 'plugged';
             s.yank = 0;
+            s.forPlay = false;
+            player.setOutputHold(false); // the music starts with the click
             // the satisfying click
             playTone(2600, 18, { type: 'square', volume: 0.05 });
             playTone(160, 70, { type: 'sine', volume: 0.12, delayMs: 8 });
@@ -455,7 +487,7 @@ export function useEarPods({
       // (only once unplugged: while plugged in, spare cable hangs out of view)
       const floor = s.phase === 'free' ? H - Math.max(6, MM.cable * mm) : undefined;
       for (let i = 0; i < steps; i++)
-        r.step(dt / steps, { gravity: 2400, damping: 0.975, iterations: 24, bend: 0.3, maxBend: 40, stiffTail: 4, floor, floorFrom: 4 });
+        r.step(dt / steps, CABLE(floor));
 
       if (s.phase === 'free' || s.phase === 'retracting') {
         axis = plugAxis();
@@ -467,17 +499,28 @@ export function useEarPods({
       s.drawFront = dz > 0.12 || !!s.drag;
       const g = s.drawFront ? gf : gb;
       const tail = { x: r.pts[n - 1].x, y: r.pts[n - 1].y };
+      // How far along the plug the jack's opening is (mm from the housing):
+      // whatever is past it is inside the iPod and must not be drawn.
+      let cut = showTip ? -Infinity : 0;
+      const along = len(axisMm);
+      if (jk && (s.phase === 'entering' || s.phase === 'plugged') && along > 1e-3) {
+        const d = MM.housing + MM.relief + dot(sub(jk.p, tail), norm(axisMm)) / along;
+        if (d > -MM.tip) cut = Math.min(0, d);
+      }
       // the nearer of plug and cable is drawn last
       if (dz > 0.15) {
-        drawPlug(g, tail, axisMm, mm, dz, showTip);
+        drawPlug(g, tail, axisMm, mm, dz, cut);
         drawCable(g, r, MM.cable * mm);
       } else {
         drawCable(g, r, MM.cable * mm);
-        drawPlug(g, tail, axisMm, mm, dz, showTip);
+        drawPlug(g, tail, axisMm, mm, dz, cut);
       }
     };
     raf = requestAnimationFrame(loop);
-    return () => cancelAnimationFrame(raf);
+    return () => {
+      cancelAnimationFrame(raf);
+      player.setOutputHold(false);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 }
@@ -607,7 +650,7 @@ const CAP_FILL: Record<Section['kind'], [string, string]> = {
   ring: ['#2a2a2c', '#111'],
 };
 
-function drawPlug(g: CanvasRenderingContext2D, tail: Vec, axisMm: Vec, mm: number, dz: number, showTip: boolean) {
+function drawPlug(g: CanvasRenderingContext2D, tail: Vec, axisMm: Vec, mm: number, dz: number, cut: number) {
   const along = len(axisMm);
   const u = along > 1e-3 ? norm(axisMm) : { x: 0, y: 1 };
   const v = { x: -u.y, y: u.x };
@@ -616,7 +659,8 @@ function drawPlug(g: CanvasRenderingContext2D, tail: Vec, axisMm: Vec, mm: numbe
   const total = MM.housing + MM.relief;
   const at = (d: number): Vec => add(tail, mul(u, (d - total) * along));
 
-  const parts = PLUG.filter((p) => showTip || p.d0 >= 0);
+  // parts past `cut` (mm along the plug) are inside the iPod
+  const parts = PLUG.filter((p) => p.d1 > cut);
   // far to near: when the outward end points at us, larger d is nearer
   const order = dz >= 0 ? parts : [...parts].reverse();
 
@@ -653,12 +697,11 @@ function drawPlug(g: CanvasRenderingContext2D, tail: Vec, axisMm: Vec, mm: numbe
     if (round < 0.08) return;
     const nearD = dz >= 0 ? p.d1 : p.d0;
     const nearW = dz >= 0 ? p.w1 : p.w0;
-    // hidden when the next nearer part is at least as wide at the joint
+    // hidden when the next nearer part is (about) as wide at the joint:
+    // a step of a few percent reads as one surface, not as a ledge
     const next = order[i + 1];
-    if (next) {
-      const nextW = dz >= 0 ? next.w0 : next.w1;
-      if (nextW >= nearW * 0.98) return;
-    }
+    const nextW = next ? (dz >= 0 ? next.w0 : next.w1) : 0;
+    if (next && nextW >= nearW * 0.95) return;
     const c = at(nearD);
     const r = (nearW / 2) * mm;
     const [hi, lo] = CAP_FILL[p.kind];
@@ -667,12 +710,21 @@ function drawPlug(g: CanvasRenderingContext2D, tail: Vec, axisMm: Vec, mm: numbe
     grad.addColorStop(1, lo);
     g.fillStyle = grad;
     ellipse(c, r);
-    g.strokeStyle = 'rgba(0,0,0,0.12)';
-    g.lineWidth = Math.max(0.5, mm * 0.1);
-    g.beginPath();
-    g.ellipse(c.x, c.y, r, r * round, rot, 0, Math.PI * 2);
-    g.stroke();
   };
+
+  g.save();
+  if (cut > -Infinity) {
+    // keep only the cable side of the jack's opening
+    const o = at(cut);
+    const far = 1e4;
+    g.beginPath();
+    g.moveTo(o.x + v.x * far, o.y + v.y * far);
+    g.lineTo(o.x - v.x * far, o.y - v.y * far);
+    g.lineTo(o.x - v.x * far + u.x * far, o.y - v.y * far + u.y * far);
+    g.lineTo(o.x + v.x * far + u.x * far, o.y + v.y * far + u.y * far);
+    g.closePath();
+    g.clip();
+  }
 
   // soft shadow from the whole plug
   g.save();
@@ -687,18 +739,5 @@ function drawPlug(g: CanvasRenderingContext2D, tail: Vec, axisMm: Vec, mm: numbe
     body(p);
     nearCap(p, i);
   });
-
-  // fine seam between housing and strain relief (only when seen from the side)
-  if (round < 0.6) {
-    const s1 = add(at(MM.housing), mul(v, (-MM.width / 2) * mm));
-    const s2 = add(at(MM.housing), mul(v, (MM.width / 2) * mm));
-    g.save();
-    g.strokeStyle = 'rgba(0,0,0,0.12)';
-    g.lineWidth = Math.max(0.5, mm * 0.12);
-    g.beginPath();
-    g.moveTo(s1.x, s1.y);
-    g.lineTo(s2.x, s2.y);
-    g.stroke();
-    g.restore();
-  }
+  g.restore();
 }

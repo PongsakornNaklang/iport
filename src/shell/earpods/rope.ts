@@ -24,6 +24,11 @@ export interface RopeOptions {
   maxBend?: number;
   /** the last this-many joints (the end held by a plug) are 3× stiffer: a strain relief */
   stiffTail?: number;
+  /**
+   * 0..1, a gentle pull towards straight at every joint (a cable that resists
+   * any bend, not only sharp ones): higher is stiffer and springier.
+   */
+  straighten?: number;
   /** y of a floor the rope rests on (points from index `floorFrom` on) */
   floor?: number;
   floorFrom?: number;
@@ -109,6 +114,7 @@ export class Rope {
           const tail = i >= tailFrom;
           const f = tail ? tailFold : fold;
           if (d < f) this.solve(a, b, f, tail ? tailBend : o.bend);
+          else if (o.straighten && d < 2 * r) this.solve(a, b, 2 * r, o.straighten);
         }
       }
       if (o.floor != null) this.collideFloor(o.floor, o.floorFrom ?? 0);
