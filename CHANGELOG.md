@@ -42,6 +42,9 @@ The running app shows its version and build in the Help panel (?).
   letting go of the cable after pulling it no longer leaves it stuck in the
   air, and pulling it far enough yanks the plug out (and pauses); the cable
   is stiffer, can't get tied in loops, and springs back to a natural curve.
+- EarPods: let go of an unplugged plug and the EarPods leave the screen
+  (they used to lie along the bottom of the window); press play and they come
+  back. Dropping the plug right by the jack still plugs it back in.
 
 ## [1.0.0] - 2026-10-21
 

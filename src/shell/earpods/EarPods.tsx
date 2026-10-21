@@ -136,7 +136,6 @@ export function useEarPods({
     forPlay: false,
     drag: null as null | { id: number; index: number; plug: boolean; off: Vec; start: Vec; wasPlugged: boolean },
     yank: 0,
-    idleSince: 0,
     lastJack: null as Jack | null,
     drawFront: false,
     retractFrom: { x: 0, y: 0 },
@@ -224,7 +223,6 @@ export function useEarPods({
   function unplug() {
     const s = sim.current;
     s.phase = 'free';
-    s.idleSince = performance.now();
     const st = usePlayer.getState().status;
     if (st === 'playing' || st === 'loading') player.pause();
     playTone(700, 35, { type: 'triangle', volume: 0.08 });
@@ -303,8 +301,9 @@ export function useEarPods({
         const seat = add(j.p, mul(j.aMm, MM.housing + MM.relief + 0.3));
         if (len(sub(end, seat)) < Math.max(36, 9 * j.mm)) beginEnter(true);
       }
-      s.idleSince = performance.now();
-    };
+      // let go of an unplugged plug: the EarPods leave the screen
+      if (s.phase === 'free') beginRetract();
+      };
     el.addEventListener('pointerdown', down, true);
     el.addEventListener('pointermove', move);
     el.addEventListener('pointerup', up);
@@ -490,18 +489,17 @@ export function useEarPods({
         const held = s.drag?.index;
         if (held !== n - 1) r.pts[n - 1].pinned = false;
         if (held !== n - 2) r.pts[n - 2].pinned = false;
-        if (!s.drag && now - s.idleSince > 9000) beginRetract();
+        // unplugged and not held: the EarPods leave the screen
+        if (!s.drag) beginRetract();
       }
 
       // physics (2 substeps for stability)
       const steps = 2;
-      // the bottom of the window is a desk the cable can lie on (not near the anchor, which is below it)
-      // (only once unplugged: while plugged in, spare cable hangs out of view)
-      const floor = s.phase === 'free' ? H - Math.max(6, MM.cable * mm) : undefined;
+      // (no floor: spare cable hangs out of view below the window)
       for (let i = 0; i < steps; i++)
         // The strain relief is straight in 3D; pointing at (or away from) us it
         // looks short, so the cable may turn sooner on screen.
-        r.step(dt / steps, CABLE(floor, Math.round(5 * Math.min(1, len(axisMm) / Math.max(1e-3, mm)))));
+        r.step(dt / steps, CABLE(undefined, Math.round(5 * Math.min(1, len(axisMm) / Math.max(1e-3, mm)))));
       r.untangle();
       // Shape memory: plugged in and left alone, the cable eases towards its
       // natural curve, straight out of the strain relief and sweeping down to
