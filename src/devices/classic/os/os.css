@@ -1007,7 +1007,10 @@
   top: 50%;
   transform: translate(-50%, -50%);
   z-index: 40;
-  max-width: 220px;
+  width: max-content;
+  max-width: 250px;
+  box-sizing: border-box;
+  text-wrap: balance;
   padding: 10px 16px;
   border-radius: 10px;
   background: rgba(28, 28, 28, 0.84);

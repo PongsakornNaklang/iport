@@ -128,7 +128,7 @@ function PhotoGrid({ filter }: { filter?: string }) {
       return true;
     }
     if (e.type === 'click' && e.button === 'play') {
-      os.nav.push({ title: 'Slideshow', el: <Slideshow photos={photos} start={s} />, header: 'hidden' });
+      os.nav.push({ title: 'Slideshow', el: <Slideshow photos={photos} start={s} />, header: 'hidden', kind: 'slideshow' });
       return true;
     }
     return false;
@@ -179,7 +179,7 @@ function PhotoViewer({ photos, start }: { photos: Photo[]; start: number }) {
       return true;
     }
     if (e.type === 'click' && e.button === 'play') {
-      os.nav.push({ title: 'Slideshow', el: <Slideshow photos={photos} start={i} />, header: 'hidden' });
+      os.nav.push({ title: 'Slideshow', el: <Slideshow photos={photos} start={i} />, header: 'hidden', kind: 'slideshow' });
       return true;
     }
     if (e.type === 'click' && e.button === 'select') return true;

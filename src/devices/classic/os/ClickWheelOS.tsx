@@ -201,13 +201,18 @@ export function ClickWheelOS({
     setLit(true);
   }, []);
 
+  /** video, slideshows and games keep the backlight on */
+  const keepLit = useRef(false);
   useEffect(() => {
     if (!backlightSec) {
       setLit(true);
       return;
     }
     const t = window.setInterval(() => {
-      if (Date.now() - lastInput.current > backlightSec * 1000) setLit(false);
+      if (keepLit.current) {
+        lastInput.current = Date.now();
+        setLit(true);
+      } else if (Date.now() - lastInput.current > backlightSec * 1000) setLit(false);
     }, 400);
     return () => window.clearInterval(t);
   }, [backlightSec]);
@@ -359,6 +364,7 @@ export function ClickWheelOS({
   const entries = leaving ? [...stack, leaving] : stack;
   const mediaVisible = !!media?.req.visible && !anim && power === 'on' && !game && media.owner === top.id;
   const mediaUnder = mediaVisible && !!media?.req.under;
+  keepLit.current = power === 'on' && (mediaUnder || !!game || top.kind === 'slideshow');
 
   const cls = (e: Entry, i: number): string => {
     const isTop = e === top;
