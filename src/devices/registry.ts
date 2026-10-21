@@ -45,6 +45,19 @@ export const MODELS: DeviceModel[] = [
     ],
     engravable: true,
     jack: { x: -96, y: 395.5, z: 0, ny: 1, pxPerMm: 6.41 },
+    cover: {
+      radius: 54,
+      cases: true,
+      holes: [
+        { side: 'bottom', at: -96, len: 32, thick: 28 }, // headphone jack
+        { side: 'bottom', at: 0, len: 66, thick: 20 }, // Lightning
+        { side: 'bottom', at: 80, len: 74, thick: 16 }, // speaker
+        { side: 'top', at: 118, len: 48, thick: 18 }, // Sleep/Wake
+        { side: 'left', at: -245.5, len: 42, thick: 18 }, // volume up
+        { side: 'left', at: -199.5, len: 42, thick: 18 }, // volume down
+      ],
+      camera: { x: 53.6, y: 53.6, d: 42 },
+    },
     load: () => import('./touch7'),
   },
   {
@@ -89,6 +102,16 @@ export const MODELS: DeviceModel[] = [
     ],
     engravable: true,
     jack: { x: -86, y: 297.5, z: 0, ny: 1, pxPerMm: 7.78 },
+    cover: {
+      radius: 38,
+      cases: true,
+      holes: [
+        { side: 'bottom', at: -86, len: 36, thick: 32 }, // headphone jack
+        { side: 'bottom', at: 0, len: 70, thick: 22 }, // Lightning
+        { side: 'top', at: 88, len: 58, thick: 22 }, // Sleep/Wake
+        { side: 'left', at: -127.5, len: 132, thick: 22 }, // volume and play/pause
+      ],
+    },
     load: () => import('./nano7'),
   },
   {
@@ -118,6 +141,7 @@ export const MODELS: DeviceModel[] = [
     ],
     engravable: true,
     jack: { x: -92, y: -160.4, z: 15.5, ny: -1, pxPerMm: 10 },
+    // No sock yet: around the shuffle's body and clip it renders very slowly.
     load: () => import('./shuffle4'),
   },
   {
@@ -191,6 +215,15 @@ export const MODELS: DeviceModel[] = [
     ],
     engravable: true,
     jack: { x: -120.5, y: 326, z: 0, ny: 1, pxPerMm: 6.3 },
+    cover: {
+      radius: 42,
+      cases: true,
+      holes: [
+        { side: 'top', at: -130.5, len: 46, thick: 22, z: 2 }, // Hold switch
+        { side: 'bottom', at: -120.5, len: 38, thick: 34 }, // headphone jack
+        { side: 'bottom', at: 0, len: 150, thick: 26 }, // dock connector
+      ],
+    },
     load: () => import('./classic'),
   },
 ];

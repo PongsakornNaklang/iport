@@ -14,6 +14,14 @@ The running app shows its version and build in the Help panel (?).
 
 ## [Unreleased]
 
+### Added
+- Cases and iPod Socks, under Customize → Design. Silicone and leather cases
+  fit the iPod touch, nano and classic, with cut-outs for the buttons, ports
+  and the touch's camera. iPod Socks fit the same three, in the six colors
+  of Apple's 2004 set or any color you pick; the iPod's end shows through the
+  sock's opening. The buttons and screen still work through either. Presets
+  and share links keep the case.
+
 ### Changed
 - Panel tabs (Customize, Library) have a white thumb that slides to the
   chosen tab, and clicking a tab no longer leaves a focus ring on it.
@@ -24,6 +32,8 @@ The running app shows its version and build in the Help panel (?).
   for the iPod and its EarPods cable. Phones keep them along the bottom.
 
 ### Fixed
+- EarPods: in landscape (video on the iPod touch or nano) the plug stayed
+  where the jack was before the iPod turned. It now follows the jack.
 - The sides of every iPod are now one continuous surface. Seen edge-on or
   zoomed in they no longer show stripes, gaps or saw-tooth corners, and their
   shading (the iPod classic's mirror-steel back especially) is smooth instead

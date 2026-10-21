@@ -6,6 +6,7 @@
  */
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { Box3D, Device3D, EdgeDecal, Slab3D, type EdgeSlice } from '../../shell/Device3D';
+import { BodyExtras } from '../../shell/bodySlot';
 import { isTypingTarget } from '../../shell/keyboard';
 import { player, usePlayer } from '../../core/player/player';
 import { useLibrary } from '../../core/library/store';
@@ -307,6 +308,7 @@ export default function IpodNano7({ appearance }: DeviceProps) {
       height={H}
       depth={D}
       radius={R}
+      under={<BodyExtras />}
       backInset={3.5}
       breaks={NANO_BREAKS}
       edge={(t) => {

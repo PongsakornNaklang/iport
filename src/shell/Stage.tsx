@@ -4,6 +4,9 @@ import { getModel } from '../devices/registry';
 import type { DeviceModel, DeviceProps } from '../devices/types';
 import { liveOrientation, useStage } from './stageStore';
 import { JackMarkers, useEarPods } from './earpods/EarPods';
+import { BodySlotContext } from './bodySlot';
+import { Cover, type CoverInfo } from './cover/Cover';
+import { coverGeometry } from './cover/geometry';
 
 const lazyCache = new Map<string, LazyExoticComponent<ComponentType<DeviceProps>>>();
 function deviceComponent(model: DeviceModel) {
@@ -52,6 +55,24 @@ export function Stage() {
   const [fit, setFit] = useState(0.8);
   const [bars, setBars] = useState(() => barsFor(typeof window === 'undefined' ? 1200 : window.innerWidth));
 
+  // A case or sock the iPod is wearing, and the size it all takes up.
+  const coverKind = appearance.cover?.kind ?? 'none';
+  const coverColor = appearance.cover?.color ?? '#000';
+  const cover = useMemo<CoverInfo | null>(() => {
+    const fit = model.cover;
+    if (!fit || coverKind === 'none' || (coverKind !== 'sock' && !fit.cases)) return null;
+    return { fit, choice: { kind: coverKind, color: coverColor }, pxPerMm: model.jack?.pxPerMm ?? 6.4, size: model.size, jackNy: model.jack?.ny };
+  }, [model, coverKind, coverColor]);
+  const outer = useMemo(() => {
+    if (!cover || cover.choice.kind === 'none') return model.size;
+    const g = coverGeometry(cover.fit, cover.choice.kind, cover.pxPerMm, cover.size, cover.jackNy);
+    return {
+      width: Math.max(model.size.width, g.w),
+      height: Math.max(model.size.height, g.h + 2 * Math.abs(g.cy)),
+      depth: Math.max(model.size.depth, g.d),
+    };
+  }, [cover, model]);
+
   // Orientation lives in a ref and is applied directly to the DOM each frame.
   const st = useRef({
     rx: 0,
@@ -80,14 +101,14 @@ export function Stage() {
       setBars((cur) => (cur.bottom === b.bottom && cur.right === b.right ? cur : b));
       const usableH = Math.max(160, r.height - TOP_BAR - (inset.bottom || b.bottom));
       const usableW = Math.max(200, r.width - inset.left - inset.right - b.right);
-      const f = Math.min((usableH * fh) / model.size.height, (usableW * 0.86) / model.size.width);
+      const f = Math.min((usableH * fh) / outer.height, (usableW * 0.86) / outer.width);
       setFit(clamp(f, 0.2, 3));
     };
     measure();
     const ro = new ResizeObserver(measure);
     ro.observe(el);
     return () => ro.disconnect();
-  }, [model, inset]);
+  }, [model, inset, outer]);
 
   // Toolbar-requested views.
   useEffect(() => {
@@ -106,8 +127,8 @@ export function Stage() {
   spinRef.current = spinning;
   const sceneRef = useRef(scene);
   sceneRef.current = scene;
-  const modelRef = useRef(model);
-  modelRef.current = model;
+  const sizeRef = useRef(outer);
+  sizeRef.current = outer;
   useEffect(() => {
     let raf = 0;
     const loop = (now: number) => {
@@ -168,8 +189,8 @@ export function Stage() {
     el.style.setProperty('--vz', (-Math.cos(rxRad) * Math.cos(ryRad)).toFixed(3));
     const sh = shadowRef.current;
     if (sh) {
-      const m = modelRef.current;
-      const w = Math.abs(Math.cos(ryRad)) * m.size.width + Math.abs(Math.sin(ryRad)) * m.size.depth;
+      const m = sizeRef.current;
+      const w = Math.abs(Math.cos(ryRad)) * m.width + Math.abs(Math.sin(ryRad)) * m.depth;
       sh.style.width = `${w * 1.05}px`;
       sh.style.opacity = String(0.55 + 0.25 * Math.abs(Math.cos(rxRad)));
     }
@@ -241,6 +262,16 @@ export function Stage() {
   useEarPods({ wrap: wrapRef, back: backCanvas, front: frontCanvas, markers: jackRef, model, enabled: scene.earpods !== false });
 
   const Device = useMemo(() => deviceComponent(model), [model]);
+  // inside the device's own 3D root, so they turn with it (see bodySlot)
+  const bodyExtras = useMemo(
+    () => (
+      <>
+        {cover && <Cover info={cover} />}
+        <JackMarkers model={model} markerRef={jackRef} />
+      </>
+    ),
+    [cover, model],
+  );
   const scale = fit * zoom;
   const shiftX = (inset.left - inset.right - bars.right) / 2;
   const centerY = (TOP_BAR - (inset.bottom || bars.bottom)) / 2;
@@ -263,7 +294,7 @@ export function Stage() {
         <div
           className="stage-shadow"
           ref={shadowRef}
-          style={{ transform: `translate(calc(-50% + ${shiftX}px), ${(model.size.height / 2) * scale + centerY + 14}px) scale(${scale})` }}
+          style={{ transform: `translate(calc(-50% + ${shiftX}px), ${(outer.height / 2) * scale + centerY + 14}px) scale(${scale})` }}
         />
       )}
       {/* EarPods cable behind the iPod (and on top when the jack faces the camera) */}
@@ -272,9 +303,10 @@ export function Stage() {
         <div className="stage-rot" ref={rotRef}>
           <div className="device-enter" key={model.id} style={{ width: model.size.width, height: model.size.height }}>
             <Suspense fallback={<div className="device-loading" style={{ width: model.size.width, height: model.size.height }} />}>
-              <Device model={model} appearance={appearance} />
+              <BodySlotContext.Provider value={bodyExtras}>
+                <Device model={model} appearance={appearance} />
+              </BodySlotContext.Provider>
             </Suspense>
-            <JackMarkers model={model} markerRef={jackRef} />
           </div>
         </div>
       </div>

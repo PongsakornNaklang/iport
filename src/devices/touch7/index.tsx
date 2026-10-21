@@ -4,6 +4,7 @@
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Box3D, Device3D, EdgeDecal } from '../../shell/Device3D';
+import { BodyExtras } from '../../shell/bodySlot';
 import { isTypingTarget } from '../../shell/keyboard';
 import { player } from '../../core/player/player';
 import type { DeviceProps } from '../types';
@@ -217,6 +218,7 @@ export default function IpodTouch({ model, appearance }: DeviceProps) {
         height={height}
         depth={depth}
         radius={RADIUS}
+        under={<BodyExtras />}
         breaks={[0.085]}
         frontInset={FRONT_INSET}
         backInset={BACK_INSET}

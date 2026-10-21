@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { Box3D, Device3D, type CornerRadii, type EdgeSlice } from '../../shell/Device3D';
+import { BodyExtras } from '../../shell/bodySlot';
 import { isTypingTarget } from '../../shell/keyboard';
 import { usePlaylists } from '../../core/library/selectors';
 import { useSettings } from '../../core/settings/store';
@@ -167,6 +168,8 @@ export default function IpodShuffle({ model, appearance }: DeviceProps) {
 
   return (
     <div ref={rootRef} className={`s4 ${power ? 's4-on' : 's4-off'}`} style={{ width: W, height: H, ...vars }}>
+      {/* a sock goes on before anything else (see shell/cover) */}
+      <BodyExtras />
       <div className="s4-asm" style={{ transform: `translateZ(${BODY_CZ}px)` }}>
         {/*
          * The flat parts on the top edge are painted BEFORE the body. Chrome

@@ -81,6 +81,12 @@ export interface Facet {
   base: FacetLayer;
   /** the band's back color, faded in over the facet with `mask` */
   blend?: FacetLayer & { mask: string };
+  /**
+   * The facet's local frame in shell coordinates: origin, unit axes along
+   * its width and height, and its outward normal. A point p lands at
+   * ((p - O)·U, (p - O)·V) on the facet's w × h box.
+   */
+  frame: { O: V3; U: V3; V: V3; N: V3 };
 }
 
 export interface Band {
@@ -95,7 +101,7 @@ export interface Band {
   cb: string;
 }
 
-type V3 = [number, number, number];
+export type V3 = [number, number, number];
 type V2 = [number, number];
 
 const sub3 = (a: V3, b: V3): V3 => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
@@ -129,7 +135,15 @@ const FACE_GAP = 0.08;
  * profile changes abruptly (a seam, the edge of the cover glass): bands start
  * and end exactly there, and a jump in the inset becomes a step.
  */
-export function makeBands(edge: (t: number) => ShellSlice, depth: number, breaks: number[] = []): Band[] {
+/** How finely the sides follow the profile: band length (px of depth) and curve tolerance (px). */
+export interface ShellDetail {
+  bandPx?: number;
+  curveTol?: number;
+}
+
+export function makeBands(edge: (t: number) => ShellSlice, depth: number, breaks: number[] = [], detail: ShellDetail = {}): Band[] {
+  const bandPx = detail.bandPx ?? BAND_PX;
+  const curveTol = detail.curveTol ?? CURVE_TOL;
   const at = (t: number) => edge(Math.min(1, Math.max(0, t)));
   const inset = (t: number) => at(t).inset ?? 0;
   const cuts = [0, ...breaks.filter((b) => b > EPS && b < 1 - EPS).sort((a, b) => a - b), 1];
@@ -164,14 +178,14 @@ export function makeBands(edge: (t: number) => ShellSlice, depth: number, breaks
       const tm = (ta + tb) / 2;
       const mid = at(tm);
       const im = mid.inset ?? 0;
-      if (level < 8 && (tb - ta) * depth > 0.15 && Math.abs(im - (ia + ib) / 2) > CURVE_TOL) {
+      if (level < 8 && (tb - ta) * depth > 0.15 && Math.abs(im - (ia + ib) / 2) > curveTol) {
         split(ta, tm, ia, im, ca, mid.color, level + 1);
         split(tm, tb, im, ib, mid.color, cb, level + 1);
         return;
       }
       push({ ta, tb, ia, ib, ca, cb });
     };
-    const n = Math.max(1, Math.round(((s1 - s0) * depth) / BAND_PX));
+    const n = Math.max(1, Math.round(((s1 - s0) * depth) / bandPx));
     for (let k = 0; k < n; k++) {
       const ta = s0 + ((s1 - s0) * k) / n;
       const tb = s0 + ((s1 - s0) * (k + 1)) / n;
@@ -219,9 +233,17 @@ export function cornerFacets(R: number): number {
  * corners are elliptical with the given radii; the outline at inset i has
  * radii pulled in by i (as CSS draws an inset box with the same corners).
  */
-export function buildShell(W: number, H: number, depth: number, radius: Radius, edge: (t: number) => ShellSlice, breaks?: number[]): Facet[] {
+export function buildShell(
+  W: number,
+  H: number,
+  depth: number,
+  radius: Radius,
+  edge: (t: number) => ShellSlice,
+  breaks?: number[],
+  detail?: ShellDetail,
+): Facet[] {
   const half = depth / 2;
-  const bands = makeBands(edge, depth, breaks);
+  const bands = makeBands(edge, depth, breaks, detail);
   const { x: rx, y: ry } = cornerRadii(radius);
   const facets: Facet[] = [];
   // corner centres (the same at every inset) and the quarter each one covers
@@ -318,7 +340,7 @@ export function buildShell(W: number, H: number, depth: number, radius: Radius, 
         !step && b.cb !== b.ca
           ? { ...layer(b.cb, b.ib), mask: `linear-gradient(#0000 ${f(overTop)}px, #000 ${f(overTop + h)}px)` }
           : undefined;
-      out.push({ key: `${bi}-${key}`, matrix, w, h: hh, clip, base, blend });
+      out.push({ key: `${bi}-${key}`, matrix, w, h: hh, clip, base, blend, frame: { O, U, V: Vn, N } });
     };
 
     // straight walls (each runs between its corners whatever the inset)

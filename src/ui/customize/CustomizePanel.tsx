@@ -10,7 +10,7 @@ import {
   type Preset,
 } from '../../core/customize/store';
 import { getModel } from '../../devices/registry';
-import type { DeviceModel, OptionDef } from '../../devices/types';
+import type { CoverKind, DeviceModel, OptionDef } from '../../devices/types';
 import { useStage } from '../../shell/stageStore';
 import { ModelThumb } from '../ModelPicker';
 import { Panel } from '../Panel';
@@ -99,6 +99,8 @@ function DesignTab({ model }: { model: DeviceModel }) {
         ))}
       </div>
 
+      {model.cover && <CoverSection model={model} />}
+
       {model.options && model.options.length > 0 && (
         <div className="section">
           <div className="section-title">Options</div>
@@ -142,6 +144,85 @@ function DesignTab({ model }: { model: DeviceModel }) {
         </button>
       </div>
     </>
+  );
+}
+
+/** Colors each kind of cover came in. */
+const COVER_COLORS: Record<Exclude<CoverKind, 'none'>, { name: string; color: string }[]> = {
+  silicone: [
+    { name: 'Black', color: '#1f1f21' },
+    { name: 'White', color: '#f1f1ef' },
+    { name: 'Midnight Blue', color: '#2b3a57' },
+    { name: 'Pink Sand', color: '#e6c3b7' },
+    { name: 'Red', color: '#c3132f' },
+    { name: 'Mint', color: '#b4dbc4' },
+    { name: 'Lavender', color: '#b7a5d6' },
+    { name: 'Yellow', color: '#f1d24a' },
+  ],
+  leather: [
+    { name: 'Saddle Brown', color: '#8a5a34' },
+    { name: 'Tan', color: '#be8a57' },
+    { name: 'Black', color: '#262324' },
+    { name: 'Midnight', color: '#27324a' },
+    { name: 'Oxblood', color: '#5c1f25' },
+  ],
+  // the six in the 2004 iPod Socks box
+  sock: [
+    { name: 'Grey', color: '#8e9196' },
+    { name: 'Purple', color: '#7a57a5' },
+    { name: 'Blue', color: '#3a7fc4' },
+    { name: 'Green', color: '#6eb14b' },
+    { name: 'Orange', color: '#ee8936' },
+    { name: 'Pink', color: '#eb8fb2' },
+  ],
+};
+
+function CoverSection({ model }: { model: DeviceModel }) {
+  const a = useAppearance(model.id);
+  const setCover = useCustomize((s) => s.setCover);
+  const cases = !!model.cover?.cases;
+  const kind: CoverKind = a.cover?.kind ?? 'none';
+  const current = kind === 'none' || (kind !== 'sock' && !cases) ? 'none' : kind;
+  const items = [
+    { id: 'none' as const, label: 'None' },
+    ...(cases ? [{ id: 'silicone' as const, label: 'Silicone' }, { id: 'leather' as const, label: 'Leather' }] : []),
+    { id: 'sock' as const, label: 'iPod Socks' },
+  ];
+  const palette = current === 'none' ? [] : COVER_COLORS[current];
+  const color = a.cover?.color ?? '#888888';
+  const named = palette.find((c) => c.color === color.toLowerCase());
+  return (
+    <div className="section">
+      <div className="section-title">
+        {cases ? 'Case' : 'Accessory'} {current !== 'none' && <span className="cz-finish-name">{named ? named.name : 'Custom'}</span>}
+      </div>
+      <SegTabs
+        className="cz-seg"
+        items={items}
+        value={current}
+        onChange={(k) => setCover({ kind: k, color: k === 'none' ? color : COVER_COLORS[k][0].color })}
+      />
+      {current !== 'none' && (
+        <div className="swatches cz-cover-colors">
+          {palette.map((c) => (
+            <button
+              key={c.color}
+              className={`swatch ${color.toLowerCase() === c.color ? 'on' : ''}`}
+              style={{ background: c.color }}
+              title={c.name}
+              aria-label={c.name}
+              onClick={() => setCover({ kind: current, color: c.color })}
+            />
+          ))}
+          <input type="color" className="color-input" value={toHex(color)} onChange={(e) => setCover({ kind: current, color: e.target.value })} aria-label="Custom color" title="Custom color" />
+        </div>
+      )}
+      {current === 'sock' && (
+        <p className="tiny" style={{ marginTop: 8 }}>
+          Apple’s knitted socks from 2004. The buttons still work through the fabric.
+        </p>
+      )}
+    </div>
   );
 }
 

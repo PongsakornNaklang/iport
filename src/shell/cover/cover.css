@@ -1,0 +1,114 @@
+/* Cases and iPod Socks (Cover.tsx). --cv is the material color, --mm one millimetre. */
+.cv {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0;
+  height: 0;
+  transform-style: preserve-3d;
+  pointer-events: none;
+}
+.cv .d3-face {
+  pointer-events: none;
+}
+
+.cv-fill,
+.cv-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+
+/* the lip: a border with the opening masked out (the inner edge follows the corner) */
+.cv-ring {
+  border-style: solid;
+  border-color: transparent;
+  background-origin: border-box;
+  background-clip: border-box;
+  mask:
+    linear-gradient(#000 0 0) padding-box exclude,
+    linear-gradient(#000 0 0);
+  -webkit-mask:
+    linear-gradient(#000 0 0) padding-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+}
+
+/* ---------------------------------------------------------------- silicone */
+.cv-silicone .cv-tex {
+  background:
+    radial-gradient(130% 90% at 28% 18%, rgba(255, 255, 255, 0.13), transparent 60%),
+    linear-gradient(160deg, var(--cv-hi), var(--cv) 40%, var(--cv-lo));
+}
+.cv-silicone .cv-ring {
+  background:
+    linear-gradient(160deg, var(--cv-hi), var(--cv) 40%, var(--cv-lo)) border-box;
+}
+.cv-silicone .cv-stitch {
+  display: none;
+}
+
+/* ----------------------------------------------------------------- leather */
+.cv-leather .cv-tex,
+.cv-leather .cv-ring {
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' seed='7'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -1.4 1.05'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E") 0 0 / 120px 120px border-box,
+    radial-gradient(120% 90% at 30% 20%, rgba(255, 236, 214, 0.16), transparent 62%) border-box,
+    linear-gradient(160deg, var(--cv-hi), var(--cv) 42%, var(--cv-lo)) border-box;
+}
+.cv-stitch {
+  position: absolute;
+  border: calc(var(--mm) * 0.16) dashed color-mix(in srgb, var(--cv) 35%, #f4e6d2);
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+/* ---------------------------------------------------------------- iPod Socks */
+.cv-knit {
+  background-color: var(--cv);
+  background-image:
+    radial-gradient(110% 80% at 50% 40%, rgba(255, 255, 255, 0.16), transparent 70%),
+    var(--cv-knit);
+  background-size:
+    100% 100%,
+    var(--cv-stitch);
+  /* the fabric bulges: darker where it rolls over the edge */
+  box-shadow: inset 0 0 calc(var(--mm) * 2.5) color-mix(in srgb, var(--cv) 70%, #000);
+}
+/* the ribbed cuff at the mouth */
+.cv-cuff {
+  position: absolute;
+  left: 0;
+  right: 0;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      rgba(0, 0, 0, 0.2) 0 calc(var(--mm) * 0.35),
+      rgba(255, 255, 255, 0.12) calc(var(--mm) * 0.55) calc(var(--mm) * 1.05),
+      rgba(0, 0, 0, 0.2) calc(var(--mm) * 1.3)
+    ),
+    color-mix(in srgb, var(--cv) 92%, #fff);
+  box-shadow: 0 0 calc(var(--mm) * 0.8) rgba(0, 0, 0, 0.28);
+}
+/* fabric is never quite flat: a soft crease */
+.cv-fold {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(104deg, transparent 38%, rgba(0, 0, 0, 0.07) 46%, rgba(255, 255, 255, 0.06) 52%, transparent 60%);
+  pointer-events: none;
+}
+.cv-knit-back .cv-fold {
+  transform: scaleX(-1);
+}
+
+/*
+ * A cover is hollow: through the hairlines between its pieces you look
+ * inside, at the far wall from behind. Show the walls from both sides, or
+ * the page shows through as a light line along the edges.
+ */
+.cv .d3-facet,
+.cv .d3-facet i,
+.cv .d3-face {
+  backface-visibility: visible;
+  -webkit-backface-visibility: visible;
+}
