@@ -125,9 +125,18 @@ export default function IpodClassic({ model, appearance }: DeviceProps) {
   // vertical position helpers for edge parts (z: + towards the front)
   const zAt = (t: number) => D / 2 - t * D;
   const insetAt = (t: number) => (t < FRONT_T + SEAM_T ? 0 : steelInset((t - FRONT_T - SEAM_T) / (1 - FRONT_T - SEAM_T)));
+  // How steeply the edge curves in towards the back at depth t (degrees);
+  // parts on the edge are tilted to match.
+  const slopeAt = (t: number) => (Math.atan((insetAt(t + 0.01) - insetAt(t - 0.01)) / (0.02 * D)) * 180) / Math.PI;
+  /** where a part centred at depth t sits, `gap` px out from the surface along its normal */
+  const onEdge = (t: number, gap: number) => {
+    const a = (slopeAt(t) * Math.PI) / 180;
+    return { inset: insetAt(t) - gap * Math.cos(a), z: zAt(t) - gap * Math.sin(a), tilt: slopeAt(t) };
+  };
   const portT = 0.5;
-  const portZ = zAt(portT);
-  const portInset = insetAt(portT);
+  const port = onEdge(portT, 0.35);
+  const holdT = 0.47;
+  const holdSlot = onEdge(holdT, 0.35);
 
   const frontStyle: CSSProperties = {
     ['--al' as string]: front,
@@ -177,16 +186,16 @@ export default function IpodClassic({ model, appearance }: DeviceProps) {
       decals={
         <>
           {/* ---- top edge: Hold switch slot ---- */}
-          <EdgePlane x={holdX} y={-H / 2 + insetAt(0.47) - 0.35} z={zAt(0.47)} w={44} h={13} side="top">
+          <EdgePlane x={holdX} y={-H / 2 + holdSlot.inset} z={holdSlot.z} w={44} h={13} side="top" tilt={holdSlot.tilt}>
             <div className={`cl-hold-slot ${hold ? 'on' : ''}`}>
               <div className="cl-hold-orange" />
             </div>
           </EdgePlane>
           {/* ---- bottom edge: headphone jack (EarPods plug in here) + dock connector ---- */}
-          <EdgePlane x={-W / 2 + 74} y={H / 2 - portInset + 0.35} z={portZ} w={30} h={30} side="bottom">
+          <EdgePlane x={-W / 2 + 74} y={H / 2 - port.inset} z={port.z} w={30} h={30} side="bottom" tilt={port.tilt}>
             <div className="cl-jack" />
           </EdgePlane>
-          <EdgePlane x={0} y={H / 2 - portInset + 0.35} z={portZ} w={136} h={20} side="bottom">
+          <EdgePlane x={0} y={H / 2 - port.inset} z={port.z} w={136} h={20} side="bottom" tilt={port.tilt}>
             <div className="cl-dock">
               <div className="cl-dock-pins" />
             </div>
@@ -196,11 +205,12 @@ export default function IpodClassic({ model, appearance }: DeviceProps) {
     >
       <Box3D
         x={knobX}
-        y={-H / 2 + insetAt(0.47) - 1.1}
-        z={zAt(0.47)}
+        y={-H / 2 + insetAt(holdT) - 1.1}
+        z={zAt(holdT)}
         w={20}
         h={3}
         d={9}
+        rotate={`rotateX(${holdSlot.tilt.toFixed(2)}deg)`}
         color={shade(steelKnob, -0.15)}
         faces={{
           top: `repeating-linear-gradient(90deg, ${shade(steelKnob, 0.1)} 0 2px, ${shade(steelKnob, -0.08)} 2px 3.5px)`,
@@ -219,8 +229,14 @@ export default function IpodClassic({ model, appearance }: DeviceProps) {
 }
 
 /** A flat part lying on the top/bottom edge, facing outwards. */
-function EdgePlane({ x, y, z, w, h, side, children }: { x: number; y: number; z: number; w: number; h: number; side: 'top' | 'bottom'; children: React.ReactNode }) {
-  const rot = side === 'top' ? 'rotateX(90deg)' : 'rotateX(-90deg)';
+/**
+ * A flat part on the top or bottom edge (the Hold slot, the ports). The steel
+ * edge curves, so the part is tilted by `tilt` degrees to lie along the
+ * surface at its centre: a tangent plane stays outside a convex surface, so
+ * the edge never covers part of it.
+ */
+function EdgePlane({ x, y, z, w, h, side, tilt = 0, children }: { x: number; y: number; z: number; w: number; h: number; side: 'top' | 'bottom'; tilt?: number; children: React.ReactNode }) {
+  const rot = side === 'top' ? `rotateX(${90 + tilt}deg)` : `rotateX(${-90 - tilt}deg)`;
   return (
     <div className="d3-decal" style={{ transform: `translate3d(${x}px, ${y}px, ${z}px) ${rot}` }}>
       <div style={{ position: 'absolute', width: w, height: h, marginLeft: -w / 2, marginTop: -h / 2 }}>{children}</div>

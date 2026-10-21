@@ -20,6 +20,8 @@ The running app shows its version and build in the Help panel (?).
   shading (the iPod classic's mirror-steel back especially) is smooth instead
   of banded.
 - Spinning the iPod classic and iPod nano is noticeably smoother.
+- The iPod classic's headphone jack, dock connector and Hold switch follow
+  the curve of the steel edge, so the edge no longer hides part of them.
 
 ## [1.0.0] - 2026-10-21
 

@@ -199,6 +199,12 @@ export function buildShell(W: number, H: number, depth: number, R: number, edge:
   // touch a face's plane exactly, rounding lets their edge poke through it.
   const zAt = (t: number) => (t <= 0 ? half - FACE_GAP : t >= 1 ? -half + FACE_GAP : half - t * depth);
 
+  // Facets in a recess (a step, or a band between two steps, like the
+  // classic's seam groove) go last. The rest of the shell is convex, so no
+  // facet crosses another's plane; a recess does, and Chrome's 3D sort cuts
+  // every later layer along the planes of earlier ones (cut edges sparkle).
+  const recessed: Facet[] = [];
+
   bands.forEach((b, bi) => {
     const za = zAt(b.ta);
     const zb = zAt(b.tb);
@@ -208,6 +214,7 @@ export function buildShell(W: number, H: number, depth: number, R: number, edge:
     // or across a step (it would cover part of a recessed seam).
     const step = b.ta === b.tb;
     const isStep = (x?: Band) => !x || x.ta === x.tb;
+    const out = step || (bi > 0 && isStep(bands[bi - 1]) && isStep(bands[bi + 1])) ? recessed : facets;
     const overTop = bi === 0 || step || isStep(bands[bi - 1]) ? 0 : OVER;
     const overBottom = bi === bands.length - 1 || step || isStep(bands[bi + 1]) ? 0 : OVER;
 
@@ -275,7 +282,7 @@ export function buildShell(W: number, H: number, depth: number, R: number, edge:
         !step && b.cb !== b.ca
           ? { ...layer(b.cb, b.ib), mask: `linear-gradient(#0000 ${f(overTop)}px, #000 ${f(overTop + h)}px)` }
           : undefined;
-      facets.push({ key: `${bi}-${key}`, matrix, w, h: hh, clip, base, blend });
+      out.push({ key: `${bi}-${key}`, matrix, w, h: hh, clip, base, blend });
     };
 
     // straight walls (each runs from R to W-R / H-R whatever the inset)
@@ -300,5 +307,5 @@ export function buildShell(W: number, H: number, depth: number, R: number, edge:
       }
     });
   });
-  return facets;
+  return [...facets, ...recessed];
 }

@@ -173,13 +173,6 @@ function Shell({
       {/* just inside each face, never in its plane (coplanar layers flicker) */}
       {cap(half - 0.04, frontInset, front, 1)}
       {cap(-half + 0.04, backInset, back, -1)}
-      {lining.map((l) => (
-        <div
-          key={l.t}
-          className="d3-slice"
-          style={{ inset: l.inset, borderRadius: Math.max(0, radius - l.inset), background: l.color, transform: `translateZ(${(half - l.t * depth).toFixed(2)}px)` }}
-        />
-      ))}
       {facets.map((fa) => (
         <div key={fa.key} className="d3-facet" style={{ width: fa.w, height: fa.h, transform: fa.matrix, clipPath: fa.clip }}>
           <i style={{ width: fa.base.w, height: fa.base.h, background: fa.base.color, transform: fa.base.matrix }} />
@@ -189,6 +182,18 @@ function Shell({
             </b>
           )}
         </div>
+      ))}
+      {/*
+        * Painted after the sides: Chrome's 3D sort cuts every later layer
+        * along the planes of earlier ones, and cut edges sparkle. Inside the
+        * shell these cross nothing, so nothing gets cut.
+        */}
+      {lining.map((l) => (
+        <div
+          key={l.t}
+          className="d3-slice"
+          style={{ inset: l.inset, borderRadius: Math.max(0, radius - l.inset), background: l.color, transform: `translateZ(${(half - l.t * depth).toFixed(2)}px)` }}
+        />
       ))}
     </>
   );
