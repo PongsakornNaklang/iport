@@ -358,6 +358,7 @@ export function ClickWheelOS({
   const headerStyle = top.header ?? 'light';
   const entries = leaving ? [...stack, leaving] : stack;
   const mediaVisible = !!media?.req.visible && !anim && power === 'on' && !game && media.owner === top.id;
+  const mediaUnder = mediaVisible && !!media?.req.under;
 
   const cls = (e: Entry, i: number): string => {
     const isTop = e === top;
@@ -381,8 +382,12 @@ export function ClickWheelOS({
 
   return (
     <OSContext.Provider value={api}>
-      <div className={`cl-os cl-theme-${theme} ${color ? '' : 'cl-mono'}`} style={rootStyle}>
-        <MediaLayer visible={mediaVisible} style={mediaVisible ? media!.req.style : undefined} fit={media?.req.fit ?? 'contain'} />
+      <div className={`cl-os cl-theme-${theme} ${color ? '' : 'cl-mono'} ${mediaUnder ? 'cl-media-under' : ''}`} style={rootStyle}>
+        <MediaLayer
+          visible={mediaVisible}
+          style={mediaVisible ? { ...media!.req.style, ...(mediaUnder ? { zIndex: 0 } : null) } : undefined}
+          fit={media?.req.fit ?? 'contain'}
+        />
         <div className="cl-stack">
           {entries.map((e, i) => (
             <ScreenHost key={e.id} id={e.id} active={e === top && !game && !locked && !ringing} className={cls(e, i)} padTop={(e.header ?? 'light') === 'light' ? hdr : 0}>

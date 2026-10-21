@@ -318,7 +318,7 @@ function VideoView({ t }: { t: Track }) {
     setPoke((p) => p + 1);
   }, [t.id]);
 
-  useMedia({ visible: true, style: {}, fit: fitScreen ? 'cover' : 'contain' });
+  useMedia({ visible: true, style: {}, fit: fitScreen ? 'cover' : 'contain', under: true });
 
   useInput((e) => {
     if (e.type === 'scroll') {

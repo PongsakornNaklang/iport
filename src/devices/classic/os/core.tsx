@@ -106,6 +106,8 @@ export interface MediaRequest {
   visible: boolean;
   style?: CSSProperties;
   fit?: 'contain' | 'cover';
+  /** draw the picture beneath the screen (full-screen video with on-screen overlays) */
+  under?: boolean;
 }
 
 export interface MenuOption {

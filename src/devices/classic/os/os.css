@@ -330,6 +330,9 @@
 .cl-dot-off {
   visibility: hidden;
 }
+.cl-row-artv .cl-dot {
+  margin: 0 -3px 0 3px;
+}
 .cl-sel .cl-dot {
   background: #fff;
 }
@@ -789,9 +792,13 @@
   fill: #eee;
   stroke: #eee;
 }
-/* video screens are transparent so the media layer shows through */
+/* video screens are black; while the picture plays beneath them they turn
+   transparent so the media layer shows through under the on-screen overlays */
 .cl-scr:has(.cl-video) {
   background: #000;
+}
+.cl-media-under .cl-scr:has(.cl-video) {
+  background: transparent;
 }
 
 /* ------------------------------------------------------------------ Cover Flow */
