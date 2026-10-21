@@ -33,6 +33,10 @@ The running app shows its version and build in the Help panel (?).
 - EarPods: pressing play starts the music with the click of the plug, not
   before; the part of the plug inside the jack is no longer drawn over the
   iPod while it goes in, and the stray line across the plug is gone.
+- EarPods: the plug stays round where it meets the jack from every angle;
+  letting go of the cable after pulling it no longer leaves it stuck in the
+  air, and pulling it far enough yanks the plug out (and pauses); the cable
+  is stiffer, can't get tied in loops, and springs back to a natural curve.
 
 ## [1.0.0] - 2026-10-21
 

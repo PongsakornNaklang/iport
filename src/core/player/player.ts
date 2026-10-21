@@ -397,8 +397,10 @@ export const player = {
 
   pause() {
     active?.pause();
-    if (outputHeld && wantsSound()) {
-      set({ status: 'paused' });
+    // Paused as of now, not when the media's pause event arrives: by then the
+    // EarPods may be holding the sound, and that ignores pause events.
+    if (wantsSound()) {
+      set({ status: get().currentId ? 'paused' : 'idle' });
       saveBookmarkNow();
       updateMediaSessionState();
     }

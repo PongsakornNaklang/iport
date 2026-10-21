@@ -30,14 +30,14 @@ const POINTS = 34;
  * strongly), stiffer still at the strain relief, and well damped, so shaking
  * the iPod swings it rather than sending waves down it.
  */
-const CABLE = (floor?: number): RopeOptions => ({
+const CABLE = (floor?: number, stiffTail = 5): RopeOptions => ({
   gravity: 2400,
-  damping: 0.955,
-  iterations: 30,
-  bend: 0.5,
-  maxBend: 25,
-  straighten: 0.3,
-  stiffTail: 5,
+  damping: 0.93,
+  iterations: 40,
+  bend: 0.9,
+  maxBend: 15,
+  straighten: 0.8,
+  stiffTail,
   floor,
   floorFrom: 4,
 });
@@ -292,7 +292,9 @@ export function useEarPods({
         /* not captured */
       }
       if (!s.rope) return;
-      if (s.phase !== 'plugged') s.rope.pts[d.index].pinned = false;
+      // let go of the cable (the plug end and the cable's exit from it stay
+      // pinned while plugged in: the plugged phase pins them every frame)
+      if (s.phase !== 'plugged' || d.index < s.rope.count - 2) s.rope.pts[d.index].pinned = false;
       s.rope.pts[0].pinned = true;
       // dropped next to the jack → plug it back in
       const j = s.lastJack;
@@ -407,7 +409,14 @@ export function useEarPods({
       let want = len(sub(end, s.anchor)) * 1.03 + 10 + 3 * mm;
       if (s.drag) {
         const dp = r.pts[s.drag.index];
-        want = Math.max(want, (len(sub(dp, s.anchor)) + len(sub(dp, end))) * 1.05);
+        const i = Math.max(1, s.drag.index);
+        // Enough cable from below the window up to your hand. While plugged
+        // in, the bit between your hand and the plug doesn't grow: pull too
+        // far and it yanks the plug out (see the plugged phase below).
+        want =
+          s.phase === 'plugged'
+            ? Math.max(want, (len(sub(dp, s.anchor)) * (n - 1) * 1.03) / i)
+            : Math.max(want, (len(sub(dp, s.anchor)) + len(sub(dp, end))) * 1.05);
       }
       r.rest += (want / (n - 1) - r.rest) * 0.15;
 
@@ -450,18 +459,21 @@ export function useEarPods({
         r.pts[n - 1].pinned = true;
         r.moveTo(n - 1, pos.x, pos.y);
         axis = norm(axisMm);
-        pinExit(r, pos, axis);
+        pinExit(r, pos, axis, len(axisMm) / mm);
       } else if (s.phase === 'plugged' && jk) {
         r.pts[n - 1].pinned = true;
         r.moveTo(n - 1, seat.x, seat.y);
         axisMm = jk.aMm;
         dz = jk.dz;
         axis = norm(jk.aMm);
-        if (len(jk.aMm) > mm * 0.35) pinExit(r, seat, axis);
+        if (len(jk.aMm) > mm * 0.35) pinExit(r, seat, axis, len(jk.aMm) / mm);
         else r.pts[n - 2].pinned = false;
         showTip = false;
-        // a hard yank on the cable pulls the plug out
-        if (r.stretch(n - 3) > 2.4 || r.stretch(n - 4) > 2.4) s.yank++;
+        // a hard yank on the cable pulls the plug out: the cable between
+        // your hand and the plug pulled well past its length
+        const held = s.drag && !s.drag.plug ? s.drag.index : -1;
+        const taut = held > 0 && len(sub(r.pts[held], seat)) > (n - 1 - held) * r.rest * 1.35;
+        if (taut || r.stretch(n - 3) > 2.4 || r.stretch(n - 4) > 2.4) s.yank++;
         else s.yank = Math.max(0, s.yank - 1);
         if (s.yank > 5 && s.drag) unplug();
       } else if (s.phase === 'retracting') {
@@ -487,7 +499,31 @@ export function useEarPods({
       // (only once unplugged: while plugged in, spare cable hangs out of view)
       const floor = s.phase === 'free' ? H - Math.max(6, MM.cable * mm) : undefined;
       for (let i = 0; i < steps; i++)
-        r.step(dt / steps, CABLE(floor));
+        // The strain relief is straight in 3D; pointing at (or away from) us it
+        // looks short, so the cable may turn sooner on screen.
+        r.step(dt / steps, CABLE(floor, Math.round(5 * Math.min(1, len(axisMm) / Math.max(1e-3, mm)))));
+      r.untangle();
+      // Shape memory: plugged in and left alone, the cable eases towards its
+      // natural curve, straight out of the strain relief and sweeping down to
+      // where it comes from below the window. Shakes still swing it, but odd
+      // shapes a 2D stand-in for a 3D cable can get into never stay.
+      if ((s.phase === 'plugged' || s.phase === 'entering') && !s.drag) {
+        const tail = r.pts[n - 1];
+        const reach = len(sub(tail, s.anchor));
+        const p1 = add(s.anchor, { x: 0, y: -reach * 0.4 });
+        const p2 = add(tail, mul(axis, reach * 0.35));
+        r.blendTo((i) => {
+          const t = i / (n - 1);
+          const a = (1 - t) ** 3;
+          const b = 3 * (1 - t) ** 2 * t;
+          const c = 3 * (1 - t) * t * t;
+          const d = t ** 3;
+          return {
+            x: a * s.anchor.x + b * p1.x + c * p2.x + d * tail.x,
+            y: a * s.anchor.y + b * p1.y + c * p2.y + d * tail.y,
+          };
+        }, s.phase === 'plugged' ? 0.05 : 0.03);
+      }
 
       if (s.phase === 'free' || s.phase === 'retracting') {
         axis = plugAxis();
@@ -526,9 +562,10 @@ export function useEarPods({
 }
 
 // pin the second-to-last point so the cable leaves the strain relief straight
-function pinExit(r: Rope, tail: Vec, axis: Vec) {
+// (`f`: how foreshortened the plug is on screen, 1 = seen side-on)
+function pinExit(r: Rope, tail: Vec, axis: Vec, f = 1) {
   const n = r.count;
-  const p = add(tail, mul(axis, r.rest));
+  const p = add(tail, mul(axis, r.rest * Math.max(0.25, Math.min(1, f))));
   r.pts[n - 2].pinned = true;
   r.moveTo(n - 2, p.x, p.y);
 }
@@ -712,11 +749,21 @@ function drawPlug(g: CanvasRenderingContext2D, tail: Vec, axisMm: Vec, mm: numbe
     ellipse(c, r);
   };
 
-  g.save();
-  if (cut > -Infinity) {
-    // keep only the cable side of the jack's opening
+  // A part that crosses the jack's opening is cut off there. The edge where
+  // a round plug meets the iPod is the opening's ellipse, not a straight line:
+  // keep the cable side of the opening, and when that side faces us, also the
+  // near half of the ellipse (where the plug's round surface meets the iPod).
+  // Parts wholly outside are drawn whole, so their ends stay round.
+  const drawCut = (p: Section, draw: () => void) => {
+    if (!(p.d0 < cut)) {
+      draw();
+      return;
+    }
     const o = at(cut);
+    const k = Math.max(0, Math.min(1, (cut - p.d0) / (p.d1 - p.d0)));
+    const r = ((p.w0 + (p.w1 - p.w0) * k) / 2) * mm;
     const far = 1e4;
+    g.save();
     g.beginPath();
     g.moveTo(o.x + v.x * far, o.y + v.y * far);
     g.lineTo(o.x - v.x * far, o.y - v.y * far);
@@ -724,7 +771,17 @@ function drawPlug(g: CanvasRenderingContext2D, tail: Vec, axisMm: Vec, mm: numbe
     g.lineTo(o.x + v.x * far + u.x * far, o.y + v.y * far + u.y * far);
     g.closePath();
     g.clip();
-  }
+    draw();
+    g.restore();
+    if (dz > 0 && round > 0.02) {
+      g.save();
+      g.beginPath();
+      g.ellipse(o.x, o.y, r, r * round, rot, 0, Math.PI * 2);
+      g.clip();
+      draw();
+      g.restore();
+    }
+  };
 
   // soft shadow from the whole plug
   g.save();
@@ -732,12 +789,13 @@ function drawPlug(g: CanvasRenderingContext2D, tail: Vec, axisMm: Vec, mm: numbe
   g.shadowBlur = Math.max(3, mm * 1.6);
   g.shadowOffsetY = Math.max(2, mm * 0.8);
   g.fillStyle = '#e9e9ec';
-  for (const p of parts) if (p.kind === 'plastic') body(p);
+  for (const p of parts) if (p.kind === 'plastic') drawCut(p, () => body(p));
   g.restore();
 
-  order.forEach((p, i) => {
-    body(p);
-    nearCap(p, i);
-  });
-  g.restore();
+  order.forEach((p, i) =>
+    drawCut(p, () => {
+      body(p);
+      nearCap(p, i);
+    }),
+  );
 }

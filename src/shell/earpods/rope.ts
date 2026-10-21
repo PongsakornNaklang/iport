@@ -121,6 +121,53 @@ export class Rope {
     }
   }
 
+  /**
+   * Ease the free points towards a target shape by `k` (0..1) without adding
+   * velocity: a gentle shape memory.
+   */
+  blendTo(target: (i: number) => { x: number; y: number }, k: number): void {
+    for (let i = 0; i < this.pts.length; i++) {
+      const p = this.pts[i];
+      if (p.pinned) continue;
+      const t = target(i);
+      const dx = (t.x - p.x) * k;
+      const dy = (t.y - p.y) * k;
+      p.x += dx;
+      p.px += dx;
+      p.y += dy;
+      p.py += dy;
+    }
+  }
+
+  /**
+   * Remove small loops: where the cable crosses itself within `span`
+   * segments, lay the points in between straight across. A stiff cable held
+   * at both ends can't unwind a loop on its own (it would have to kink).
+   * Returns whether anything changed.
+   */
+  untangle(span = 14): boolean {
+    const pts = this.pts;
+    const n = pts.length;
+    let changed = false;
+    for (let i = 0; i < n - 3; i++) {
+      for (let j = i + 2; j <= Math.min(n - 2, i + span); j++) {
+        if (!segmentsCross(pts[i], pts[i + 1], pts[j], pts[j + 1])) continue;
+        const a = pts[i];
+        const b = pts[j + 1];
+        for (let k = i + 1; k <= j; k++) {
+          const p = pts[k];
+          if (p.pinned) continue;
+          const t = (k - i) / (j + 1 - i);
+          p.x = p.px = a.x + (b.x - a.x) * t;
+          p.y = p.py = a.y + (b.y - a.y) * t;
+        }
+        changed = true;
+        break;
+      }
+    }
+    return changed;
+  }
+
   /** Keep points above the floor, with friction while touching it. */
   private collideFloor(floor: number, from: number): void {
     for (let i = from; i < this.pts.length; i++) {
@@ -179,4 +226,13 @@ export class Rope {
     const b = this.pts[i + 1];
     return Math.hypot(b.x - a.x, b.y - a.y) / this.rest;
   }
+}
+
+function segmentsCross(a: RopePoint, b: RopePoint, c: RopePoint, d: RopePoint): boolean {
+  const o = (p: RopePoint, q: RopePoint, r: RopePoint) => (q.x - p.x) * (r.y - p.y) - (q.y - p.y) * (r.x - p.x);
+  const d1 = o(c, d, a);
+  const d2 = o(c, d, b);
+  const d3 = o(a, b, c);
+  const d4 = o(a, b, d);
+  return ((d1 > 0 && d2 < 0) || (d1 < 0 && d2 > 0)) && ((d3 > 0 && d4 < 0) || (d3 < 0 && d4 > 0));
 }

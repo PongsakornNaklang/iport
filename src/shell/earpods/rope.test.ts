@@ -65,4 +65,25 @@ describe('rope', () => {
     for (let i = 0; i < 60; i++) stiff.step(1 / 120, { ...opts, maxBend: 40, stiffTail: 1 });
     expect(turnAt(stiff, 1)).toBeLessThan(15);
   });
+
+  it('pulls small loops straight', () => {
+    const r = new Rope(12, 0, 0, 10, 1, 0);
+    // tie a loop into the middle: the cable goes on, curls back and crosses itself
+    const loop: [number, number][] = [[38, -8], [32, -16], [24, -10], [28, 5], [36, 4], [46, 0]];
+    loop.forEach(([x, y], k) => r.place(4 + k, x, y));
+    for (let k = 10; k < 12; k++) r.place(k, 56 + (k - 10) * 10, 0);
+    const crosses = () => {
+      for (let i = 0; i < r.count - 3; i++)
+        for (let j = i + 2; j < r.count - 1; j++) {
+          const [a, b, c, d] = [r.pts[i], r.pts[i + 1], r.pts[j], r.pts[j + 1]];
+          const o = (p: typeof a, q: typeof a, s: typeof a) => (q.x - p.x) * (s.y - p.y) - (q.y - p.y) * (s.x - p.x);
+          if (o(c, d, a) * o(c, d, b) < 0 && o(a, b, c) * o(a, b, d) < 0) return true;
+        }
+      return false;
+    };
+    expect(crosses()).toBe(true);
+    expect(r.untangle()).toBe(true);
+    expect(crosses()).toBe(false);
+    expect(r.untangle()).toBe(false);
+  });
 });
