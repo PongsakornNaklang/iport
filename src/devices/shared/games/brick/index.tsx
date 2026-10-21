@@ -145,6 +145,7 @@ class BrickGame implements GameImpl {
   private pw = PADDLE_W;
   private py: number;
   private hold = 0;
+  private holdWait = 0;
   private score = 0;
   private lives = 3;
   private level = 1;
@@ -265,7 +266,9 @@ class BrickGame implements GameImpl {
       return;
     }
     if (e.type === 'down' && (e.button === 'prev' || e.button === 'next')) {
+      // a touch on the wheel's rim starts as a press and may turn into a swipe: wait a moment
       this.hold = e.button === 'prev' ? -1 : 1;
+      this.holdWait = 0.15;
       return;
     }
     if (e.type === 'up' && (e.button === 'prev' || e.button === 'next')) {
@@ -304,7 +307,7 @@ class BrickGame implements GameImpl {
 
     const { w } = this.env;
     if (this.demo) this.aiMove();
-    this.pTarget += this.hold * 380 * dt;
+    if (this.hold && (this.holdWait -= dt) <= 0) this.pTarget += this.hold * 380 * dt;
     this.wideT = Math.max(0, this.wideT - dt);
     this.slowT = Math.max(0, this.slowT - dt);
     this.pw += ((this.wideT > 0 ? WIDE_W : PADDLE_W) - this.pw) * approach(10, dt);
@@ -354,6 +357,7 @@ class BrickGame implements GameImpl {
         this.bonus = 100 * this.level;
         this.score += this.bonus;
         this.caps = [];
+        this.balls = [];
         this.setPhase('clear');
         sfx.levelUp();
         for (let i = 0; i < 5; i++) {

@@ -3,6 +3,7 @@
  *  - `useOS`    runtime state (screen, lock, foreground app, overlays…)
  *  - `usePrefs` persisted touch-only preferences (home layout, toggles, timers…)
  */
+import { useEffect } from 'react';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { playLock } from '../../../core/sound/click';
@@ -33,7 +34,7 @@ export interface AlertAction {
 }
 
 export interface AlertSpec {
-  title: string;
+  title?: string;
   message?: string;
   input?: { placeholder?: string; value?: string };
   actions: AlertAction[];
@@ -292,4 +293,74 @@ export const os = {
     if (v && prefs().rotationLock) return;
     S({ landscape: v });
   },
+
+  // ---------------------------------------------------------------- Home button
+  homeClick() {
+    const st = G();
+    if (!st.screenOn) {
+      os.wake();
+      return;
+    }
+    if (st.overlay === 'siri') {
+      S({ overlay: null });
+      return;
+    }
+    if (st.locked) {
+      if (st.passcode) S({ passcode: false });
+      else os.unlock();
+      return;
+    }
+    if (st.alert) {
+      S({ alert: null });
+      return;
+    }
+    if (st.menu) {
+      S({ menu: null });
+      return;
+    }
+    if (st.overlay) {
+      S({ overlay: null, edgeDrag: null });
+      return;
+    }
+    if (st.jiggle) {
+      S({ jiggle: false });
+      return;
+    }
+    if (st.app) {
+      os.goHome();
+      return;
+    }
+    if (st.homePage !== 0) S({ homePage: 0 });
+  },
+  homeDouble() {
+    const st = G();
+    if (!st.screenOn || st.locked) return;
+    if (st.overlay === 'switcher') {
+      S({ overlay: null });
+      return;
+    }
+    os.openSwitcher();
+  },
+  homeLong() {
+    const st = G();
+    if (!st.screenOn) S({ screenOn: true });
+    S({ overlay: 'siri', menu: null, edgeDrag: null });
+  },
 };
+
+// ------------------------------------------------------------------ status bar overrides
+
+
+type BarStyle = 'light' | 'dark' | 'hidden';
+let barSeq = 0;
+export const useBarOverrides = create<{ list: { token: number; app: string; style: BarStyle }[] }>(() => ({ list: [] }));
+
+/** While mounted (and `enabled`), force the status bar style for `app`. */
+export function useStatusBar(app: string, style: BarStyle | null, enabled = true) {
+  useEffect(() => {
+    if (!enabled || !style) return;
+    const token = ++barSeq;
+    useBarOverrides.setState((s) => ({ list: [...s.list, { token, app, style }] }));
+    return () => useBarOverrides.setState((s) => ({ list: s.list.filter((x) => x.token !== token) }));
+  }, [app, style, enabled]);
+}

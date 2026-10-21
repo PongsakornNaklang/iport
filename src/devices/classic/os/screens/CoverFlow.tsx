@@ -13,7 +13,7 @@ const TOP = 34;
 const SIDE_X = 74;
 const SPACING = 25;
 const ANGLE = 72;
-const FLIP_SIZE = 184;
+const FLIP_SIZE = 164;
 
 /**
  * Cover Flow: album covers in 3D perspective with reflections. Wheel to
@@ -27,14 +27,40 @@ export function CoverFlow() {
     () => [...albums(tracks)].sort((a, b) => compareTitles(a.artist, b.artist) || compareTitles(a.title, b.title)),
     [tracks],
   );
-  const [target, setTarget] = useState(() => {
+  const [targetState, setTargetState] = useState<{ i: number; key: string | null }>(() => {
     const cur = usePlayer.getState().currentId;
     const t = cur ? useLibrary.getState().tracks[cur] : undefined;
     const k = t ? albumKey(t) : null;
-    return Math.max(0, list.findIndex((a) => a.key === k));
+    const i = Math.max(0, list.findIndex((a) => a.key === k));
+    return { i, key: list[i]?.key ?? null };
   });
+  // keep the same album in the middle when the library changes underneath
+  const keyed = targetState.key ? list.findIndex((a) => a.key === targetState.key) : -1;
+  const target = keyed >= 0 ? keyed : targetState.i;
+  const setTarget = (fn: (x: number) => number) => {
+    const i = clamp(fn(target), 0, Math.max(0, list.length - 1));
+    setTargetState({ i, key: list[i]?.key ?? null });
+  };
   const [pos, setPos] = useState(target);
   const [flipped, setFlipped] = useState(false);
+  const [flipT, setFlipT] = useState(0);
+  useEffect(() => {
+    const from = flipT;
+    const to = flipped ? 1 : 0;
+    if (from === to) return;
+    const t0 = performance.now();
+    const dur = 520;
+    let raf = 0;
+    const step = (now: number) => {
+      const k = Math.min(1, (now - t0) / dur);
+      const e = k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+      setFlipT(from + (to - from) * e);
+      if (k < 1) raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [flipped]);
   const [trackSel, setTrackSel] = useState(0);
   const anim = useRef({ x: target, v: 0, target, raf: 0, last: 0 });
 
@@ -66,7 +92,13 @@ export function CoverFlow() {
     };
     a.raf = requestAnimationFrame(loop);
   }, [t]);
-  useEffect(() => () => cancelAnimationFrame(anim.current.raf), []);
+  useEffect(
+    () => () => {
+      cancelAnimationFrame(anim.current.raf);
+      anim.current.raf = 0;
+    },
+    [],
+  );
 
   const album: AlbumInfo | undefined = list[Math.round(clamp(pos, 0, Math.max(0, n - 1)))];
   const centerAlbum = list[t];
@@ -121,16 +153,15 @@ export function CoverFlow() {
     const x = ad <= 1 ? d * SIDE_X : s * (SIDE_X + (ad - 1) * SPACING);
     const rot = -s * Math.min(1, ad) * ANGLE;
     const z = -Math.min(1, ad) * 70;
-    const isFlip = flipped && i === t;
+    const isCenter = i === t;
+    const f = isCenter ? flipT : 0;
     const style: CSSProperties = {
-      transform: isFlip
-        ? `translate3d(0, ${(COVER - FLIP_SIZE) / 2 + 6}px, 40px) rotateY(180deg) scale(${FLIP_SIZE / COVER})`
-        : `translate3d(${x.toFixed(2)}px, 0, ${z.toFixed(2)}px) rotateY(${rot.toFixed(2)}deg)`,
-      zIndex: isFlip ? 2000 : 1000 - Math.round(ad * 10),
-      opacity: flipped && !isFlip ? 0.25 : 1,
+      transform: `translate3d(${(x * (1 - f)).toFixed(2)}px, ${(f * 4).toFixed(2)}px, ${(z * (1 - f) + Math.sin(f * Math.PI) * -40).toFixed(2)}px) rotateY(${(rot * (1 - f) + 180 * f).toFixed(2)}deg)`,
+      zIndex: isCenter && flipT > 0 ? 2000 : 1000 - Math.round(ad * 10),
+      opacity: isCenter ? 1 : 1 - flipT * 0.75,
     };
     covers.push(
-      <div key={a.key} className={`cl-cf-cover ${isFlip ? 'cl-cf-flipped' : ''}`} style={style}>
+      <div key={a.key} className="cl-cf-cover" style={style}>
         <div className="cl-cf-front">
           <Artwork src={a.artwork} size={COVER} />
           <div className="cl-cf-reflect">
@@ -161,11 +192,11 @@ export function CoverFlow() {
 function CoverBack({ album, sel, active }: { album: AlbumInfo; sel: number; active: boolean }) {
   const tracks = useTracks();
   const current = usePlayer((s) => s.currentId);
-  const rowH = 12.5;
+  const rowH = 17;
   const visible = 7;
   const top = clamp(sel - visible + 1, 0, Math.max(0, album.trackIds.length - visible));
   return (
-    <div className="cl-cf-back" style={{ width: COVER, height: COVER }}>
+    <div className="cl-cf-back" style={{ width: FLIP_SIZE, height: FLIP_SIZE, left: (COVER - FLIP_SIZE) / 2, top: (COVER - FLIP_SIZE) / 2 }}>
       <div className="cl-cf-back-head">
         <div className="cl-cf-back-title">{album.title}</div>
         <div className="cl-cf-back-artist">{album.artist}</div>
@@ -177,7 +208,7 @@ function CoverBack({ album, sel, active }: { album: AlbumInfo; sel: number; acti
           return (
             <div key={id} className={`cl-cf-back-row ${i === sel && active ? 'cl-sel' : ''}`} style={{ height: rowH }}>
               <span className="cl-cf-back-name">{tr?.title}</span>
-              {id === current ? <SpeakerGlyph size={7} /> : <span className="cl-cf-back-time">{formatTime(tr?.duration)}</span>}
+              {id === current ? <SpeakerGlyph size={10} /> : <span className="cl-cf-back-time">{formatTime(tr?.duration)}</span>}
             </div>
           );
         })}

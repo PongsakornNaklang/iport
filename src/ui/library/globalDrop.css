@@ -1,0 +1,86 @@
+.gdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(8, 10, 14, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 140ms ease, visibility 0s linear 140ms;
+}
+.gdrop.on {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 140ms ease;
+}
+.gdrop-box {
+  width: min(520px, 100%);
+  padding: 40px 28px;
+  border-radius: 24px;
+  border: 2px dashed rgba(106, 168, 255, 0.85);
+  background: rgba(30, 60, 110, 0.28);
+  color: #e9f1ff;
+  text-align: center;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.45), inset 0 0 60px rgba(59, 140, 255, 0.15);
+  transform: scale(0.97);
+  transition: transform 160ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.gdrop.on .gdrop-box {
+  transform: scale(1);
+}
+.gdrop-box svg {
+  color: #8fbfff;
+  margin-bottom: 10px;
+}
+.gdrop-title {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.gdrop-sub {
+  margin-top: 6px;
+  font-size: 13.5px;
+  color: rgba(233, 241, 255, 0.72);
+}
+
+.gdrop-hud {
+  position: fixed;
+  left: 50%;
+  top: calc(var(--topbar-h, 56px) + 12px);
+  transform: translateX(-50%);
+  z-index: 95;
+  width: min(360px, calc(100vw - 32px));
+  padding: 10px 14px 12px;
+  border-radius: 14px;
+  background: rgba(30, 31, 36, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+  font-size: 12.5px;
+  color: #f2f2f4;
+  pointer-events: none;
+}
+.gdrop-hud-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 8px;
+}
+.gdrop-hud-text span {
+  color: #a6a7ad;
+}
+.gdrop-hud-bar {
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.12);
+  overflow: hidden;
+}
+.gdrop-hud-bar > div {
+  height: 100%;
+  background: #3b8cff;
+  transition: width 140ms;
+}

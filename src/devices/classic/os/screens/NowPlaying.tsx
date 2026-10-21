@@ -91,9 +91,10 @@ function MusicView({ t }: { t: Track }) {
     [],
   );
 
-  const showYouTube = active && kind === 'youtube' && hasVideo && (status === 'playing' || status === 'paused');
+  const playerError = usePlayer((s) => s.error);
+  const showYouTube = active && kind === 'youtube' && hasVideo && status === 'playing' && !playerError;
   const art = { left: 12, top: 14, size: 126 };
-  useMedia(showYouTube ? { visible: true, style: { left: art.left, top: os.hdr + art.top, width: art.size, height: art.size }, fit: 'cover' } : null);
+  useMedia(showYouTube ? { visible: true, style: { inset: `${os.hdr + art.top}px auto auto ${art.left}px`, width: art.size, height: art.size }, fit: 'cover' } : null);
 
   useInput((e) => {
     if (e.type === 'scroll') {
@@ -153,7 +154,7 @@ function MusicView({ t }: { t: Track }) {
       songMenu(os, t.id, 'nowplaying');
       return true;
     }
-    if (e.button === 'select') return true;
+    if ((e.type === 'down' || e.type === 'up' || e.type === 'repeat') && e.button === 'select') return true;
     return false;
   });
 

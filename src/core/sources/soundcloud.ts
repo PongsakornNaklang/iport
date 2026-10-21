@@ -218,3 +218,9 @@ function setToTracks(r: ScSet): { tracks: Track[]; title: string } {
     ),
   };
 }
+
+/** Search SoundCloud tracks (server-side, best effort — SoundCloud has no keyless public search API). */
+export async function soundcloudSearch(q: string): Promise<Track[]> {
+  const r = await apiJson<{ tracks: ScItem[] }>('soundcloud', { q });
+  return (r.tracks ?? []).map((t) => scTrack(t));
+}

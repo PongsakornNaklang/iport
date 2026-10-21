@@ -173,6 +173,9 @@ export interface NanoData {
   serial: string;
   timerSeconds: number;
   timerAction: 'alarm' | 'sleep';
+  invert: boolean;
+  mono: boolean;
+  turnForVideo: boolean;
 }
 
 function serialNo(): string {
@@ -208,6 +211,9 @@ const DATA_DEFAULTS: NanoData = {
   serial: serialNo(),
   timerSeconds: 15 * 60,
   timerAction: 'alarm',
+  invert: false,
+  mono: false,
+  turnForVideo: true,
 };
 
 interface NanoDataActions {

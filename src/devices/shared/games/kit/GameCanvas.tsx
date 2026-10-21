@@ -108,6 +108,7 @@ export function GameCanvas({ bus, width, height, onExit, color, create }: GamePr
 
     const env: GameEnv = { w: width, h: height, color, exit, pause };
     const game = create(env);
+    (window as unknown as Record<string, unknown>).__game = game; // TEMP-HARNESS
 
     const off = bus.on((e: WheelEvent) => {
       if (exited) return true;

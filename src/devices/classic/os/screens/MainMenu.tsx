@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useArtworkUrls } from '../../../../core/library/artwork';
 import { albums, podcasts, radioStations, songs, useTracks } from '../../../../core/library/selectors';
 import { useLibrary } from '../../../../core/library/store';
-import { player, useCurrentTrack, usePlayer } from '../../../../core/player/player';
+import { useCurrentTrack, usePlayer } from '../../../../core/player/player';
 import { useSettings } from '../../../../core/settings/store';
 import { useOS } from '../core';
 import { ListView, type Row } from '../ListView';
@@ -170,7 +170,7 @@ function ArtPanel({ kind, width, height }: { kind: string; width: number; height
     });
   }, [slideKey, url, kind]);
 
-  const size = Math.round(Math.max(width, height) * 1.22);
+  const size = Math.round(Math.max(width, height) * 1.1);
   return (
     <div className="cl-art-panel" style={{ width, height }}>
       {layers.map((l, i) => (

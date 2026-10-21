@@ -4,13 +4,14 @@
  * Reusable: give it a WheelBus, a screen size, color/monochrome and
  * capability flags. The iPod classic device renders it at 320×240.
  */
-import { lazy, memo, Suspense, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import { lazy, memo, Suspense, type ComponentType, type LazyExoticComponent, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { MediaLayer } from '../../../core/player/MediaLayer';
 import { player } from '../../../core/player/player';
 import { useSettings } from '../../../core/settings/store';
 import { useAlarmState } from '../../../core/alarms';
 import { WheelBus, type WheelButton, type WheelEvent } from '../../shared/clickwheel/bus';
 import { GAMES } from '../../shared/games/registry';
+import type { GameProps } from '../../shared/games/types';
 import {
   FULL_CAPS,
   InputStack,
@@ -291,7 +292,7 @@ export function ClickWheelOS({
       }
       if (!(e.type === 'up' || (e.type === 'touch' && !e.active) || (e.type === 'repeat' && e.button === 'menu'))) wake();
       // Hold Play/Pause for ~2 s: sleep
-      if (e.button === 'play' && (e.type === 'hold' || e.type === 'repeat')) {
+      if ((e.type === 'hold' || e.type === 'repeat') && e.button === 'play') {
         if (e.type === 'repeat' && e.count === 14) {
           player.pause();
           setMenuSpec(null);
@@ -403,7 +404,7 @@ export function ClickWheelOS({
           </div>
         )}
         {/* LCD: brightness, backlight, power */}
-        <div className="cl-lcd-dim" style={{ opacity: (1 - brightness) * 0.5 }} />
+        <div className="cl-lcd-dim" style={{ opacity: Math.max(0, 0.85 - brightness) * 0.55 }} />
         <div className={`cl-backlight ${lit ? '' : 'cl-backlight-off'}`} />
         {(power === 'boot' || power === 'reboot') && (
           <div className={`cl-boot cl-boot-${bootStyle} ${power === 'reboot' ? 'cl-boot-blank' : ''}`}>
@@ -444,7 +445,7 @@ const ScreenHost = memo(function ScreenHost({
 
 // ------------------------------------------------------------------ games
 
-const gameCache = new Map<string, ReturnType<typeof lazy>>();
+const gameCache = new Map<string, LazyExoticComponent<ComponentType<GameProps>>>();
 
 function GameHost({ id, width, height, color, onExit }: { id: string; width: number; height: number; color: boolean; onExit: () => void }) {
   const gameBus = useMemo(() => new WheelBus(), []);

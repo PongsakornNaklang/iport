@@ -6,7 +6,7 @@
 import type { Track } from '../types';
 import { apiText, fetchWithTimeout, firstOk, secureUrl, SourceError } from './net';
 import { itunes, itunesArtwork, type ItunesResult } from './itunes';
-import { parseClock, stripHtml } from './text';
+import { decodeEntities, parseClock, stripHtml } from './text';
 import { attrOf, child, childrenNamed, find, parseXml, textOf, type XmlEl } from './xml';
 import { makeTrack } from './track';
 
@@ -90,6 +90,12 @@ export function parseApplePodcastUrl(input: string): string | null {
 const MEDIA_EXT = /\.(mp3|m4a|m4b|aac|ogg|oga|opus|wav|mp4|m4v|mov|webm)(\?|#|$)/i;
 const VIDEO_EXT = /\.(mp4|m4v|mov|webm)(\?|#|$)/i;
 
+/** Titles are plain text (but often double-escaped): decode, collapse whitespace. */
+function cleanTitle(s: string | undefined, fallback: string): string {
+  const t = decodeEntities(s ?? '').replace(/\s+/g, ' ').trim();
+  return (t.length > 300 ? `${t.slice(0, 299)}…` : t) || fallback;
+}
+
 function parseDate(s: string | undefined): number | undefined {
   if (!s) return undefined;
   let t = Date.parse(s);
@@ -131,7 +137,7 @@ export function parseFeed(xml: string): Feed {
   const channel = rss ? child(rss, 'channel') : (atom ?? (rdf ? child(rdf, 'channel') : undefined));
   if (!channel) throw new SourceError('This address isn’t a podcast feed.');
 
-  const title = stripHtml(textOf(channel, 'title') ?? 'Podcast', 300);
+  const title = cleanTitle(textOf(channel, 'title'), 'Podcast');
   const author = stripHtml(textOf(channel, 'itunes:author', 'author', 'managingEditor', 'dc:creator', 'googleplay:author') ?? '', 200) || undefined;
   const authorAtom = atom ? textOf(child(channel, 'author'), 'name') : undefined;
   const artwork =
@@ -148,7 +154,7 @@ export function parseFeed(xml: string): Feed {
   for (const it of itemEls) {
     const media = mediaOf(it);
     if (!media || !/^https?:\/\//i.test(media.url)) continue;
-    const t = stripHtml(textOf(it, 'title', 'itunes:title') ?? 'Episode', 300);
+    const t = cleanTitle(textOf(it, 'title', 'itunes:title'), 'Episode');
     const ep = parseInt(textOf(it, 'itunes:episode') ?? '', 10);
     const season = parseInt(textOf(it, 'itunes:season') ?? '', 10);
     const video = /^video\//i.test(media.type ?? '') || (!media.type && VIDEO_EXT.test(media.url));
