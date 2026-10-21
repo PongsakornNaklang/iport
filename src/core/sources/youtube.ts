@@ -24,7 +24,8 @@ export interface YouTubeRef {
 export function parseYouTubeUrl(input: string): YouTubeRef | null {
   const s = input.trim();
   if (!s) return null;
-  if (VIDEO_ID.test(s) && !/^[a-z]+$/i.test(s)) return { videoId: s };
+  // bare id (but not an 11-letter word): ids almost always contain digits, _ - or inner capitals
+  if (VIDEO_ID.test(s) && (/[0-9_-]/.test(s) || /[A-Z]/.test(s.slice(1)))) return { videoId: s };
   let u: URL;
   try {
     u = new URL(/^[a-z][a-z0-9+.-]*:\/\//i.test(s) ? s : `https://${s}`);
@@ -87,12 +88,20 @@ export function cleanVideoTitle(raw: string): string {
 
 /** "RickAstleyVEVO" → "Rick Astley", "Queen - Topic" → "Queen", "LinkinParkOfficial" → "Linkin Park" */
 export function cleanChannelName(raw: string | undefined): string {
-  let s = (raw ?? '').trim();
-  s = s.replace(/\s*-\s*Topic$/i, '');
-  const vevo = /VEVO$/i.test(s);
-  s = s.replace(/\s*VEVO$/i, '').replace(/\s*(\bofficial\b|official)\s*(youtube)?\s*(channel)?$/i, '').replace(/\s+(music|records)\s*$/i, (m) => (vevo ? '' : m));
-  if (vevo || !/\s/.test(s)) s = s.replace(/([a-z])([A-Z])/g, '$1 $2');
-  return s.trim() || (raw ?? '').trim();
+  const orig = (raw ?? '').trim();
+  let s = orig.replace(/\s*-\s*Topic$/i, '');
+  let squashed = false;
+  if (/.VEVO$/i.test(s)) {
+    s = s.replace(/\s*VEVO$/i, '');
+    squashed = true;
+  }
+  if (/.Official(\s*(YouTube\s*)?Channel)?$/i.test(s)) {
+    s = s.replace(/\s*Official(\s*(YouTube\s*)?Channel)?$/i, '');
+    squashed = true;
+  }
+  s = s.replace(/(.)\s+(YouTube\s+)?Channel$/i, '$1');
+  if (squashed && !/\s/.test(s)) s = s.replace(/([a-z])([A-Z])/g, '$1 $2');
+  return s.trim() || orig;
 }
 
 /**
@@ -106,7 +115,7 @@ export function splitArtistTitle(rawTitle: string, channel?: string): { artist: 
   // Auto-generated "Artist - Topic" channels: the title is already just the song.
   if (channel && /\s-\s*Topic$/i.test(channel)) return { artist: ch, title: cleaned };
 
-  const dash = cleaned.match(/^(.+?)\s+[-–—~]\s+(.+)$/) ?? cleaned.match(/^(.+?)\s*[-–—]\s*(.+)$/u);
+  const dash = cleaned.match(/^(.+?)\s+[-–—~]\s+(.+)$/) ?? cleaned.match(/^(.+?)\s*[–—]\s*(.+)$/);
   if (dash && dash[1].length <= 80) {
     const left = dash[1].trim();
     const right = dash[2].trim();
