@@ -5,7 +5,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { DEFAULT_MODEL_ID, getModel, MODELS } from '../../devices/registry';
-import type { Appearance, DeviceModel } from '../../devices/types';
+import type { Appearance, CoverChoice, DeviceModel } from '../../devices/types';
 import { uid } from '../util/id';
 
 export type Backdrop = 'white' | 'studio' | 'light' | 'desk' | 'gradient' | 'aurora' | 'solid';
@@ -43,6 +43,8 @@ interface CustomizeState {
   setColor(slot: string, color: string): void;
   setOption(key: string, value: string | number | boolean): void;
   setEngraving(lines: [string, string]): void;
+  /** put a case or an iPod Sock on the current model (kind 'none' takes it off) */
+  setCover(cover: CoverChoice): void;
   applyFinish(finishId: string): void;
   resetAppearance(): void;
   setScene(p: Partial<Scene>): void;
@@ -119,6 +121,12 @@ export const useCustomize = create<CustomizeState>()(
         set({ appearances: { ...appearances, [modelId]: { ...cur, engraving: [lines[0].slice(0, 28), lines[1].slice(0, 28)] } } });
       },
 
+      setCover(cover) {
+        const { modelId, appearances } = get();
+        const cur = appearances[modelId] ?? defaultAppearance(getModel(modelId));
+        set({ appearances: { ...appearances, [modelId]: { ...cur, cover: { ...cover } } } });
+      },
+
       applyFinish(finishId) {
         const { modelId, appearances } = get();
         const model = getModel(modelId);
@@ -127,8 +135,13 @@ export const useCustomize = create<CustomizeState>()(
         set({
           appearances: {
             ...appearances,
-            // keep non-finish options (wallpaper, theme…) and the engraving
-            [modelId]: { ...base, options: { ...cur.options, ...(model.finishes.find((f) => f.id === finishId)?.options ?? {}) }, engraving: cur.engraving },
+            // keep non-finish options (wallpaper, theme…), the engraving and the case
+            [modelId]: {
+              ...base,
+              options: { ...cur.options, ...(model.finishes.find((f) => f.id === finishId)?.options ?? {}) },
+              engraving: cur.engraving,
+              cover: cur.cover,
+            },
           },
         });
       },
@@ -178,6 +191,7 @@ export const useCustomize = create<CustomizeState>()(
           options: { ...base.options, ...(p.appearance?.options ?? {}) },
           engraving: [p.appearance?.engraving?.[0] ?? '', p.appearance?.engraving?.[1] ?? ''],
           finishId: p.appearance?.finishId,
+          cover: validCover(p.appearance?.cover),
         };
         set({
           modelId: model.id,
@@ -223,6 +237,15 @@ export const useCustomize = create<CustomizeState>()(
     },
   ),
 );
+
+const COVER_KINDS = ['none', 'silicone', 'leather', 'sock'];
+
+/** A cover from a preset or a share link, if it is one we know. */
+function validCover(c: unknown): CoverChoice | undefined {
+  const v = c as Partial<CoverChoice> | undefined;
+  if (!v || typeof v !== 'object' || !COVER_KINDS.includes(v.kind as string) || typeof v.color !== 'string') return undefined;
+  return { kind: v.kind as CoverChoice['kind'], color: v.color };
+}
 
 export function useAppearance(modelId?: string): Appearance {
   const id = useCustomize((s) => modelId ?? s.modelId);

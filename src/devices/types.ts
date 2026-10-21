@@ -29,6 +29,31 @@ export interface Appearance {
   engraving: [string, string];
   /** id of the finish this appearance started from */
   finishId?: string;
+  /** what the iPod is wearing: a case or an iPod Sock */
+  cover?: CoverChoice;
+}
+
+export type CoverKind = 'none' | 'silicone' | 'leather' | 'sock';
+
+export interface CoverChoice {
+  kind: CoverKind;
+  color: string;
+}
+
+/**
+ * How a case or sock fits this model. Everything is in device px.
+ * Openings are on the edges: `at` is along the edge from its centre (x for
+ * top/bottom, y for left/right), `len` along the edge and `thick` across
+ * it (depth), centred at depth `z` (+ towards the front).
+ */
+export interface CoverFit {
+  /** corner radius of the body outline */
+  radius: number;
+  /** a case is offered (the shuffle only gets socks) */
+  cases: boolean;
+  holes: { side: 'top' | 'bottom' | 'left' | 'right'; at: number; len: number; thick: number; z?: number }[];
+  /** rear camera: centre from the top-left of the back as seen from behind, and its diameter */
+  camera?: { x: number; y: number; d: number };
 }
 
 export interface DeviceProps {
@@ -60,6 +85,8 @@ export interface DeviceModel {
    * it opens to (ny: -1 top, +1 bottom) and the model's px-per-mm scale.
    */
   jack?: { x: number; y: number; z: number; ny: 1 | -1; pxPerMm: number };
+  /** How cases and iPod Socks fit (see shell/cover). */
+  cover?: CoverFit;
   /** Lazy-loaded device implementation. */
   load: () => Promise<{ default: ComponentType<DeviceProps> }>;
 }

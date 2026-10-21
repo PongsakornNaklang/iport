@@ -11,7 +11,7 @@ import { useEffect, useRef, type RefObject } from 'react';
 import { player, usePlayer } from '../../core/player/player';
 import { playTone } from '../../core/sound/click';
 import type { DeviceModel } from '../../devices/types';
-import { liveOrientation, useStage } from '../stageStore';
+import { useStage } from '../stageStore';
 import { Rope, type RopeOptions } from './rope';
 
 // EarPods dimensions in millimetres
@@ -91,6 +91,27 @@ export function JackMarkers({ model, markerRef }: { model: DeviceModel; markerRe
       ))}
     </div>
   );
+}
+
+/**
+ * The z of the jack's outward axis (unit length) as the stage shows it.
+ * Composed from the transforms between the markers and the stage, so it
+ * holds when the device turns itself (landscape video) and has none of the
+ * perspective skew a reading of the projected markers would.
+ */
+function jackFacing(markers: Element, ny: number): number {
+  let m = new DOMMatrix();
+  const chain: Element[] = [];
+  for (let e = markers.parentElement; e; e = e.parentElement) {
+    chain.push(e);
+    if (e.classList.contains('stage-rot')) break;
+  }
+  for (let i = chain.length - 1; i >= 0; i--) {
+    const t = getComputedStyle(chain[i]).transform;
+    if (t && t !== 'none') m = m.multiply(new DOMMatrix(t));
+  }
+  const d = m.transformPoint(new DOMPoint(0, ny, 0, 0));
+  return d.z / (Math.hypot(d.x, d.y, d.z) || 1);
 }
 
 interface Jack {
@@ -349,10 +370,8 @@ export function useEarPods({
       // three orthogonal device axes: their projected lengths give the true scale
       // (for a rotation, the squared lengths of the projected axes sum to 2 k²)
       const k = Math.max(0.05, Math.sqrt((len(n) ** 2 + len(ax) ** 2 + len(az) ** 2) / 2) / MARK);
-      // how foreshortened the jack axis is → how much it points at / away from us
-      const f = Math.min(1, len(n) / (MARK * k));
-      const toward = jack.ny * Math.sin((liveOrientation.rx * Math.PI) / 180);
-      const dz = Math.sign(toward || 0) * Math.sqrt(Math.max(0, 1 - f * f));
+      // how much the jack's opening faces us (+1) or away (−1)
+      const dz = jackFacing(m, jack.ny);
       // Small iPods are shown enlarged; cap the plug so it doesn't fill the
       // window. The cap grows with the zoom, so zooming in enlarges the plug too.
       const cap = Math.min(1, (MAX_PX_PER_MM * useStage.getState().zoom) / (jack.pxPerMm * k));

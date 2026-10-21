@@ -54,7 +54,8 @@ and 360° on the right edge of the window (along the bottom on phones).
 ### Make it yours
 
 Every colored part, the materials, wallpapers, screen theme, engraving on the
-back and the backdrop. Save a design as a preset, share it as a link, or export
+back and the backdrop. Put it in a silicone or leather case, or in one of
+Apple's knitted iPod Socks. Save a design as a preset, share it as a link, or export
 all your presets to a file.
 
 ![The Customize panel next to an iPod classic](docs/screenshots/customize.png)

@@ -7,6 +7,7 @@
  */
 import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { Box3D, Device3D, type EdgeSlice } from '../../shell/Device3D';
+import { BodyExtras } from '../../shell/bodySlot';
 import { isTypingTarget } from '../../shell/keyboard';
 import { useSettings } from '../../core/settings/store';
 import { ClickWheel } from '../shared/clickwheel/ClickWheel';
@@ -154,6 +155,7 @@ export default function IpodClassic({ model, appearance }: DeviceProps) {
       height={H}
       depth={D}
       radius={RADIUS}
+      under={<BodyExtras />}
       edge={edge}
       breaks={[FRONT_T * 0.2, FRONT_T, FRONT_T + SEAM_T]}
       backInset={backInset}

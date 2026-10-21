@@ -1,5 +1,5 @@
 import { useMemo, type CSSProperties, type ReactNode } from 'react';
-import { buildShell, liningSlices, radiusCss, type Radius } from './edgeShell';
+import { buildShell, liningSlices, radiusCss, type Facet, type Radius, type ShellDetail } from './edgeShell';
 
 export type { CornerRadii, Radius } from './edgeShell';
 
@@ -50,6 +50,17 @@ export interface Device3DProps {
    * hairline stripes).
    */
   decals?: ReactNode;
+  /** Painted first of all: a case or sock around the body (see shell/cover). */
+  under?: ReactNode;
+  /**
+   * A shell with nothing inside it (a case): no solid lining behind the
+   * sides, which would hide what is inside.
+   */
+  hollow?: boolean;
+  /** CSS mask image for a facet of the sides (holes cut in a case); keep it stable */
+  facetMask?: (f: Facet) => string | undefined;
+  /** coarser sides (soft things like a sock need fewer pieces); keep it stable */
+  detail?: ShellDetail;
   className?: string;
 }
 
@@ -68,20 +79,39 @@ export function Device3D({
   backStyle,
   children,
   decals,
+  under,
+  hollow = false,
+  facetMask,
+  detail,
   className,
 }: Device3DProps) {
   const half = depth / 2;
   const breakKey = breaks?.join(',') ?? '';
   const radiusKey = radiusCss(radius, 0);
   const sides = useMemo(
-    () => <Shell width={width} height={height} depth={depth} radius={radius} edge={edge} breaks={breakKey} frontInset={frontInset} backInset={backInset} />,
+    () => (
+      <Shell
+        width={width}
+        height={height}
+        depth={depth}
+        radius={radius}
+        edge={edge}
+        breaks={breakKey}
+        frontInset={frontInset}
+        backInset={backInset}
+        hollow={hollow}
+        facetMask={facetMask}
+        detail={detail}
+      />
+    ),
     // radius by value (callers may pass a new object each render)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [width, height, depth, radiusKey, edge, breakKey, frontInset, backInset],
+    [width, height, depth, radiusKey, edge, breakKey, frontInset, backInset, hollow, facetMask, detail],
   );
 
   return (
     <div className={`d3-root ${className ?? ''}`} style={{ width, height }}>
+      {under}
       {decals}
       {sides}
       <div
@@ -121,6 +151,9 @@ function Shell({
   breaks,
   frontInset,
   backInset,
+  hollow,
+  facetMask,
+  detail,
 }: {
   width: number;
   height: number;
@@ -130,12 +163,15 @@ function Shell({
   breaks: string;
   frontInset: number;
   backInset: number;
+  hollow: boolean;
+  facetMask?: (f: Facet) => string | undefined;
+  detail?: ShellDetail;
 }) {
   const facets = useMemo(
-    () => buildShell(width, height, depth, radius, edge, breaks ? breaks.split(',').map(Number) : []),
-    [width, height, depth, radius, edge, breaks],
+    () => buildShell(width, height, depth, radius, edge, breaks ? breaks.split(',').map(Number) : [], detail),
+    [width, height, depth, radius, edge, breaks, detail],
   );
-  const lining = useMemo(() => liningSlices(edge, depth, radius), [edge, depth, radius]);
+  const lining = useMemo(() => (hollow ? [] : liningSlices(edge, depth, radius)), [hollow, edge, depth, radius]);
   const half = depth / 2;
   const front = edge(0);
   const back = edge(1);
@@ -144,7 +180,7 @@ function Shell({
   // the other way. Where the face is narrower, fill the ring around it.
   const cap = (z: number, faceInset: number, s: EdgeSlice, facing: 1 | -1) => {
     const edgeInset = s.inset ?? 0;
-    if (Math.abs(faceInset - edgeInset) < 0.05) return null; // the sides meet the face exactly
+    if (hollow || Math.abs(faceInset - edgeInset) < 0.05) return null; // the sides meet the face exactly
     const overhang = faceInset < edgeInset;
     const inset = Math.min(faceInset, edgeInset);
     const turn = overhang ? facing === 1 : facing === -1; // a backing faces away from the face it backs
@@ -165,16 +201,20 @@ function Shell({
       {/* just inside each face, never in its plane (coplanar layers flicker) */}
       {cap(half - 0.04, frontInset, front, 1)}
       {cap(-half + 0.04, backInset, back, -1)}
-      {facets.map((fa) => (
-        <div key={fa.key} className="d3-facet" style={{ width: fa.w, height: fa.h, transform: fa.matrix, clipPath: fa.clip }}>
-          <i style={{ width: fa.base.w, height: fa.base.h, background: fa.base.color, transform: fa.base.matrix }} />
-          {fa.blend && (
-            <b style={{ maskImage: fa.blend.mask, WebkitMaskImage: fa.blend.mask }}>
-              <i style={{ width: fa.blend.w, height: fa.blend.h, background: fa.blend.color, transform: fa.blend.matrix }} />
-            </b>
-          )}
-        </div>
-      ))}
+      {facets.map((fa) => {
+        const mask = facetMask?.(fa);
+        const holes = mask ? { maskImage: mask, WebkitMaskImage: mask, maskSize: '100% 100%', WebkitMaskSize: '100% 100%' } : null;
+        return (
+          <div key={fa.key} className="d3-facet" style={{ width: fa.w, height: fa.h, transform: fa.matrix, clipPath: fa.clip, ...holes }}>
+            <i style={{ width: fa.base.w, height: fa.base.h, background: fa.base.color, transform: fa.base.matrix }} />
+            {fa.blend && (
+              <b style={{ maskImage: fa.blend.mask, WebkitMaskImage: fa.blend.mask }}>
+                <i style={{ width: fa.blend.w, height: fa.blend.h, background: fa.blend.color, transform: fa.blend.matrix }} />
+              </b>
+            )}
+          </div>
+        );
+      })}
       {/*
         * Painted after the sides: Chrome's 3D sort cuts every later layer
         * along the planes of earlier ones, and cut edges sparkle. Inside the
