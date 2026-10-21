@@ -1,0 +1,1258 @@
+/* =====================================================================
+   iPort web chrome — Apple-style, minimal, Liquid Glass on white.
+   (The iPods themselves are styled inside src/devices/*.)
+   ===================================================================== */
+
+:root {
+  color-scheme: light;
+
+  /* surfaces & text */
+  --ui-bg: #ffffff;
+  --ui-text: #1d1d1f;
+  --ui-text-2: #6e6e73;
+  --ui-text-3: #86868b;
+  --ui-line: rgba(0, 0, 0, 0.07);
+  --ui-line-strong: rgba(0, 0, 0, 0.12);
+  --ui-fill: rgba(118, 118, 128, 0.12); /* iOS tertiary fill */
+  --ui-fill-2: rgba(118, 118, 128, 0.2);
+  --ui-accent: #0071e3;
+  --ui-accent-2: #0077ed;
+  --ui-danger: #ff3b30;
+  --ui-green: #34c759;
+  --ui-radius: 22px;
+  --ui-font: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+
+  /* Liquid Glass material */
+  --glass: linear-gradient(180deg, rgba(255, 255, 255, 0.72) 0%, rgba(255, 255, 255, 0.5) 100%);
+  --glass-strong: linear-gradient(180deg, rgba(255, 255, 255, 0.86) 0%, rgba(250, 250, 252, 0.74) 100%);
+  --glass-blur: blur(22px) saturate(190%);
+  --glass-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.035),
+    0 1px 2px rgba(0, 0, 0, 0.05),
+    0 8px 28px rgba(0, 0, 0, 0.08);
+  --glass-shadow-lg:
+    inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.04),
+    0 2px 6px rgba(0, 0, 0, 0.05),
+    0 24px 64px rgba(0, 0, 0, 0.12);
+  /* the bright, refractive rim */
+  --glass-rim: linear-gradient(
+    150deg,
+    rgba(255, 255, 255, 1) 0%,
+    rgba(255, 255, 255, 0.35) 28%,
+    rgba(255, 255, 255, 0.08) 52%,
+    rgba(255, 255, 255, 0.4) 78%,
+    rgba(255, 255, 255, 0.95) 100%
+  );
+
+  --topbar-h: 64px;
+  --ease: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: var(--ui-bg);
+  color: var(--ui-text);
+  font-family: var(--ui-font);
+  font-size: 14px;
+  letter-spacing: -0.01em;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  letter-spacing: inherit;
+}
+
+::selection {
+  background: rgba(0, 113, 227, 0.2);
+}
+
+/* ------------------------------------------------------------------ glass */
+/* Any element in this list gets the Liquid Glass material + rim light. */
+.glass,
+.tb-group,
+.model-picker-btn,
+.model-menu,
+.view-controls,
+.panel,
+.toast {
+  position: relative;
+  background: var(--glass);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  box-shadow: var(--glass-shadow);
+  isolation: isolate;
+}
+.glass::after,
+.tb-group::after,
+.model-picker-btn::after,
+.model-menu::after,
+.view-controls::after,
+.panel::after,
+.toast::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: var(--glass-rim);
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* ------------------------------------------------------------------ layout */
+.app {
+  position: fixed;
+  inset: 0;
+}
+
+.main {
+  position: absolute;
+  inset: 0;
+}
+
+.topbar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  height: var(--topbar-h);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 16px;
+  padding-top: env(safe-area-inset-top);
+  pointer-events: none;
+}
+.topbar > * {
+  pointer-events: auto;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 17px;
+  letter-spacing: -0.022em;
+  white-space: nowrap;
+  padding: 0 6px 0 2px;
+}
+.brand-mark {
+  width: 24px;
+  height: 24px;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.12));
+}
+.brand small {
+  font-weight: 400;
+  color: var(--ui-text-3);
+  font-size: 13px;
+  letter-spacing: -0.01em;
+}
+
+.topbar-spacer {
+  flex: 1;
+}
+
+/* segmented glass capsule with the panel buttons */
+.tb-group {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px;
+  border-radius: 999px;
+}
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 36px;
+  min-width: 36px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--ui-text);
+  transition:
+    background 200ms var(--ease),
+    color 200ms var(--ease),
+    transform 120ms var(--ease);
+  white-space: nowrap;
+}
+.icon-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+.icon-btn:active {
+  transform: scale(0.96);
+}
+.icon-btn.active {
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.1),
+    0 4px 12px rgba(0, 0, 0, 0.06);
+  color: var(--ui-accent);
+}
+.icon-btn svg {
+  width: 17px;
+  height: 17px;
+  flex: none;
+}
+.icon-btn.round {
+  padding: 0;
+  width: 36px;
+}
+
+/* ------------------------------------------------------------------ model picker */
+.model-picker {
+  position: relative;
+}
+.model-picker-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 44px;
+  padding: 0 14px 0 10px;
+  border-radius: 999px;
+  border: 0;
+  cursor: pointer;
+  text-align: left;
+  transition: transform 160ms var(--ease);
+}
+.model-picker-btn:active {
+  transform: scale(0.98);
+}
+.model-picker-btn .mp-name {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.15;
+}
+.model-picker-btn .mp-gen {
+  font-size: 11.5px;
+  color: var(--ui-text-2);
+}
+.model-menu {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0;
+  width: min(400px, calc(100vw - 24px));
+  padding: 8px;
+  border-radius: 26px;
+  background: var(--glass-strong);
+  box-shadow: var(--glass-shadow-lg);
+  z-index: 50;
+  transform-origin: 30% 0;
+  animation: pop-in 280ms var(--ease);
+}
+.model-item {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 18px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  transition: background 160ms var(--ease);
+}
+.model-item:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+.model-item.selected {
+  background: rgba(0, 113, 227, 0.08);
+}
+.model-item .mi-thumb {
+  flex: none;
+  width: 40px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+}
+.model-item .mi-name {
+  font-weight: 600;
+  font-size: 14.5px;
+}
+.model-item .mi-meta {
+  font-size: 12px;
+  color: var(--ui-text-2);
+}
+.model-item .mi-blurb {
+  font-size: 12px;
+  color: var(--ui-text-3);
+  margin-top: 2px;
+  line-height: 1.35;
+}
+.model-item .mi-year {
+  margin-left: auto;
+  align-self: flex-start;
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--ui-text-3);
+  font-variant-numeric: tabular-nums;
+}
+
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.94) translateY(-6px);
+    filter: blur(4px);
+  }
+}
+
+/* ------------------------------------------------------------------ stage */
+.stage {
+  position: absolute;
+  inset: 0;
+  perspective: 2400px;
+  perspective-origin: 50% 46%;
+  overflow: hidden;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: grab;
+}
+.stage:active {
+  cursor: grabbing;
+}
+
+.backdrop-white {
+  background: #ffffff;
+}
+.backdrop-studio {
+  background: radial-gradient(ellipse 80% 70% at 50% 35%, var(--bg1) 0%, var(--bg2) 75%);
+}
+.backdrop-light {
+  background: radial-gradient(ellipse 90% 80% at 50% 30%, #ffffff 0%, #f0f0f3 55%, #dcdde2 100%);
+}
+.backdrop-solid {
+  background: var(--bg1);
+}
+.backdrop-gradient {
+  background: linear-gradient(160deg, var(--bg1), var(--bg2));
+}
+.backdrop-desk {
+  background:
+    radial-gradient(ellipse 70% 50% at 50% 40%, rgba(255, 220, 170, 0.18), transparent 70%),
+    repeating-linear-gradient(92deg, rgba(0, 0, 0, 0.06) 0 2px, transparent 2px 9px),
+    repeating-linear-gradient(88deg, rgba(255, 255, 255, 0.03) 0 1px, transparent 1px 23px),
+    linear-gradient(180deg, #6b4a32, #3e2a1c 70%, #2b1d13);
+}
+.backdrop-aurora {
+  background: linear-gradient(120deg, #0b1026, #1a0b2e, #04202a, #0b1026);
+  background-size: 300% 300%;
+  animation: aurora 24s ease-in-out infinite;
+}
+.backdrop-aurora::before {
+  content: '';
+  position: absolute;
+  inset: -20%;
+  background:
+    radial-gradient(40% 30% at 30% 30%, rgba(80, 255, 200, 0.18), transparent 70%),
+    radial-gradient(40% 30% at 70% 40%, rgba(140, 90, 255, 0.2), transparent 70%),
+    radial-gradient(50% 40% at 50% 80%, rgba(40, 140, 255, 0.15), transparent 70%);
+  filter: blur(20px);
+  animation: aurora-move 18s ease-in-out infinite alternate;
+}
+@keyframes aurora {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+@keyframes aurora-move {
+  from {
+    transform: translate(-4%, -2%) rotate(0deg);
+  }
+  to {
+    transform: translate(4%, 3%) rotate(8deg);
+  }
+}
+
+.stage-floor {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 40%;
+  background: linear-gradient(to bottom, transparent, rgba(0, 0, 0, 0.22));
+  pointer-events: none;
+}
+.backdrop-white .stage-floor,
+.backdrop-light .stage-floor {
+  background: none;
+}
+
+.stage-center {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0;
+  height: 0;
+  transform-style: preserve-3d;
+  transition: transform 520ms var(--ease);
+}
+.stage-rot {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  transform-style: preserve-3d;
+}
+.device-enter {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  transform-style: preserve-3d;
+  animation: device-in 640ms var(--ease);
+}
+@keyframes device-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -47%) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+.device-loading {
+  border-radius: 40px;
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.stage-shadow {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  height: 40px;
+  margin-top: -20px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(0, 0, 0, 0.28), rgba(0, 0, 0, 0.1) 55%, transparent);
+  filter: blur(9px);
+  pointer-events: none;
+  transform-origin: 50% 50%;
+  transition: transform 520ms var(--ease);
+}
+.backdrop-studio .stage-shadow,
+.backdrop-aurora .stage-shadow,
+.backdrop-desk .stage-shadow {
+  background: radial-gradient(closest-side, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.25) 55%, transparent);
+}
+
+/* ------------------------------------------------------------------ EarPods */
+.ep-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.ep-markers {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  transform-style: preserve-3d;
+  pointer-events: none;
+}
+.ep-markers i {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1px;
+  height: 1px;
+  visibility: hidden;
+}
+
+/* ------------------------------------------------------------------ 3D primitives */
+.d3-root {
+  position: relative;
+  transform-style: preserve-3d;
+}
+.d3-lining {
+  position: absolute;
+  pointer-events: none;
+}
+/* one flat strip of the device's side (see edgeShell.ts) */
+.d3-facet {
+  position: absolute;
+  left: 0;
+  top: 0;
+  overflow: hidden;
+  transform-origin: 0 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  pointer-events: none;
+}
+.d3-facet > b {
+  position: absolute;
+  inset: 0;
+}
+.d3-facet i {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 0 0;
+}
+.d3-cap {
+  position: absolute;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  pointer-events: none;
+}
+.d3-face {
+  position: absolute;
+  overflow: hidden;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transform-style: flat;
+}
+.d3-box {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0;
+  height: 0;
+  transform-style: preserve-3d;
+}
+.d3-slab {
+  position: absolute;
+  transform-style: preserve-3d;
+}
+.d3-slab-face {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+.d3-box-face {
+  position: absolute;
+  left: 0;
+  top: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+.d3-decal {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0;
+  height: 0;
+  transform-style: preserve-3d;
+  pointer-events: none;
+}
+
+/* ------------------------------------------------------------------ view controls */
+.view-controls {
+  position: absolute;
+  left: 50%;
+  bottom: max(18px, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 5px;
+  border-radius: 999px;
+}
+.view-controls button {
+  height: 36px;
+  min-width: 36px;
+  padding: 0 13px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ui-text);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition:
+    background 200ms var(--ease),
+    transform 120ms var(--ease);
+}
+.view-controls button:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+.view-controls button:active {
+  transform: scale(0.95);
+}
+.view-controls button.on {
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  color: var(--ui-accent);
+}
+.view-controls .sep {
+  width: 1px;
+  height: 20px;
+  background: var(--ui-line-strong);
+  margin: 0 4px;
+}
+.view-controls svg {
+  width: 16px;
+  height: 16px;
+}
+.vc-zoom {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.view-controls .vc-zoom-val {
+  min-width: 48px;
+  font-variant-numeric: tabular-nums;
+}
+/*
+ * On larger screens the controls stand as a slim pill on the right edge,
+ * clear of the iPod and of the EarPods cable below it (the stage reserves
+ * that strip, see Stage.tsx). Labels become tooltips.
+ */
+@media (min-width: 721px) {
+  .view-controls {
+    left: auto;
+    right: 16px;
+    top: calc(50% + var(--topbar-h) / 2);
+    bottom: auto;
+    transform: translateY(-50%);
+    flex-direction: column;
+    transition: right 520ms var(--ease);
+  }
+  .view-controls button {
+    width: 36px;
+    padding: 0;
+    justify-content: center;
+  }
+  .view-controls button .lbl {
+    display: none;
+  }
+  .view-controls .sep {
+    width: 20px;
+    height: 1px;
+    margin: 4px 0;
+  }
+  .vc-zoom {
+    flex-direction: column-reverse;
+  }
+  .view-controls .vc-zoom-val {
+    min-width: 0;
+    font-size: 11px;
+    letter-spacing: -0.2px;
+  }
+  .app:has(.panel.right) .view-controls {
+    right: calc(14px + min(392px, 100vw - 28px) + 12px);
+  }
+  /* nothing along the bottom any more (:root: this comes before the base rule) */
+  :root .toast {
+    bottom: 32px;
+  }
+}
+
+.hint {
+  position: absolute;
+  left: 50%;
+  top: 12px;
+  transform: translateX(-50%);
+  z-index: 5;
+  font-size: 12px;
+  color: var(--ui-text-3);
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+/* ------------------------------------------------------------------ panels */
+.panel {
+  position: absolute;
+  top: calc(var(--topbar-h) + 4px);
+  bottom: 14px;
+  z-index: 30;
+  width: min(392px, calc(100vw - 28px));
+  display: flex;
+  flex-direction: column;
+  border-radius: 30px;
+  background: var(--glass-strong);
+  box-shadow: var(--glass-shadow-lg);
+  overflow: hidden;
+  animation: panel-in 420ms var(--ease);
+}
+.panel.left {
+  left: 14px;
+  transform-origin: 0 0;
+}
+.panel.right {
+  right: 14px;
+  transform-origin: 100% 0;
+}
+@keyframes panel-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(-8px);
+    filter: blur(6px);
+  }
+}
+.panel-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 18px 16px 8px 22px;
+}
+.panel-head h2 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.026em;
+  flex: 1;
+}
+.panel-close {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 0;
+  background: var(--ui-fill);
+  color: var(--ui-text-2);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: background 160ms var(--ease);
+}
+.panel-close:hover {
+  background: var(--ui-fill-2);
+}
+.panel-body {
+  flex: 1;
+  overflow: auto;
+  padding: 8px 20px 28px;
+  overscroll-behavior: contain;
+}
+
+/*
+ * Scrollbars in the app's own panels and menus: thin, rounded and light on a
+ * clear track, instead of the system's (which can be a dark classic bar that
+ * cuts through the rounded glass). Firefox and current Chrome use the
+ * standard properties; Safari uses the ::-webkit ones.
+ */
+.panel,
+.panel *,
+.model-menu {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.22) transparent;
+}
+.panel ::-webkit-scrollbar,
+.model-menu::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+  background: transparent;
+}
+.panel ::-webkit-scrollbar-track,
+.model-menu::-webkit-scrollbar-track {
+  background: transparent;
+  /* keep clear of the rounded corners */
+  margin: 14px 0 22px;
+}
+.panel ::-webkit-scrollbar-thumb,
+.model-menu::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  background-clip: padding-box;
+  border: 4px solid transparent;
+  border-radius: 999px;
+}
+.panel ::-webkit-scrollbar-thumb:hover,
+.model-menu::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0, 0, 0, 0.36);
+}
+.panel ::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* iOS segmented control */
+.panel-tabs {
+  position: relative;
+  display: flex;
+  gap: 2px;
+  margin: 6px 20px 4px;
+  padding: 2px;
+  border-radius: 10px;
+  background: var(--ui-fill);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.panel-tabs::-webkit-scrollbar {
+  display: none;
+}
+.panel-tabs button {
+  position: relative; /* above the thumb */
+  flex: 1 0 auto;
+  height: 30px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ui-text);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  outline: none;
+  transition: opacity 200ms var(--ease);
+}
+.panel-tabs button:not(.on):hover {
+  opacity: 0.7;
+}
+.panel-tabs button.on {
+  font-weight: 600;
+}
+/* keyboard focus only: a soft ring inside the tab */
+.panel-tabs button:focus-visible {
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--ui-accent) 55%, transparent);
+}
+/* the white thumb that slides to the selected tab */
+.panel-tabs-thumb {
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  left: 0;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow:
+    0 3px 8px rgba(0, 0, 0, 0.12),
+    0 3px 1px rgba(0, 0, 0, 0.04);
+  pointer-events: none;
+}
+.panel-tabs-thumb.ready {
+  transition:
+    transform 380ms cubic-bezier(0.32, 1.25, 0.5, 1),
+    width 380ms cubic-bezier(0.32, 1.25, 0.5, 1);
+}
+
+.section {
+  margin: 18px 0 6px;
+}
+.section-title {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: var(--ui-text-3);
+  margin: 0 0 8px 2px;
+}
+.row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.field label,
+.label {
+  font-size: 12.5px;
+  color: var(--ui-text-2);
+}
+.input,
+.select {
+  height: 38px;
+  padding: 0 14px;
+  border-radius: 12px;
+  border: 0;
+  background: var(--ui-fill);
+  color: var(--ui-text);
+  font: inherit;
+  font-size: 14px;
+  outline: none;
+  width: 100%;
+  min-width: 0;
+  transition:
+    background 160ms var(--ease),
+    box-shadow 160ms var(--ease);
+}
+.input::placeholder {
+  color: var(--ui-text-3);
+}
+textarea.input {
+  height: auto;
+  min-height: 84px;
+  padding: 10px 14px;
+  resize: vertical;
+}
+.select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 34px;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236e6e73' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 10l5 5 5-5'/%3E%3C/svg%3E"),
+    linear-gradient(var(--ui-fill), var(--ui-fill));
+  background-repeat: no-repeat;
+  background-position:
+    right 12px center,
+    0 0;
+  background-color: transparent;
+}
+.input:focus,
+.select:focus {
+  background-color: #fff;
+  box-shadow:
+    0 0 0 1px rgba(0, 113, 227, 0.5),
+    0 0 0 4px rgba(0, 113, 227, 0.16);
+}
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: 0;
+  background: var(--ui-fill);
+  color: var(--ui-text);
+  cursor: pointer;
+  font-size: 13.5px;
+  font-weight: 500;
+  white-space: nowrap;
+  transition:
+    background 160ms var(--ease),
+    transform 120ms var(--ease);
+}
+.btn:hover {
+  background: var(--ui-fill-2);
+}
+.btn:active {
+  transform: scale(0.97);
+}
+.btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+  transform: none;
+}
+.btn.primary {
+  background: var(--ui-accent);
+  color: white;
+  box-shadow: 0 2px 8px rgba(0, 113, 227, 0.3);
+}
+.btn.primary:hover {
+  background: var(--ui-accent-2);
+}
+.btn.danger {
+  color: var(--ui-danger);
+}
+.btn.small {
+  height: 30px;
+  padding: 0 12px;
+  font-size: 12.5px;
+}
+.btn svg {
+  width: 15px;
+  height: 15px;
+}
+.muted {
+  color: var(--ui-text-2);
+  font-size: 13.5px;
+  line-height: 1.45;
+}
+.tiny {
+  font-size: 12px;
+  color: var(--ui-text-3);
+  line-height: 1.4;
+}
+.error-text {
+  color: var(--ui-danger);
+  font-size: 13px;
+}
+
+.swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.swatch {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 0;
+  box-shadow:
+    inset 0 0 0 0.5px rgba(0, 0, 0, 0.18),
+    inset 0 1px 1px rgba(255, 255, 255, 0.5),
+    0 1px 3px rgba(0, 0, 0, 0.12);
+  cursor: pointer;
+  padding: 0;
+  outline: 2px solid transparent;
+  outline-offset: 3px;
+  transition:
+    outline-color 160ms var(--ease),
+    transform 120ms var(--ease);
+}
+.swatch:hover {
+  transform: scale(1.06);
+}
+.swatch.on {
+  outline-color: var(--ui-accent);
+}
+
+.color-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 0;
+}
+.color-row .label {
+  flex: 1;
+  font-size: 14px;
+  color: var(--ui-text);
+}
+.color-input {
+  width: 36px;
+  height: 26px;
+  border: 0;
+  border-radius: 8px;
+  padding: 0;
+  background: none;
+  cursor: pointer;
+  box-shadow: inset 0 0 0 0.5px rgba(0, 0, 0, 0.15);
+}
+.color-input::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+.color-input::-webkit-color-swatch {
+  border: 0;
+  border-radius: 8px;
+}
+.color-input::-moz-color-swatch {
+  border: 0;
+  border-radius: 8px;
+}
+
+/* iOS switch */
+.switch {
+  position: relative;
+  width: 51px;
+  height: 31px;
+  flex: none;
+  border-radius: 999px;
+  border: 0;
+  background: rgba(120, 120, 128, 0.16);
+  cursor: pointer;
+  transition: background 240ms var(--ease);
+  padding: 0;
+}
+.switch::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 27px;
+  height: 27px;
+  border-radius: 50%;
+  background: white;
+  box-shadow:
+    0 3px 8px rgba(0, 0, 0, 0.15),
+    0 3px 1px rgba(0, 0, 0, 0.06);
+  transition: transform 240ms var(--ease);
+}
+.switch.on {
+  background: var(--ui-green);
+}
+.switch.on::after {
+  transform: translateX(20px);
+}
+
+/* inset grouped list */
+.list {
+  display: flex;
+  flex-direction: column;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.7);
+  box-shadow: 0 0 0 0.5px var(--ui-line);
+  overflow: hidden;
+}
+.list-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  min-height: 52px;
+}
+.list-item + .list-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 60px;
+  right: 0;
+  height: 0.5px;
+  background: var(--ui-line-strong);
+}
+.list-item .li-art {
+  width: 38px;
+  height: 38px;
+  border-radius: 7px;
+  object-fit: cover;
+  flex: none;
+  background: #e8e8ed;
+}
+.list-item .li-text {
+  flex: 1;
+  min-width: 0;
+}
+.list-item .li-title {
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.list-item .li-sub {
+  font-size: 12.5px;
+  color: var(--ui-text-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dropzone {
+  border: 1.5px dashed rgba(0, 0, 0, 0.14);
+  border-radius: 20px;
+  padding: 20px;
+  text-align: center;
+  color: var(--ui-text-2);
+  font-size: 13.5px;
+  background: rgba(255, 255, 255, 0.5);
+  transition:
+    border-color 160ms var(--ease),
+    background 160ms var(--ease);
+}
+.dropzone.over {
+  border-color: var(--ui-accent);
+  background: rgba(0, 113, 227, 0.06);
+}
+.badge {
+  display: inline-flex;
+  align-items: center;
+  height: 18px;
+  padding: 0 7px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  background: var(--ui-fill);
+  color: var(--ui-text-2);
+}
+.progress {
+  height: 4px;
+  border-radius: 999px;
+  background: var(--ui-fill);
+  overflow: hidden;
+}
+.progress > div {
+  height: 100%;
+  border-radius: inherit;
+  background: var(--ui-accent);
+  transition: width 160ms var(--ease);
+}
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 86px;
+  transform: translateX(-50%);
+  z-index: 100;
+  padding: 12px 20px;
+  border-radius: 999px;
+  background: var(--glass-strong);
+  box-shadow: var(--glass-shadow-lg);
+  font-size: 14px;
+  font-weight: 500;
+  max-width: calc(100vw - 32px);
+  animation: toast-in 420ms var(--ease);
+}
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 12px) scale(0.96);
+    filter: blur(4px);
+  }
+}
+
+/* ------------------------------------------------------------------ dark backdrops */
+/* Glass on a dark scene: keep it light but a bit more transparent. */
+.app.scene-dark .brand {
+  color: #fff;
+}
+.app.scene-dark .brand small {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* keep the view controls under the iPod when a side panel is open */
+
+/* ------------------------------------------------------------------ responsive */
+@media (max-width: 720px) {
+  :root {
+    --topbar-h: 58px;
+  }
+  .topbar {
+    gap: 8px;
+    padding: 0 10px;
+    padding-top: env(safe-area-inset-top);
+  }
+  .brand span,
+  .brand small,
+  .icon-btn .lbl,
+  .model-picker-btn .mp-gen {
+    display: none;
+  }
+  .icon-btn {
+    padding: 0;
+    width: 36px;
+  }
+  .model-picker-btn {
+    height: 40px;
+  }
+  .panel {
+    top: auto;
+    left: 8px !important;
+    right: 8px !important;
+    bottom: 8px;
+    width: auto;
+    height: min(74vh, 660px);
+    border-radius: 30px;
+    transform-origin: 50% 100%;
+  }
+  .view-controls button .lbl {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    transition-duration: 1ms !important;
+  }
+}

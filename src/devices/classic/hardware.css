@@ -1,0 +1,318 @@
+/* ==================================================================
+   iPod classic hardware (front, back, ports). Prefix cl-.
+   ================================================================== */
+
+.cl-device {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+/* ------------------------------------------------------------------ anodized front */
+.cl-front {
+  position: absolute;
+  inset: 0;
+  background:
+    url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.15' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.16'/%3E%3C/svg%3E"),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.05) 30%, rgba(0, 0, 0, 0) 60%, rgba(0, 0, 0, 0.07) 100%),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.05), rgba(255, 255, 255, 0.04) 50%, rgba(0, 0, 0, 0.06)),
+    var(--al);
+  background-blend-mode: overlay, normal, normal, normal;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.28),
+    inset 0 0 0 2px rgba(0, 0, 0, 0.06);
+}
+.cl-front-dark {
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.12),
+    inset 0 0 0 2px rgba(0, 0, 0, 0.2);
+}
+.cl-front-sheen {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(90% 45% at calc(50% - var(--lx, 0) * 90%) calc(8% + var(--ly, 0) * 60%), rgba(255, 255, 255, 0.26), rgba(255, 255, 255, 0) 70%),
+    linear-gradient(calc(110deg + var(--lx, 0) * 30deg), rgba(255, 255, 255, 0) 30%, rgba(255, 255, 255, 0.07) 50%, rgba(255, 255, 255, 0) 70%);
+}
+.cl-front-dark .cl-front-sheen {
+  opacity: 0.55;
+}
+
+/* ------------------------------------------------------------------ screen window */
+.cl-window {
+  position: absolute;
+  border-radius: 3px;
+  background: radial-gradient(ellipse at 50% 0%, #1b1c1f, #050506 70%);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.6),
+    0 1px 0 1px rgba(255, 255, 255, 0.22),
+    0 -1px 0 1px rgba(0, 0, 0, 0.12);
+  overflow: hidden;
+}
+.cl-lcd {
+  position: absolute;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 0 0 1px #000;
+}
+.cl-glass {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+  background:
+    linear-gradient(
+        122deg,
+        rgba(255, 255, 255, 0.16) 0%,
+        rgba(255, 255, 255, 0.06) 34%,
+        rgba(255, 255, 255, 0) 34.4%,
+        rgba(255, 255, 255, 0) 100%
+      )
+      calc(50% + var(--lx, 0) * 40%) 0 / 170% 100% no-repeat,
+    radial-gradient(120% 70% at calc(20% - var(--lx, 0) * 60%) -10%, rgba(255, 255, 255, 0.1), transparent 60%);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.12);
+}
+
+/* ------------------------------------------------------------------ wheel */
+.cl-wheel-well {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.22);
+  box-shadow:
+    inset 0 1px 2px rgba(0, 0, 0, 0.45),
+    0 1px 0 rgba(255, 255, 255, 0.35);
+}
+.cl-front-dark .cl-wheel-well {
+  background: rgba(0, 0, 0, 0.5);
+  box-shadow:
+    inset 0 1px 2px rgba(0, 0, 0, 0.6),
+    0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* ------------------------------------------------------------------ back */
+.cl-back {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  color: #2a2c30;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+.cl-back-base,
+.cl-back-env,
+.cl-back-streak,
+.cl-back-glint {
+  position: absolute;
+  pointer-events: none;
+}
+.cl-back-base {
+  inset: 0;
+  /* a polished mirror in a white studio: bright sky, a soft grey horizon,
+     bright floor — the bands drift with the tilt (--ly) */
+  background: linear-gradient(
+      180deg,
+      #fbfcfd 0%,
+      #f1f3f5 10%,
+      #dfe2e6 21%,
+      #c3c7cc 31%,
+      #a8acb2 38%,
+      #8d9197 42%,
+      #7b7f86 44%,
+      #8a8e94 48%,
+      #a7abb1 54%,
+      #cdd0d4 62%,
+      #eceef0 71%,
+      #fafbfc 78%,
+      #f3f4f6 84%,
+      #d8dbdf 92%,
+      #c3c6cb 100%
+    )
+    50% calc(50% + var(--ly, 0) * 55%) / 100% 150%;
+}
+.cl-back-env {
+  inset: -20% -80%;
+  background: linear-gradient(
+    102deg,
+    rgba(255, 255, 255, 0) 16%,
+    rgba(255, 255, 255, 0.55) 26%,
+    rgba(255, 255, 255, 0) 34%,
+    rgba(40, 44, 52, 0.22) 43%,
+    rgba(40, 44, 52, 0.06) 51%,
+    rgba(255, 255, 255, 0.45) 59%,
+    rgba(255, 255, 255, 0) 66%,
+    rgba(40, 44, 52, 0.16) 78%,
+    rgba(255, 255, 255, 0) 88%
+  );
+  transform: translate(calc(var(--lx, 0) * 26%), calc(var(--ly, 0) * -12%));
+}
+.cl-back-streak {
+  left: -10%;
+  right: -10%;
+  top: 0;
+  bottom: 0;
+  background:
+    linear-gradient(90deg, rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0) 9%, rgba(0, 0, 0, 0) 91%, rgba(0, 0, 0, 0.14)),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0) 6%, rgba(0, 0, 0, 0) 94%, rgba(0, 0, 0, 0.1));
+}
+.cl-back-glint {
+  width: 70%;
+  height: 40%;
+  left: 15%;
+  top: 4%;
+  background: radial-gradient(closest-side, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0));
+  transform: translate(calc(var(--lx, 0) * 70%), calc(var(--ly, 0) * -90%));
+  mix-blend-mode: screen;
+}
+.cl-back-matte .cl-back-base {
+  background:
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.07) 0 1px, rgba(0, 0, 0, 0.05) 1px 2px, rgba(255, 255, 255, 0.02) 2px 3px),
+    linear-gradient(180deg, #d9dbde 0%, #b9bcc1 45%, #a9acb1 60%, #c8cbcf 100%);
+}
+.cl-back-matte .cl-back-env {
+  opacity: 0.22;
+}
+.cl-back-matte .cl-back-glint {
+  opacity: 0.35;
+}
+.cl-back-painted .cl-back-base {
+  background: linear-gradient(180deg, var(--paint-hi) 0%, var(--paint) 35%, var(--paint) 70%, var(--paint-lo) 100%);
+}
+.cl-back-painted .cl-back-env {
+  opacity: 0.35;
+}
+
+.cl-back-logo {
+  position: absolute;
+  left: 50%;
+  top: 134px;
+  transform: translateX(-50%);
+  overflow: visible;
+}
+.cl-logo-shape {
+  fill: rgba(38, 40, 46, 0.42);
+  filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.55)) drop-shadow(0 -1px 0 rgba(0, 0, 0, 0.18));
+}
+.cl-back-painted .cl-logo-shape {
+  fill: rgba(255, 255, 255, 0.28);
+}
+.cl-back-wordmark {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 356px;
+  text-align: center;
+  font-weight: 500;
+  font-size: 48px;
+  line-height: 1;
+  letter-spacing: -1.5px;
+  color: rgba(34, 36, 42, 0.52);
+  text-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.55),
+    0 -1px 0 rgba(0, 0, 0, 0.12);
+}
+.cl-back-painted .cl-back-wordmark,
+.cl-back-painted .cl-back-engraving,
+.cl-back-painted .cl-back-print {
+  color: rgba(255, 255, 255, 0.6);
+  text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.2);
+}
+.cl-back-engraving {
+  position: absolute;
+  left: 30px;
+  right: 30px;
+  top: 432px;
+  text-align: center;
+  font-size: 15px;
+  line-height: 21px;
+  letter-spacing: 0.4px;
+  color: rgba(30, 32, 38, 0.6);
+  text-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.6),
+    0 -0.5px 0 rgba(0, 0, 0, 0.25);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cl-back-print {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 46px;
+  text-align: center;
+  font-size: 8.5px;
+  line-height: 13px;
+  letter-spacing: 0.15px;
+  color: rgba(30, 32, 38, 0.66);
+  text-shadow: 0 0.5px 0 rgba(255, 255, 255, 0.5);
+}
+.cl-back-marks {
+  margin-top: 4px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+}
+.cl-back-marks svg {
+  display: block;
+}
+
+/* ------------------------------------------------------------------ edge parts */
+.cl-hold-slot {
+  position: absolute;
+  inset: 0;
+  border-radius: 3px;
+  background: linear-gradient(180deg, #0b0b0c, #26272a);
+  box-shadow:
+    inset 0 1px 2px rgba(0, 0, 0, 0.9),
+    0 0 0 0.6px rgba(255, 255, 255, 0.35);
+}
+.cl-hold-orange {
+  position: absolute;
+  left: 3px;
+  top: 2.5px;
+  bottom: 2.5px;
+  width: 17px;
+  border-radius: 1.5px;
+  background: linear-gradient(180deg, #ffad4a, #f07a10);
+  opacity: 0;
+  transition: opacity 150ms;
+}
+.cl-hold-slot.on .cl-hold-orange {
+  opacity: 1;
+}
+.cl-hold-knob .d3-box-face {
+  cursor: pointer;
+}
+.cl-jack {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, #000 0 34%, #1d1d1f 40%, #6f7277 50%, #e4e6ea 58%, #9a9da2 68%, #4c4f54 80%, rgba(80, 82, 86, 0) 100%);
+}
+.cl-dock {
+  position: absolute;
+  inset: 0;
+  border-radius: 4px;
+  background: linear-gradient(180deg, #050505, #1b1b1d);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.4),
+    inset 0 0 4px #000;
+}
+.cl-dock-pins {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  top: 7px;
+  height: 6px;
+  border-radius: 1px;
+  background: #2b2b2e;
+  box-shadow: inset 0 0 0 1px #3a3a3d;
+}
+.cl-dock-pins::after {
+  content: '';
+  position: absolute;
+  left: 3px;
+  right: 3px;
+  top: 2px;
+  height: 2px;
+  background: repeating-linear-gradient(90deg, #b9984a 0 2px, transparent 2px 3.6px);
+  opacity: 0.8;
+}
