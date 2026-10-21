@@ -140,7 +140,7 @@ export interface Prefs {
   weather: { at: number; data: unknown } | null;
   weatherUnit: 'C' | 'F';
   deviceName: string;
-  reminders: { id: string; text: string; done: boolean }[];
+  reminders: { id: string; text: string; done: boolean; flagged?: boolean; due?: number; notes?: string }[];
   safariFavs: boolean;
 }
 
@@ -156,7 +156,7 @@ const DEFAULT_PREFS: Prefs = {
   keyboardClicks: true,
   lockSound: true,
   musicTab: 'library',
-  tvTab: 'library',
+  tvTab: 'watch',
   clockTab: 'world',
   timer: { endAt: null, remaining: 0, duration: 15 * 60, sound: 'Radar' },
   stopwatch: { startAt: null, acc: 0, laps: [] },

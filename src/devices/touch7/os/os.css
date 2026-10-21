@@ -895,9 +895,9 @@
 .t7-cc-bg {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.42);
-  -webkit-backdrop-filter: blur(22px) saturate(1.4);
-  backdrop-filter: blur(22px) saturate(1.4);
+  background: rgba(0, 0, 0, 0.5);
+  -webkit-backdrop-filter: blur(24px) saturate(1.5);
+  backdrop-filter: blur(24px) saturate(1.5);
   transition: opacity 420ms;
 }
 .t7-cc.instant .t7-cc-bg,
@@ -923,7 +923,7 @@
 .t7-cc-mod {
   position: absolute;
   border-radius: 17px;
-  background: rgba(90, 90, 96, 0.42);
+  background: rgba(38, 38, 42, 0.5);
   -webkit-backdrop-filter: blur(20px);
   backdrop-filter: blur(20px);
   overflow: hidden;

@@ -814,6 +814,35 @@ const G: Record<string, ReactNode> = {
       {[0, 1, 2].flatMap((r) => [0, 1, 2].map((c) => <rect key={`${r}${c}`} x={3 + c * 6.5} y={3 + r * 6.5} width="5" height="5" rx="1.2" />))}
     </g>
   ),
+  gamecontroller: (
+    <g>
+      <path {...S} strokeWidth={1.8} d="M7.5 7h9a5 5 0 0 1 4.9 4l.8 4.3a2.6 2.6 0 0 1-4.5 2.2L15.5 15h-7l-2.2 2.5a2.6 2.6 0 0 1-4.5-2.2l.8-4.3A5 5 0 0 1 7.5 7Z" />
+      <path {...S} strokeWidth={1.8} d="M8 9.5v3.5M6.25 11.25h3.5" />
+      <g {...F}>
+        <circle cx="15.5" cy="10.2" r="1.1" />
+        <circle cx="17.5" cy="12.4" r="1.1" />
+      </g>
+    </g>
+  ),
+  'books.vertical': (
+    <g {...S} strokeWidth={1.7}>
+      <rect x="3" y="4" width="4.5" height="16" rx="1" />
+      <rect x="8.5" y="4" width="4.5" height="16" rx="1" />
+      <path d="m14.8 5.2 3.9-1 3.6 14.6-3.9 1z" />
+    </g>
+  ),
+  bag: (
+    <g {...S} strokeWidth={1.8}>
+      <path d="M5 8h14l-1 12.5H6z" />
+      <path d="M9 10V6.5a3 3 0 0 1 6 0V10" />
+    </g>
+  ),
+  paintbrush: (
+    <g>
+      <path {...S} strokeWidth={1.8} d="M20.5 3.5c-3 1.2-8.2 6.3-10 9.2l1.6 1.6c2.9-1.8 8-7 9.2-10z" />
+      <path {...F} d="M9.6 13.6c-2 0-3.4 1.3-3.6 3.2-.1 1.2-.8 2-2 2.4 2.2 1.4 6.4 1 7.4-1.6.4-1.1.2-2.2-.6-3z" />
+    </g>
+  ),
   'lightbulb': <path {...S} d="M9 18h6M10 21.5h4M12 2.5a6.5 6.5 0 0 0-4 11.6c.8.6 1 1.4 1 2.4h6c0-1 .2-1.8 1-2.4A6.5 6.5 0 0 0 12 2.5Z" />,
 };
 

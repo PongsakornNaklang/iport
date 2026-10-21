@@ -69,7 +69,9 @@
   top: 5px;
   width: 320px;
   height: 568px;
-  overflow: clip;
+  overflow: hidden;
+  /* composited layers inside (scrollers, video) must not leak past the glass */
+  contain: paint;
   background: #000;
 }
 
