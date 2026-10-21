@@ -105,21 +105,25 @@
 }
 .cl-back-base {
   inset: 0;
+  /* a polished mirror in a white studio: bright sky, a soft grey horizon,
+     bright floor — the bands drift with the tilt (--ly) */
   background: linear-gradient(
       180deg,
-      #f7f8fa 0%,
-      #e2e5e9 14%,
-      #bfc3c8 28%,
-      #a3a7ad 38%,
-      #8f9399 42.5%,
-      #4a4e54 43.6%,
-      #5d6167 49%,
-      #8a8e94 58%,
-      #c6c9ce 68%,
-      #eceef0 78%,
-      #f8f9fa 84%,
-      #c3c6cb 93%,
-      #a5a9ae 100%
+      #fbfcfd 0%,
+      #f1f3f5 10%,
+      #dfe2e6 21%,
+      #c3c7cc 31%,
+      #a8acb2 38%,
+      #8d9197 42%,
+      #7b7f86 44%,
+      #8a8e94 48%,
+      #a7abb1 54%,
+      #cdd0d4 62%,
+      #eceef0 71%,
+      #fafbfc 78%,
+      #f3f4f6 84%,
+      #d8dbdf 92%,
+      #c3c6cb 100%
     )
     50% calc(50% + var(--ly, 0) * 55%) / 100% 150%;
 }
@@ -127,14 +131,14 @@
   inset: -20% -80%;
   background: linear-gradient(
     102deg,
-    rgba(255, 255, 255, 0) 18%,
-    rgba(255, 255, 255, 0.62) 27%,
+    rgba(255, 255, 255, 0) 16%,
+    rgba(255, 255, 255, 0.55) 26%,
     rgba(255, 255, 255, 0) 34%,
-    rgba(10, 12, 16, 0.42) 44%,
-    rgba(10, 12, 16, 0.1) 52%,
-    rgba(255, 255, 255, 0.5) 60%,
+    rgba(40, 44, 52, 0.22) 43%,
+    rgba(40, 44, 52, 0.06) 51%,
+    rgba(255, 255, 255, 0.45) 59%,
     rgba(255, 255, 255, 0) 66%,
-    rgba(10, 12, 16, 0.3) 78%,
+    rgba(40, 44, 52, 0.16) 78%,
     rgba(255, 255, 255, 0) 88%
   );
   transform: translate(calc(var(--lx, 0) * 26%), calc(var(--ly, 0) * -12%));
@@ -144,7 +148,9 @@
   right: -10%;
   top: 0;
   bottom: 0;
-  background: linear-gradient(90deg, rgba(0, 0, 0, 0.18), rgba(0, 0, 0, 0) 12%, rgba(0, 0, 0, 0) 88%, rgba(0, 0, 0, 0.22));
+  background:
+    linear-gradient(90deg, rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0) 9%, rgba(0, 0, 0, 0) 91%, rgba(0, 0, 0, 0.14)),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0) 6%, rgba(0, 0, 0, 0) 94%, rgba(0, 0, 0, 0.1));
 }
 .cl-back-glint {
   width: 70%;

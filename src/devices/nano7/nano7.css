@@ -1746,10 +1746,14 @@
 }
 
 /* device turns for landscape video */
-.n7-turn {
-  position: relative;
-  transform-style: preserve-3d;
-  transition: transform 0.6s cubic-bezier(0.3, 0.9, 0.3, 1);
+/* Settings ▸ Videos ▸ Rotate for Video: the whole iPod turns sideways.
+   The stage wrapper is rotated (not just the device) so the EarPods jack
+   markers that live next to the device turn with it. */
+.device-enter:has(> .n7-device) {
+  transition: transform 0.65s cubic-bezier(0.3, 0.9, 0.3, 1);
+}
+.device-enter:has(> .n7-landscape) {
+  transform: translate(-50%, -50%) rotateZ(-90deg);
 }
 
 /* ------------------------------------------------------------- settings */
@@ -2070,7 +2074,9 @@
 }
 .n7-radio-tabs button {
   flex: 1;
-  font-size: 11.5px !important;
+  min-width: 0;
+  white-space: nowrap;
+  font-size: 11px !important;
   color: var(--tint) !important;
   border: 1px solid var(--tint) !important;
   height: 24px;
@@ -2080,6 +2086,7 @@
 }
 .n7-radio-tabs button:first-child {
   border-radius: 5px 0 0 5px;
+  flex: 1.25;
 }
 .n7-radio-tabs button:last-child {
   border-radius: 0 5px 5px 0;

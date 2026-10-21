@@ -3,6 +3,7 @@ import { namesFromUrl, oembedTitle, parseSoundCloudUrl, scArtwork, scTrack } fro
 import { buildArchiveQuery, parseArchiveUrl, pickPlayableFiles, toArchiveItem, archiveTrack } from './archive';
 import { playableStations, stationTrack, type Station } from './radio';
 import { classifyLink, directTrack } from './links';
+import { normalizeUrl } from './net';
 import { itunesArtwork, previewTrack } from './itunes';
 import { makeTrack } from './track';
 
@@ -127,7 +128,19 @@ describe('links', () => {
     ['example.com/movie.mp4', 'media'],
     ['https://example.com/stream', 'unknown'],
   ])('%s → %s', (url, kind) => expect(classifyLink(url)?.kind).toBe(kind));
-  it('rejects junk', () => expect(classifyLink('not a link at all')).toBeNull());
+  it('rejects junk', () => {
+    expect(classifyLink('not a link at all')).toBeNull();
+    expect(classifyLink('hello world')).toBeNull();
+    expect(classifyLink('hello')).toBeNull();
+  });
+
+  it('normalizes scheme-less addresses', () => {
+    expect(normalizeUrl('example.com/music/My%20Song.mp3')).toBe('https://example.com/music/My%20Song.mp3');
+    expect(normalizeUrl('  http://radio.example.org:8000/live ')).toBe('http://radio.example.org:8000/live');
+    expect(normalizeUrl('https://exa mple.com/x')).toBeNull();
+    expect(normalizeUrl('ftp://example.com/x')).toBeNull();
+    expect(classifyLink('dQw4w9WgXcQ')).toMatchObject({ kind: 'youtube', ref: { videoId: 'dQw4w9WgXcQ' } });
+  });
 
   it('direct tracks', () => {
     expect(directTrack('https://example.com/music/01%20My_Song.mp3')).toMatchObject({ source: 'url', mediaType: 'music', title: '01 My Song', artist: 'example.com' });

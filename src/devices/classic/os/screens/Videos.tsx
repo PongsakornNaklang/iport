@@ -30,8 +30,10 @@ export function VideosMenu() {
   const rows = useMemo<Row[]>(
     () => [
       { key: 'movies', label: 'Movies', chevron: true, onSelect: () => os.nav.push({ title: 'Movies', el: <VideoList kind="movie" /> }) },
-      { key: 'mv', label: 'Music Videos', chevron: true, onSelect: () => os.nav.push({ title: 'Music Videos', el: <VideoList kind="musicvideo" /> }) },
+      { key: 'rentals', label: 'Rentals', chevron: true, onSelect: () => os.nav.push({ title: 'Rentals', el: <ListView rows={[]} empty="No Rentals" /> }) },
       { key: 'tv', label: 'TV Shows', chevron: true, onSelect: () => os.nav.push({ title: 'TV Shows', el: <TvShows /> }) },
+      { key: 'vpod', label: 'Video Podcasts', chevron: true, onSelect: () => os.nav.push({ title: 'Video Podcasts', el: <VideoPodcasts /> }) },
+      { key: 'mv', label: 'Music Videos', chevron: true, onSelect: () => os.nav.push({ title: 'Music Videos', el: <VideoList kind="musicvideo" /> }) },
       { key: 'vp', label: 'Video Playlists', chevron: true, onSelect: () => os.nav.push({ title: 'Video Playlists', el: <VideoPlaylists /> }) },
       { key: 'settings', label: 'Settings', chevron: true, onSelect: () => os.nav.push({ title: 'Video Settings', el: <VideoSettings /> }) },
     ],
@@ -80,6 +82,30 @@ function TvShows() {
     }));
   }, [tracks, os]);
   return <ListView rows={rows} empty="No TV Shows" />;
+}
+
+function VideoPodcasts() {
+  const os = useOS();
+  const tracks = useTracks();
+  const rows = useMemo<Row[]>(() => {
+    const shows = new Map<string, Track[]>();
+    for (const t of allTracks(tracks)) {
+      if (t.mediaType !== 'podcast' || !t.hasVideo) continue;
+      const k = t.show || t.album || 'Podcast';
+      if (!shows.has(k)) shows.set(k, []);
+      shows.get(k)!.push(t);
+    }
+    return [...shows.entries()]
+      .sort((a, b) => compareTitles(a[0], b[0]))
+      .map(([name, eps]) => ({
+        key: name,
+        label: name,
+        dot: eps.some((t) => !t.playCount),
+        chevron: true,
+        onSelect: () => os.nav.push({ title: name, el: <VideoList ids={eps.sort((a, b) => (b.pubDate ?? 0) - (a.pubDate ?? 0)).map((t) => t.id)} /> }),
+      }));
+  }, [tracks, os]);
+  return <ListView rows={rows} empty="No Video Podcasts" />;
 }
 
 function VideoPlaylists() {

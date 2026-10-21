@@ -5,6 +5,7 @@ import type { CalendarEvent } from '@/core/types';
 import { IconPlus, IconTrash, IconUpload } from '../../icons';
 import { toast } from '../../toast';
 import { IconCalendar } from '../icons';
+import { addEvents } from '../importer';
 import { Confirm, Empty, Sheet } from '../ui';
 
 const COLORS = ['#ff3b30', '#ff9500', '#ffcc00', '#34c759', '#0a84ff', '#5856d6', '#af52de', '#a2845e'];
@@ -58,17 +59,23 @@ export function Calendar() {
 
   const importIcs = async (files: FileList | null) => {
     let n = 0;
+    let existing = 0;
     for (const f of Array.from(files ?? [])) {
       try {
-        for (const e of parseIcs(await f.text())) {
-          useLibrary.getState().upsertEvent(e);
-          n++;
-        }
+        const r = addEvents(parseIcs(await f.text()));
+        n += r.added;
+        existing += r.existing;
       } catch {
         /* skip */
       }
     }
-    toast(n ? `Imported ${n} event${n === 1 ? '' : 's'}` : 'No events found in that file');
+    toast(
+      n
+        ? `Imported ${n} event${n === 1 ? '' : 's'}${existing ? ` · ${existing} already here` : ''}`
+        : existing
+          ? 'These events are already in your calendar'
+          : 'No events found in that file',
+    );
   };
 
   return (
@@ -110,7 +117,7 @@ export function Calendar() {
             <div className="lib-date-head">{dayLabel(g[0].start)}</div>
             <div className="list">
               {g.map((e) => (
-                <div key={e.id} className="list-item lib-row clickable" onClick={() => setEditing(e)}>
+                <div key={e.id} className="list-item lib-row lib-row-plain clickable" onClick={() => setEditing(e)}>
                   <div className="lib-ev-time">{e.allDay ? 'all-day' : `${new Date(e.start).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}`}</div>
                   <span className="lib-ev-dot" style={{ background: e.color ?? COLORS[4] }} />
                   <div className="li-text">
@@ -195,11 +202,9 @@ function EventEditor({ event, onClose }: { event: CalendarEvent | null; onClose:
         <label>Location</label>
         <input className="input" value={location} onChange={(e) => setLocation(e.target.value)} />
       </div>
-      <div className="lib-row-flex" style={{ marginBottom: 12 }}>
-        <span className="grow" style={{ fontSize: 13.5 }}>
-          All-day
-        </span>
-        <button className={`switch ${allDay ? 'on' : ''}`} role="switch" aria-checked={allDay} onClick={() => setAllDay((a) => !a)} />
+      <div className="lib-switch-row">
+        <span>All-day</span>
+        <button className={`switch ${allDay ? 'on' : ''}`} role="switch" aria-checked={allDay} aria-label="All-day" onClick={() => setAllDay((a) => !a)} />
       </div>
       <div className="lib-grid2">
         <div className="field">

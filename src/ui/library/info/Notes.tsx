@@ -39,7 +39,7 @@ export function Notes() {
       ) : (
         <div className="list" style={{ marginTop: 10 }}>
           {list.map((n) => (
-            <div key={n.id} className="list-item lib-row clickable" onClick={() => setEditing(n)}>
+            <div key={n.id} className="list-item lib-row lib-row-plain clickable" onClick={() => setEditing(n)}>
               <div className="li-text">
                 <div className="li-title">{n.title || 'New Note'}</div>
                 <div className="li-sub">

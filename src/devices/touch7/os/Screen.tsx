@@ -99,7 +99,8 @@ export function Screen({ appearance }: { appearance: Appearance }) {
     }
   }
 
-  const dim = Math.max(0, Math.min(0.75, (1 - brightness) * 0.85));
+  // perceptual: the default (80%) looks like a normal bright screen, 5% is very dim
+  const dim = Math.min(0.78, Math.pow(Math.max(0, (0.75 - brightness) / 0.7), 1.2) * 0.78);
 
   return (
     <div

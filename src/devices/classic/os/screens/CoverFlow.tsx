@@ -10,9 +10,11 @@ import { playList, songMenu } from './Music';
 
 const COVER = 128;
 const TOP = 34;
-const SIDE_X = 74;
-const SPACING = 25;
-const ANGLE = 72;
+/** centre of the first side cover (leaves a small gap after the centre one) */
+const SIDE_X = 96;
+/** distance between the stacked side covers */
+const SPACING = 21;
+const ANGLE = 70;
 const FLIP_SIZE = 164;
 
 /**
@@ -152,7 +154,7 @@ export function CoverFlow() {
     const s = Math.sign(d);
     const x = ad <= 1 ? d * SIDE_X : s * (SIDE_X + (ad - 1) * SPACING);
     const rot = -s * Math.min(1, ad) * ANGLE;
-    const z = -Math.min(1, ad) * 70;
+    const z = -Math.min(1, ad) * 64;
     const isCenter = i === t;
     const f = isCenter ? flipT : 0;
     const style: CSSProperties = {

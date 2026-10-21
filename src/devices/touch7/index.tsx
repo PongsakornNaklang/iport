@@ -254,7 +254,7 @@ export default function IpodTouch({ model, appearance }: DeviceProps) {
           </div>
         }
         back={
-          <div className="t7-back" style={{ background: back, ['--t7-back' as string]: back }}>
+          <div className="t7-backside" style={{ background: back, ['--t7-back' as string]: back }}>
             <div className="t7-back-tex" />
             <div className="t7-back-sheen" />
             <div className="t7-rear-cam">

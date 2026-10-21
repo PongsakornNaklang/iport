@@ -68,18 +68,23 @@ export function NavStack({
   const [peek, setPeek] = useState(false);
   const els = useRef(new Map<number, HTMLDivElement>());
   const wrap = useRef<HTMLDivElement>(null);
-  const timer = useRef(0);
   const stackRef = useRef(stack);
   stackRef.current = stack;
   const suppress = useRef(false);
 
-  const finishLater = () => {
-    window.clearTimeout(timer.current);
-    timer.current = window.setTimeout(() => {
+  // bumps on every push/pop so the "animation finished" timer restarts
+  const [animSerial, setAnimSerial] = useState(0);
+  const finishLater = () => setAnimSerial((n) => n + 1);
+  // (an effect rather than a stored timeout: StrictMode's simulated unmount
+  // would otherwise cancel the timer and leave the stack "animating" forever)
+  useEffect(() => {
+    if (!animSerial) return;
+    const tm = window.setTimeout(() => {
       setAnim(null);
       setLeaving(null);
     }, ANIM_MS + 20);
-  };
+    return () => window.clearTimeout(tm);
+  }, [animSerial]);
 
   const api: NavApi = {
     push(spec) {
@@ -108,8 +113,6 @@ export function NavStack({
     topKind: stack[stack.length - 1].spec.kind,
   };
   if (apiRef) (apiRef as { current: NavApi | null }).current = api;
-
-  useEffect(() => () => window.clearTimeout(timer.current), []);
 
   // Home pressed: next time the app opens it starts from the top? The nano
   // remembers where you were, so only reset when explicitly asked.

@@ -213,6 +213,7 @@ function Viewer({ photo, index, count, onNav, onClose }: { photo: Photo; index: 
     <Sheet
       title={`${index + 1} of ${count}`}
       onClose={onClose}
+      cancel={null}
       actions={
         <button className="btn small primary" onClick={onClose}>
           Done

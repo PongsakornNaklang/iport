@@ -50,14 +50,14 @@ function steelInset(u: number): number {
 function steelColor(u: number, material: string, back: string): string {
   // brightness of what the curved mirror reflects: sky → horizon (dark) → floor
   const stops: [number, number][] = [
-    [0, 0.8],
-    [0.18, 0.97],
-    [0.36, 0.62],
-    [0.5, 0.3],
-    [0.62, 0.42],
-    [0.78, 0.86],
-    [0.9, 0.95],
-    [1, 0.74],
+    [0, 0.88],
+    [0.14, 0.98],
+    [0.3, 0.84],
+    [0.46, 0.56],
+    [0.58, 0.64],
+    [0.74, 0.9],
+    [0.88, 0.98],
+    [1, 0.86],
   ];
   let l = stops[stops.length - 1][1];
   for (let i = 1; i < stops.length; i++) {
@@ -68,15 +68,16 @@ function steelColor(u: number, material: string, back: string): string {
       break;
     }
   }
-  if (material === 'matte') l = 0.66 + (l - 0.62) * 0.3;
+  if (material === 'matte') l = 0.72 + (l - 0.62) * 0.3;
   if (material === 'painted') {
     const base = shade(back, (l - 0.65) * 0.35);
     return `linear-gradient(90deg, ${shade(back, -0.12)}, ${base} 30%, ${base} 70%, ${shade(back, -0.14)})`;
   }
-  const v = Math.round(60 + l * 190);
-  const c = `rgb(${v - 4}, ${v - 2}, ${v + 2})`;
-  const dk = `rgb(${Math.round(v * 0.62)}, ${Math.round(v * 0.63)}, ${Math.round(v * 0.66)})`;
-  return `linear-gradient(90deg, ${dk} 0%, ${c} 22%, ${c} 78%, ${dk} 100%)`;
+  const v = Math.round(64 + l * 188);
+  const c = `rgb(${v - 4}, ${v - 2}, ${Math.min(255, v + 2)})`;
+  // the left/right flanks of each slice face sideways: a touch darker, never black
+  const dk = `rgb(${Math.round(v * 0.84)}, ${Math.round(v * 0.85)}, ${Math.round(v * 0.88)})`;
+  return `linear-gradient(90deg, ${dk} 0%, ${c} 14%, ${c} 86%, ${dk} 100%)`;
 }
 
 export default function IpodClassic({ model, appearance }: DeviceProps) {
@@ -174,13 +175,26 @@ export default function IpodClassic({ model, appearance }: DeviceProps) {
         </div>
       }
       back={<ClassicBack material={material} color={backColor} engraving={appearance.engraving} capacity={info.capacity} model={info.model} />}
+      decals={
+        <>
+          {/* ---- top edge: Hold switch slot ---- */}
+          <EdgePlane x={holdX} y={-H / 2 + insetAt(0.47) - 0.35} z={zAt(0.47)} w={44} h={13} side="top">
+            <div className={`cl-hold-slot ${hold ? 'on' : ''}`}>
+              <div className="cl-hold-orange" />
+            </div>
+          </EdgePlane>
+          {/* ---- bottom edge: headphone jack (EarPods plug in here) + dock connector ---- */}
+          <EdgePlane x={-W / 2 + 74} y={H / 2 - portInset + 0.35} z={portZ} w={30} h={30} side="bottom">
+            <div className="cl-jack" />
+          </EdgePlane>
+          <EdgePlane x={0} y={H / 2 - portInset + 0.35} z={portZ} w={136} h={20} side="bottom">
+            <div className="cl-dock">
+              <div className="cl-dock-pins" />
+            </div>
+          </EdgePlane>
+        </>
+      }
     >
-      {/* ---- top edge: Hold switch ---- */}
-      <EdgePlane x={holdX} y={-H / 2 + insetAt(0.47) - 0.35} z={zAt(0.47)} w={44} h={13} side="top">
-        <div className={`cl-hold-slot ${hold ? 'on' : ''}`}>
-          <div className="cl-hold-orange" />
-        </div>
-      </EdgePlane>
       <Box3D
         x={knobX}
         y={-H / 2 + insetAt(0.47) - 1.1}
@@ -201,15 +215,6 @@ export default function IpodClassic({ model, appearance }: DeviceProps) {
         }}
         className="cl-hold-knob"
       />
-      {/* ---- bottom edge: headphone jack + dock connector ---- */}
-      <EdgePlane x={-W / 2 + 74} y={H / 2 - portInset + 0.35} z={portZ} w={30} h={30} side="bottom">
-        <div className="cl-jack" />
-      </EdgePlane>
-      <EdgePlane x={0} y={H / 2 - portInset + 0.35} z={portZ} w={136} h={20} side="bottom">
-        <div className="cl-dock">
-          <div className="cl-dock-pins" />
-        </div>
-      </EdgePlane>
     </Device3D>
   );
 }

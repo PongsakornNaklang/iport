@@ -121,7 +121,11 @@ export function NavStack({
   }, [resetSerial, popToRoot]);
 
   const api = useMemo(() => ({ push, pop, popToRoot, depth: stack.length }), [push, pop, popToRoot, stack.length]);
-  useEffect(() => onApi?.(api), [api, onApi]);
+  const onApiRef = useRef(onApi);
+  onApiRef.current = onApi;
+  useEffect(() => {
+    onApiRef.current?.(api);
+  }, [api]);
 
   // interactive edge swipe back
   const swipe = useRef<{ id: number; x0: number; k: number; w: number; dx: number; t: number; v: number; on: boolean } | null>(null);

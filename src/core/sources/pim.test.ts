@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { parseVCards } from './vcard';
-import { parseDuration, parseIcs, zonedTime } from './ics';
+import { contactKey, parseVCards } from './vcard';
+import { eventKey, parseDuration, parseIcs, zonedTime } from './ics';
 
 const VCF = `BEGIN:VCARD
 VERSION:3.0
@@ -115,5 +115,22 @@ describe('iCalendar', () => {
     expect(parseDuration('P1DT2H30M')).toBe((26 * 60 + 30) * 60_000);
     expect(parseDuration('PT15M')).toBe(15 * 60_000);
     expect(zonedTime(2025, 0, 1, 0, 0, 0, 'America/New_York')).toBe(Date.UTC(2025, 0, 1, 5));
+  });
+});
+
+describe('re-import keys', () => {
+  it('match the same person regardless of phone formatting / case', () => {
+    const [a] = parseVCards(VCF);
+    const again = { ...a, firstName: a.firstName.toUpperCase(), phones: [{ label: 'mobile', value: '+66812345678' }] };
+    expect(contactKey(again)).toBe(contactKey(a));
+    expect(contactKey({ ...a, lastName: 'Seed' })).not.toBe(contactKey(a));
+    const company = { firstName: '', lastName: '', company: 'Apple', phones: [], emails: [{ label: 'work', value: 'Hi@Apple.com' }] };
+    expect(contactKey(company)).toBe('apple|hi@apple.com');
+  });
+  it('match the same event occurrence', () => {
+    const evs = parseIcs(ICS, { from: Date.UTC(2025, 0, 1), to: Date.UTC(2025, 11, 31) });
+    const keys = evs.map(eventKey);
+    expect(new Set(keys).size).toBe(keys.length); // recurring occurrences stay distinct
+    expect(parseIcs(ICS, { from: Date.UTC(2025, 0, 1), to: Date.UTC(2025, 11, 31) }).map(eventKey)).toEqual(keys);
   });
 });

@@ -196,10 +196,15 @@ export function TrackEditor({ track, onClose }: { track: Track; onClose: () => v
           </div>
         </div>
       </div>
-      <label className="lib-row-flex" style={{ fontSize: 13, margin: '0 0 12px', cursor: 'pointer' }}>
-        <input type="checkbox" checked={d.compilation} onChange={(e) => set('compilation', e.target.checked)} />
-        Part of a compilation (shows under Compilations)
-      </label>
+      <div className="lib-switch-row">
+        <span>
+          Part of a compilation
+          <span className="tiny" style={{ display: 'block' }}>
+            Shows under Compilations on the iPod
+          </span>
+        </span>
+        <button className={`switch ${d.compilation ? 'on' : ''}`} role="switch" aria-checked={d.compilation} aria-label="Part of a compilation" onClick={() => set('compilation', !d.compilation)} />
+      </div>
       {showShow && (
         <>
           <div className="field">

@@ -5,7 +5,7 @@ import { useBattery, useNow } from '../../../core/util/hooks';
 import type { HeaderStyle } from './core';
 import { BatteryGlyph, LockGlyph, PlayStateGlyph } from './glyphs';
 
-export function StatusBar({ title, style, hold, height }: { title: string; style: HeaderStyle; hold: boolean; height: number }) {
+export function StatusBar({ title, style, hold, height, z }: { title: string; style: HeaderStyle; hold: boolean; height: number; z?: number }) {
   const status = usePlayer((s) => s.status);
   const hasTrack = usePlayer((s) => !!s.currentId);
   const timeInTitle = useSettings((s) => s.timeInTitle);
@@ -16,7 +16,7 @@ export function StatusBar({ title, style, hold, height }: { title: string; style
   const shown = timeInTitle ? formatClock(now, use24h) : title;
   const playing = status === 'playing' || status === 'loading';
   return (
-    <div className={`cl-status cl-status-${style}`} style={{ height }}>
+    <div className={`cl-status cl-status-${style}`} style={{ height, zIndex: z }}>
       <div className="cl-status-left">
         {hasTrack && <PlayStateGlyph playing={playing} />}
         {hold && <LockGlyph size={11} color={style === 'dark' ? '#ddd' : '#3a3a3a'} />}

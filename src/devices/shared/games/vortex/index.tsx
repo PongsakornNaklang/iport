@@ -868,9 +868,9 @@ class VortexGame implements GameImpl {
         g.lineWidth = 2;
         g.stroke();
       }
-      drawTitle(g, 'Vortex', w / 2, 104, ui, 38);
-      text(g, 'Spin the wheel to steer', w / 2, 128, { size: 11, weight: 600, color: ui.textDim, align: 'center', base: 'middle', shadow: ui.shadow });
-      drawPrompt(g, 'Press Center to start', w / 2, 150, this.t, ui, 12);
+      drawTitle(g, 'Vortex', w / 2, 101, ui, 38);
+      text(g, 'Spin the wheel to steer', w / 2, 130, { size: 11, weight: 600, color: ui.textDim, align: 'center', base: 'middle', shadow: ui.shadow });
+      drawPrompt(g, 'Press Center to start', w / 2, 151, this.t, ui, 12);
       return;
     }
     if (ph === 'play' && this.attached) {

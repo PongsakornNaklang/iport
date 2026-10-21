@@ -7,6 +7,7 @@ import { sfx } from './sfx';
 
 /** What a game gets from the shell. */
 export interface GameEnv {
+  /** logical screen size to lay out for (the real size, or a scaled-up one of at least 320×240) */
   w: number;
   h: number;
   color: boolean;
@@ -59,6 +60,12 @@ export function GameCanvas({ bus, width, height, onExit, color, create }: GamePr
     const g = canvas?.getContext('2d');
     if (!canvas || !g) return;
 
+    // Games are laid out for a screen of at least 320×240; smaller screens
+    // (older Click Wheel iPods) get a scaled-down copy of that logical screen.
+    const scale = Math.min(1, width / 320, height / 240);
+    const lw = Math.round(width / scale);
+    const lh = Math.round(height / scale);
+
     let dpr = 0;
     const fit = () => {
       // Never below 2× so the screen stays sharp when the 3D stage zooms the device in.
@@ -106,9 +113,8 @@ export function GameCanvas({ bus, width, height, onExit, color, create }: GamePr
       it.action();
     };
 
-    const env: GameEnv = { w: width, h: height, color, exit, pause };
+    const env: GameEnv = { w: lw, h: lh, color, exit, pause };
     const game = create(env);
-    (window as unknown as Record<string, unknown>).__game = game; // TEMP-HARNESS
 
     const off = bus.on((e: WheelEvent) => {
       if (exited) return true;
@@ -145,15 +151,16 @@ export function GameCanvas({ bus, width, height, onExit, color, create }: GamePr
       last = now;
       fit();
       if (!paused) game.update(dt);
-      g.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const k = dpr * scale;
+      g.setTransform(k, 0, 0, k, 0, 0);
       g.globalAlpha = 1;
       game.draw(g);
       if (paused) {
-        g.setTransform(dpr, 0, 0, dpr, 0, 0);
+        g.setTransform(k, 0, 0, k, 0, 0);
         drawPauseMenu(
           g,
-          width,
-          height,
+          lw,
+          lh,
           ui,
           items.map((i) => i.label),
           sel,

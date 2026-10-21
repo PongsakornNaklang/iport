@@ -154,12 +154,15 @@ class MusicQuizGame implements GameImpl {
   private art: HTMLImageElement | null = null;
   private unsub: () => void;
   private silent = silentWav();
+  private paused = false;
 
   constructor(private env: GameEnv) {
     this.p = makePalette(env.color);
     this.best = loadData('musicquiz', { high: 0 });
     this.audio = new Audio();
     this.audio.preload = 'auto';
+    // very short songs keep going until the round ends
+    this.audio.loop = true;
     this.unsub = useLibrary.subscribe((s, prev) => {
       if (s.tracks !== prev.tracks || s.hydrated !== prev.hydrated) this.refreshPool();
     });
@@ -193,10 +196,12 @@ class MusicQuizGame implements GameImpl {
   }
 
   onPause(): void {
+    this.paused = true;
     this.audio.pause();
   }
 
   onResume(): void {
+    this.paused = false;
     if (this.phase === 'question' || this.phase === 'reveal') void this.audio.play().catch(() => {});
   }
 
@@ -266,6 +271,8 @@ class MusicQuizGame implements GameImpl {
     const result = await this.loadClip(song, token);
     if (token !== this.token) return;
     if (result === 'ok') {
+      // the clip finished loading behind the pause screen: hold it until Resume
+      if (this.paused) this.audio.pause();
       this.retries = 0;
       this.fade = 0;
       this.fadeTo = 1;

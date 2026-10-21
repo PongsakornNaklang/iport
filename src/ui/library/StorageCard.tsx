@@ -6,7 +6,7 @@ import { formatBytes } from '@/core/util/format';
 import type { Track } from '@/core/types';
 import { toast } from '../toast';
 
-const COLORS = { audio: '#3d8bff', video: '#a463f2', photos: '#ff9f0a', other: '#ffd60a' };
+const COLORS = { audio: '#0a84ff', video: '#bf5af2', photos: '#ff9f0a', other: '#c7c7cc' };
 
 interface Sizes {
   audio: number;
@@ -127,7 +127,7 @@ export function StorageCard() {
           </span>
         ))}
         {persisted === false && (
-          <button className="btn ghost small" style={{ height: 18, marginLeft: 'auto' }} onClick={persist} title="Ask the browser not to clear your library when space is low">
+          <button className="btn ghost small" onClick={persist} title="Ask the browser not to clear your library when space is low">
             Keep offline
           </button>
         )}

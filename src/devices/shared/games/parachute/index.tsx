@@ -417,11 +417,12 @@ class ParachuteGame implements GameImpl {
     if (ph === 'boom' && this.phaseT > 1.6) this.gameOver();
   }
 
-  private landedCounts(): { left: number; right: number } {
+  /** Troopers on the ground each side of the gun (`marching` ones too, for the danger pips). */
+  private landedCounts(marching = false): { left: number; right: number } {
     let left = 0;
     let right = 0;
     for (const t of this.troopers) {
-      if (t.state !== 'landed') continue;
+      if (t.state !== 'landed' && !(marching && t.state === 'march')) continue;
       if (t.x < this.gx) left++;
       else right++;
     }
@@ -798,7 +799,7 @@ class ParachuteGame implements GameImpl {
 
   /** Four danger pips each side of the bunker: troopers landed on that side. */
   private drawPips(g: Ctx): void {
-    const { left, right } = this.landedCounts();
+    const { left, right } = this.landedCounts(true);
     const y = this.groundY + 5;
     for (let i = 0; i < LANDED_LIMIT; i++) {
       g.fillStyle = i < left ? this.p.pipOn : this.p.pipOff;
@@ -893,6 +894,18 @@ class ParachuteGame implements GameImpl {
   }
 
   private drawBomb(g: Ctx, b: Bomb): void {
+    // a blinking target ring: a bomb on the gun ends the game, so make it hard to miss
+    if (!this.demo && Math.floor(this.t * 6) % 2 === 0) {
+      g.strokeStyle = this.env.color ? 'rgba(255,110,90,0.85)' : LCD[3];
+      g.lineWidth = 1;
+      g.beginPath();
+      g.arc(b.x, b.y, 8, 0, Math.PI * 2);
+      g.moveTo(b.x - 11, b.y);
+      g.lineTo(b.x - 6, b.y);
+      g.moveTo(b.x + 6, b.y);
+      g.lineTo(b.x + 11, b.y);
+      g.stroke();
+    }
     g.save();
     g.translate(b.x, b.y);
     g.rotate(Math.atan2(b.vy, b.vx) - Math.PI / 2);

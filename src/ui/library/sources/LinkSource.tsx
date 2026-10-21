@@ -48,6 +48,7 @@ export function LinkSource({ intent }: { intent: Extract<Intent, { kind: 'link' 
 
   return (
     <form
+      noValidate
       onSubmit={(e) => {
         e.preventDefault();
         submit(false);

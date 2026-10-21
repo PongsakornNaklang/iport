@@ -267,16 +267,19 @@ export function ClickWheelOS({
       }
       if (p === 'boot' || p === 'reboot') return true;
       if (p === 'sleep') {
+        // any button wakes the iPod; Play/Pause also resumes the music
         if (e.type === 'down') {
           swallow.add(e.button);
           wake();
           setPower('on');
+          powerRef.current = 'on';
+          if (e.button === 'play') player.play();
         }
-        if (e.type === 'up') swallow.delete(e.button);
         return true;
       }
       if ('button' in e && swallow.has(e.button)) {
-        if (e.type === 'up') swallow.delete(e.button);
+        // swallow the rest of the waking press (up + click, or up after a hold)
+        if (e.type === 'click' || (e.type === 'up' && e.held)) swallow.delete(e.button);
         return true;
       }
       // backlight: touching / pressing anything lights the screen; holding Menu toggles it
@@ -387,7 +390,9 @@ export function ClickWheelOS({
             </ScreenHost>
           ))}
         </div>
-        {!game && <StatusBar title={top.title} style={headerStyle} hold={hold} height={hdr} />}
+        {(!game || ringing) && (
+          <StatusBar title={ringing ? 'Alarm' : top.title} style={ringing ? 'light' : headerStyle} hold={hold} height={hdr} z={ringing ? 29 : undefined} />
+        )}
         {menuSpec && <ContextMenu spec={menuSpec} onClose={() => setMenuSpec(null)} />}
         {game && <GameHost id={game} width={width} height={height} color={color} onExit={() => setGame(null)} />}
         {locked && <LockScreen onUnlock={() => setLocked(false)} />}
@@ -404,7 +409,7 @@ export function ClickWheelOS({
           </div>
         )}
         {/* LCD: brightness, backlight, power */}
-        <div className="cl-lcd-dim" style={{ opacity: Math.max(0, 0.85 - brightness) * 0.55 }} />
+        <div className="cl-lcd-dim" style={{ opacity: Math.max(0, 0.8 - brightness) * 0.6 }} />
         <div className={`cl-backlight ${lit ? '' : 'cl-backlight-off'}`} />
         {(power === 'boot' || power === 'reboot') && (
           <div className={`cl-boot cl-boot-${bootStyle} ${power === 'reboot' ? 'cl-boot-blank' : ''}`}>

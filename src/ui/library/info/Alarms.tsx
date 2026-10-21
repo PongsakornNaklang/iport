@@ -52,7 +52,7 @@ export function Alarms() {
       ) : (
         <div className="list">
           {list.map((a) => (
-            <div key={a.id} className="list-item lib-row clickable" onClick={() => setEditing(a)}>
+            <div key={a.id} className="list-item lib-row lib-row-plain clickable" onClick={() => setEditing(a)}>
               <div className="li-text">
                 <div className={`lib-alarm-time ${a.enabled ? '' : 'off'}`}>{clock(a.time)}</div>
                 <div className="li-sub">
@@ -82,7 +82,7 @@ export function Alarms() {
       </div>
       <div className="list">
         {clocks.map((c) => (
-          <div key={c.id} className="list-item lib-row">
+          <div key={c.id} className="list-item lib-row lib-row-icon">
             <IconGlobe style={{ color: 'var(--ui-text-3)', flex: 'none' }} />
             <div className="li-text">
               <div className="li-title">{c.city}</div>
@@ -216,7 +216,7 @@ function ClockPicker({ onClose }: { onClose: () => void }) {
       <input className="input" autoFocus placeholder="Search cities (e.g. Paris, Chiang Mai → Bangkok)" value={q} onChange={(e) => setQ(e.target.value)} />
       <div className="list" style={{ marginTop: 10 }}>
         {matches.map((z) => (
-          <div key={z} className="list-item lib-row clickable" onClick={() => add(z)}>
+          <div key={z} className="list-item lib-row lib-row-plain clickable" onClick={() => add(z)}>
             <div className="li-text">
               <div className="li-title">{z.split('/').pop()!.replace(/_/g, ' ')}</div>
               <div className="li-sub">{z.split('/')[0].replace(/_/g, ' ')}</div>

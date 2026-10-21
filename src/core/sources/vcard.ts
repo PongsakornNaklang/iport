@@ -180,3 +180,12 @@ function toContact(props: Prop[]): ParsedContact | null {
   if (!c.firstName && !c.lastName && !c.company && !c.phones.length && !c.emails.length) return null;
   return c;
 }
+
+/** Identity used to skip contacts that are already in the library when a .vcf is imported again. */
+export function contactKey(c: Pick<Contact, 'firstName' | 'lastName' | 'company' | 'phones' | 'emails'>): string {
+  const norm = (s: string | undefined) => (s ?? '').toLowerCase().replace(/\s+/g, ' ').trim();
+  const digits = (s: string) => s.replace(/[^\d+]/g, '');
+  const name = norm(`${c.firstName} ${c.lastName}`) || norm(c.company);
+  const first = c.phones[0] ? digits(c.phones[0].value) : norm(c.emails[0]?.value);
+  return `${name}|${first}`;
+}

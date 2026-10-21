@@ -1,5 +1,5 @@
 /** Canvas helpers shared by the games: text, rounded rects, overlays, particles. */
-import { font, type UiPalette } from './palette';
+import { font, LCD, type UiPalette } from './palette';
 
 export type Ctx = CanvasRenderingContext2D;
 
@@ -113,7 +113,7 @@ export function drawCard(
   cardW = 210,
 ): { x: number; y: number; w: number; h: number } {
   const lh = lines.reduce((a, l) => a + (l.size ?? 12) + 5, 0);
-  const ch = 40 + lh + (prompt ? 22 : 4);
+  const ch = 40 + lh + (prompt ? 27 : 4);
   const cx = Math.round((w - cardW) / 2);
   const cy = Math.round((h - ch) / 2);
   if (ui.scrim) {
@@ -152,7 +152,7 @@ export function drawCard(
     });
   }
   if (prompt && blink(prompt.t)) {
-    text(g, prompt.s, w / 2, cy + ch - 13, { size: 11, weight: 600, color: dim, align: 'center', base: 'middle' });
+    text(g, prompt.s, w / 2, cy + ch - 14, { size: 11, weight: 600, color: dim, align: 'center', base: 'middle' });
   }
   return { x: cx, y: cy, w: cardW, h: ch };
 }
@@ -338,7 +338,16 @@ export class Popups {
   }
   draw(g: Ctx, lcd: boolean): void {
     for (const p of this.list) {
-      if (!lcd) g.globalAlpha = Math.min(1, p.life * 2.5);
+      if (lcd) {
+        // a light halo keeps dark text readable over dark bricks
+        g.font = font(10, 800);
+        g.textAlign = 'center';
+        g.textBaseline = 'middle';
+        g.lineJoin = 'round';
+        g.lineWidth = 3;
+        g.strokeStyle = LCD[0];
+        g.strokeText(p.s, p.x, p.y);
+      } else g.globalAlpha = Math.min(1, p.life * 2.5);
       text(g, p.s, p.x, p.y, { size: 10, weight: 800, color: p.color, align: 'center', base: 'middle', shadow: lcd ? null : 'rgba(0,0,0,0.6)' });
     }
     g.globalAlpha = 1;

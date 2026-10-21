@@ -529,14 +529,14 @@ function Manage() {
   };
 
   return (
-    <div className="section" style={{ marginTop: 22 }}>
+    <div className="section lib-manage">
       <div className="section-title">Manage</div>
-      <div className="lib-row-flex">
-        <button className="btn" disabled={hasDemo} onClick={() => void restore()} title={hasDemo ? 'The demo songs are already in your library' : undefined}>
-          Restore demo songs
+      <div className="list">
+        <button className="list-item" disabled={hasDemo} onClick={() => void restore()} title={hasDemo ? 'The demo songs are already in your library' : undefined}>
+          <IconMusic /> Restore Demo Songs
         </button>
-        <button className="btn danger" onClick={() => setConfirm(true)}>
-          <IconTrash /> Erase all content…
+        <button className="list-item danger" onClick={() => setConfirm(true)}>
+          <IconTrash /> Erase All Content…
         </button>
       </div>
       <p className="lib-hint">

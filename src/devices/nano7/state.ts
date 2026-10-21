@@ -176,6 +176,8 @@ export interface NanoData {
   invert: boolean;
   mono: boolean;
   turnForVideo: boolean;
+  /** Fitness distance units */
+  units: 'mi' | 'km';
 }
 
 function serialNo(): string {
@@ -214,6 +216,7 @@ const DATA_DEFAULTS: NanoData = {
   invert: false,
   mono: false,
   turnForVideo: true,
+  units: typeof navigator !== 'undefined' && /^en-(US|LR|MM)$/i.test(navigator.language) ? 'mi' : 'km',
 };
 
 interface NanoDataActions {
@@ -276,6 +279,8 @@ export interface ClockState {
   timerEnd: number | null;
   /** remaining ms while paused */
   timerPaused: number | null;
+  /** length of the running countdown, ms (for the progress ring) */
+  timerTotal: number;
   timerRinging: boolean;
 }
 
@@ -286,6 +291,7 @@ export const useClockState = create<ClockState>(() => ({
   laps: [],
   timerEnd: null,
   timerPaused: null,
+  timerTotal: 0,
   timerRinging: false,
 }));
 

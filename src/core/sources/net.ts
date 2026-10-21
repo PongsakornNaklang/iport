@@ -146,10 +146,16 @@ export function isHttpUrl(s: string): boolean {
   }
 }
 
-/** Accept "example.com/x.mp3" as well as full URLs. */
+/**
+ * Accept "example.com/x.mp3" as well as full URLs. Plain words and sentences
+ * are not links (some browsers' URL parsers happily accept "https://hello world").
+ */
 export function normalizeUrl(input: string): string | null {
   const s = input.trim();
-  if (!s) return null;
+  if (!s || /\s/.test(s)) return null;
   const withScheme = /^[a-z][a-z0-9+.-]*:\/\//i.test(s) ? s : `https://${s}`;
-  return isHttpUrl(withScheme) ? withScheme : null;
+  if (!isHttpUrl(withScheme)) return null;
+  const host = new URL(withScheme).hostname;
+  if (!host.includes('.') && !host.includes(':') && host !== 'localhost') return null;
+  return withScheme;
 }

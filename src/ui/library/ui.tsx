@@ -77,7 +77,7 @@ export function SearchField({
     onSubmit?.(value.trim());
   };
   return (
-    <form className="lib-search" onSubmit={submit} role="search">
+    <form className="lib-search" onSubmit={submit} role="search" noValidate>
       <div className="lib-search-box">
         <IconSearch className="lib-search-icon" />
         <input
@@ -128,6 +128,7 @@ export function InlineForm({
   return (
     <form
       className="lib-search"
+      noValidate
       onSubmit={(e) => {
         e.preventDefault();
         if (value.trim()) onSubmit(value.trim());
@@ -301,12 +302,15 @@ export function Sheet({
   children,
   actions,
   wide,
+  cancel = 'Cancel',
 }: {
   title: ReactNode;
   onClose: () => void;
   children: ReactNode;
   actions?: ReactNode;
   wide?: boolean;
+  /** label of the top-left button; null hides it (when `actions` has its own Done) */
+  cancel?: string | null;
 }) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
@@ -316,9 +320,13 @@ export function Sheet({
   return (
     <div className={`lib-sheet ${wide ? 'wide' : ''}`} role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
       <div className="lib-sheet-head">
-        <button className="btn small" onClick={onClose}>
-          Cancel
-        </button>
+        {cancel ? (
+          <button className="btn small" onClick={onClose}>
+            {cancel}
+          </button>
+        ) : (
+          <span />
+        )}
         <h3>{title}</h3>
         <div className="lib-sheet-actions">{actions}</div>
       </div>

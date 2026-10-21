@@ -262,3 +262,8 @@ function toEvents(props: Prop[], from: number, to: number): ParsedEvent[] {
     .filter((t) => !excluded.has(t))
     .map((t) => ({ ...base, start: t, end: t + length }));
 }
+
+/** Identity used to skip events that are already in the library when an .ics is imported again. */
+export function eventKey(e: Pick<CalendarEvent, 'title' | 'start' | 'end'>): string {
+  return `${e.title.toLowerCase().replace(/\s+/g, ' ').trim()}|${e.start}|${e.end}`;
+}

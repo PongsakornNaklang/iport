@@ -12,7 +12,7 @@ import { useLibrary } from '../../core/library/store';
 import { songs } from '../../core/library/selectors';
 import { useAlarmState } from '../../core/alarms';
 import type { DeviceProps } from '../types';
-import { nano, useNano } from './state';
+import { nano, useNano, useNanoData } from './state';
 import { Screen } from './os/Screen';
 import { APPLE_PATH } from './os/icons';
 import { navBack } from './apps/registry';
@@ -73,9 +73,7 @@ export const buttons = {
     player.toggle();
   },
   previous() {
-    const { index, position } = usePlayer.getState();
-    if (position > 3 || index === 0) player.seek(0);
-    else player.jumpTo(index - 1);
+    player.prev();
   },
 };
 
@@ -228,6 +226,8 @@ export default function IpodNano7({ appearance }: DeviceProps) {
   const wallpaper = String(appearance.options.wallpaper ?? 'dark');
   const darkGlass = luminance(glass) < 0.4;
   const asleep = useNano((s) => s.asleep);
+  const video = useNano((s) => s.video);
+  const turnForVideo = useNanoData((s) => s.turnForVideo);
   const playClick = useMultiClick();
 
   useServices();
@@ -280,7 +280,7 @@ export default function IpodNano7({ appearance }: DeviceProps) {
 
   return (
     <Device3D
-      className="n7-device"
+      className={`n7-device ${video && turnForVideo ? 'n7-landscape' : ''}`}
       width={W}
       height={H}
       depth={D}

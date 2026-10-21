@@ -162,15 +162,16 @@ function About() {
   const gb = (n: number) => `${(n / 1e9).toFixed(1)} GB`;
   return (
     <Page grouped>
-      <Section>
-        <Row title="Name" detail="iPod" />
-      </Section>
+      <div className="n7-about-head">
+        <div className="n7-about-name">iPod nano</div>
+        <div className="n7-about-cap">16GB</div>
+      </div>
       <Section>
         <Row title="Songs" detail={nSongs.toLocaleString()} />
         <Row title="Videos" detail={nVideos.toLocaleString()} />
         <Row title="Photos" detail={photos.length.toLocaleString()} />
         <Row title="Podcasts" detail={nPod.toLocaleString()} />
-        <Row title="Capacity" detail={gb(cap)} />
+        <Row title="Capacity" detail="16 GB" />
         <Row title="Available" detail={gb(Math.max(0, cap - used))} />
         <Row title="Version" detail="1.0.4" />
         <Row title="Model" detail="MKN52LL/A" />
@@ -386,6 +387,10 @@ function FitnessSettings() {
         {[5000, 7500, 10000, 12500, 15000].map((n) => (
           <Row key={n} title={n.toLocaleString()} checked={d.stepGoal === n} onClick={() => d.set('stepGoal', n)} />
         ))}
+      </Section>
+      <Section header="Distance Units">
+        <Row title="Miles" checked={d.units === 'mi'} onClick={() => d.set('units', 'mi')} />
+        <Row title="Kilometers" checked={d.units === 'km'} onClick={() => d.set('units', 'km')} />
       </Section>
       <Section header="Personal Info">
         <Row title="Weight" detail={`${d.weightKg} kg`} right={<Stepper value={d.weightKg} min={30} max={200} onChange={(v) => d.set('weightKg', v)} />} />

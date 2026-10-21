@@ -61,6 +61,8 @@ export function ListView({ rows, indexed, variant = 'plain', height, initial = 0
   });
   const [letter, setLetter] = useState<string | null>(null);
   const letterTimer = useRef<number | undefined>(undefined);
+  /** recent scroll times: held arrow keys report a low velocity, so measure the rate here too */
+  const stepTimes = useRef<number[]>([]);
 
   // keep the selection valid when the list changes
   const sel = clamp(state.sel, 0, Math.max(0, rows.length - 1));
@@ -80,8 +82,13 @@ export function ListView({ rows, indexed, variant = 'plain', height, initial = 0
     if (e.type === 'scroll') {
       if (!rows.length) return true;
       let steps = e.steps;
-      const v = e.velocity;
-      if (rows.length > 40) steps *= v > 44 ? 8 : v > 30 ? 4 : v > 18 ? 2 : 1;
+      const now = performance.now();
+      const recent = stepTimes.current.filter((x) => now - x < 500);
+      recent.push(now);
+      stepTimes.current = recent;
+      const rate = recent.length * 2;
+      const v = Math.max(e.velocity, rate);
+      if (rows.length > 40) steps *= e.velocity > 44 ? 8 : e.velocity > 30 ? 4 : e.velocity > 18 ? 2 : rate > 24 && rows.length > 150 ? 2 : 1;
       const ns = clamp(sel + steps, 0, rows.length - 1);
       let nt = top;
       if (ns < nt) nt = ns;

@@ -33,20 +33,9 @@ export function NowPlayingButton() {
   );
 }
 
-/**
- * player.playTracks, making sure playback starts on the chosen item.
- * (Works around the shared player starting at index 0 when shuffle is off;
- * a no-op once that is fixed.)
- */
+/** Start a list at `i` (the shared player now honours the start index). */
 export function startPlayback(ids: string[], i: number, opts: { shuffle?: boolean; startAt?: number } = {}) {
   player.playTracks(ids, i, opts);
-  if (opts.shuffle) return;
-  const want = ids[i];
-  const s = usePlayer.getState();
-  if (want && s.queue[s.index] !== want) {
-    const j = s.queue.indexOf(want);
-    if (j >= 0) player.jumpTo(j);
-  }
 }
 
 /** Start playing `ids` at `i` and show Now Playing. */

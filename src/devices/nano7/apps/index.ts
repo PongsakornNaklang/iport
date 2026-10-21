@@ -1,3 +1,4 @@
+import './apps.css';
 import type { ComponentType } from 'react';
 import type { AppId } from '../state';
 import { MusicApp, AudiobooksApp } from './Music';

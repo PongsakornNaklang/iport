@@ -6,6 +6,7 @@ import { compareTitles } from '@/core/util/format';
 import { IconClose, IconPlus, IconTrash, IconUpload } from '../../icons';
 import { toast } from '../../toast';
 import { IconContact } from '../icons';
+import { addContacts } from '../importer';
 import { Confirm, Empty, SearchField, Sheet } from '../ui';
 
 export function fullName(c: Contact): string {
@@ -32,17 +33,23 @@ export function Contacts() {
 
   const importVcf = async (files: FileList | null) => {
     let n = 0;
+    let existing = 0;
     for (const f of Array.from(files ?? [])) {
       try {
-        for (const c of parseVCards(await f.text())) {
-          useLibrary.getState().upsertContact(c);
-          n++;
-        }
+        const r = addContacts(parseVCards(await f.text()));
+        n += r.added;
+        existing += r.existing;
       } catch {
         /* skip bad file */
       }
     }
-    toast(n ? `Imported ${n} contact${n === 1 ? '' : 's'}` : 'No contacts found in that file');
+    toast(
+      n
+        ? `Imported ${n} contact${n === 1 ? '' : 's'}${existing ? ` · ${existing} already here` : ''}`
+        : existing
+          ? 'These contacts are already here'
+          : 'No contacts found in that file',
+    );
   };
 
   return (

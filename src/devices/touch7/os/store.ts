@@ -364,3 +364,25 @@ export function useStatusBar(app: string, style: BarStyle | null, enabled = true
     return () => useBarOverrides.setState((s) => ({ list: s.list.filter((x) => x.token !== token) }));
   }, [app, style, enabled]);
 }
+
+// dev-only handle for automated UI checks
+if (import.meta.env.DEV && typeof window !== 'undefined') {
+  void Promise.all([
+    import('../../../core/customize/store'),
+    import('../../../shell/stageStore'),
+    import('../../../core/library/store'),
+    import('../../../core/player/player'),
+  ]).then(([c, st, lib, pl]) => {
+    (window as unknown as { __t7: unknown }).__t7 = {
+      os,
+      useOS,
+      usePrefs,
+      useSettings,
+      useCustomize: c.useCustomize,
+      useStage: st.useStage,
+      useLibrary: lib.useLibrary,
+      player: pl.player,
+      usePlayer: pl.usePlayer,
+    };
+  });
+}

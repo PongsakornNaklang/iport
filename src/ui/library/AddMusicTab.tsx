@@ -31,16 +31,16 @@ export type Intent =
 
 type IntentInput = Intent extends infer I ? (I extends Intent ? Omit<I, 'seq'> : never) : never;
 
-export const SOURCES: { id: SourceId; label: string; color: string; icon: ReactNode; blurb: string }[] = [
-  { id: 'computer', label: 'Computer', color: '#5e6672', icon: <IconComputer />, blurb: 'Your own songs, videos and folders. They stay private in this browser.' },
-  { id: 'youtube', label: 'YouTube', color: '#ff3b30', icon: <IconYouTube />, blurb: 'Search or paste any video, Short, music.youtube or playlist link.' },
-  { id: 'soundcloud', label: 'SoundCloud', color: '#ff6a1a', icon: <IconSoundCloud />, blurb: 'Search, or paste a track or playlist link from soundcloud.com.' },
-  { id: 'audius', label: 'Audius', color: '#a845ff', icon: <IconAudius />, blurb: 'Free, full-length songs from independent artists. No account needed.' },
-  { id: 'archive', label: 'Archive.org', color: '#8a7650', icon: <IconArchive />, blurb: 'Live concerts, netlabels, 78s, old radio, audiobooks and public-domain films.' },
-  { id: 'radio', label: 'Radio', color: '#30b158', icon: <IconRadio />, blurb: 'Thousands of free internet radio stations from radio-browser.info.' },
-  { id: 'podcasts', label: 'Podcasts', color: '#9b5cf6', icon: <IconPodcast />, blurb: 'Find any show in the Apple Podcasts directory and add episodes.' },
-  { id: 'previews', label: 'Previews', color: '#ff4f8b', icon: <IconStore />, blurb: '30-second song & music video previews from the iTunes Store.' },
-  { id: 'link', label: 'Link', color: '#2f7cf6', icon: <IconLink />, blurb: 'Any direct link to an audio or video file, or a radio stream.' },
+export const SOURCES: { id: SourceId; label: string; title: string; color: string; icon: ReactNode; blurb: string }[] = [
+  { id: 'computer', label: 'Computer', title: 'From your computer', color: '#8e8e93', icon: <IconComputer />, blurb: 'Your own songs, videos and folders. They stay private in this browser.' },
+  { id: 'youtube', label: 'YouTube', title: 'YouTube', color: '#ff0033', icon: <IconYouTube />, blurb: 'Search, or paste any video, Short, YouTube Music or playlist link.' },
+  { id: 'soundcloud', label: 'SoundCloud', title: 'SoundCloud', color: '#ff5500', icon: <IconSoundCloud />, blurb: 'Paste a track or playlist link from soundcloud.com, or search.' },
+  { id: 'audius', label: 'Audius', title: 'Audius', color: '#a845ff', icon: <IconAudius />, blurb: 'Free, full-length songs from independent artists. No account needed.' },
+  { id: 'archive', label: 'Archive', title: 'Internet Archive', color: '#8a7650', icon: <IconArchive />, blurb: 'Live concerts, netlabels, 78s, old radio, audiobooks and public-domain films.' },
+  { id: 'radio', label: 'Radio', title: 'Radio', color: '#30b158', icon: <IconRadio />, blurb: 'Thousands of free internet radio stations, from Thailand and worldwide.' },
+  { id: 'podcasts', label: 'Podcasts', title: 'Podcasts', color: '#9b5cf6', icon: <IconPodcast />, blurb: 'Find any show in the Apple Podcasts directory and add episodes.' },
+  { id: 'previews', label: 'Previews', title: 'iTunes Previews', color: '#fc3c6c', icon: <IconStore />, blurb: '30-second song and music video previews from the iTunes Store.' },
+  { id: 'link', label: 'Link', title: 'Direct link', color: '#0a84ff', icon: <IconLink />, blurb: 'Any direct link to an audio or video file, or a radio stream.' },
 ];
 
 export function AddMusicTab() {
@@ -79,22 +79,19 @@ export function AddMusicTab() {
   return (
     <>
       <PasteBar open={open} />
-      <div className="lib-sources" role="tablist" aria-label="Where to add music from" style={{ marginTop: 12 }}>
+      <div className="lib-sources" role="tablist" aria-label="Where to add music from" style={{ marginTop: 16 }}>
         {SOURCES.map((s) => (
-          <button key={s.id} role="tab" aria-selected={s.id === source} className={`lib-src ${s.id === source ? 'on' : ''}`} onClick={() => open(s.id)}>
-            <span style={{ color: s.color, display: 'grid' }}>{s.icon}</span>
-            <span>{s.label}</span>
+          <button key={s.id} role="tab" aria-selected={s.id === source} className={`lib-src ${s.id === source ? 'on' : ''}`} onClick={() => open(s.id)} title={s.title}>
+            <span className="lib-src-ico" style={{ backgroundColor: s.color }}>
+              {s.icon}
+            </span>
+            <span className="lib-src-lbl">{s.label}</span>
           </button>
         ))}
       </div>
       <div className="lib-src-head">
-        <div className="ico" style={{ background: meta.color }}>
-          {meta.icon}
-        </div>
-        <div>
-          <h3>{meta.id === 'computer' ? 'From your computer' : meta.id === 'link' ? 'Direct link' : meta.label === 'Previews' ? 'iTunes Previews' : meta.label}</h3>
-          <p>{meta.blurb}</p>
-        </div>
+        <h3>{meta.title}</h3>
+        <p>{meta.blurb}</p>
       </div>
       <div key={source}>{body}</div>
     </>

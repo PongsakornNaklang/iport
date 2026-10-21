@@ -7,11 +7,12 @@ import { useDeviceSetting, useSettings } from '../../../../core/settings/store';
 import type { ShuffleMode, Track } from '../../../../core/types';
 import { formatTime } from '../../../../core/util/format';
 import { clamp, useHeader, useInput, useMedia, useOS, useScreen } from '../core';
-import { RepeatGlyph, ShuffleGlyph, SpeakerLevel, Star } from '../glyphs';
+import { GeniusGlyph, RepeatGlyph, ShuffleGlyph, SpeakerLevel, Star } from '../glyphs';
 import { Marquee } from '../ListView';
-import { songMenu } from './Music';
+import { songMenu, startGenius } from './Music';
+import { geniusPlaylist } from '../../../../core/library/selectors';
 
-type Mode = 'progress' | 'scrub' | 'rating' | 'shuffle' | 'lyrics';
+type Mode = 'progress' | 'scrub' | 'genius' | 'rating' | 'shuffle' | 'lyrics';
 
 export function isVideoTrack(t: Track | undefined): boolean {
   if (!t) return false;
@@ -70,6 +71,9 @@ function MusicView({ t }: { t: Track }) {
   const [volShown, setVolShown] = useState(false);
   const [scrub, setScrub] = useState<number | null>(null);
   const [lyricScroll, setLyricScroll] = useState(0);
+  /** Genius slider position 0..1 */
+  const [slide, setSlide] = useState(0);
+  const geniusOK = useMemo(() => os.caps.genius && geniusPlaylist(useLibrary.getState().tracks, t.id).length >= 3, [os.caps.genius, t.id]);
   const scrubTimer = useRef<number | undefined>(undefined);
   const volTimer = useRef<number | undefined>(undefined);
 
@@ -80,9 +84,12 @@ function MusicView({ t }: { t: Track }) {
     return () => window.clearTimeout(tm);
   }, [mode, poke]);
   useEffect(() => {
-    setMode((m) => (m === 'lyrics' ? 'progress' : m));
+    setMode((m) => (m === 'lyrics' || m === 'genius' ? 'progress' : m));
     setLyricScroll(0);
   }, [t.id]);
+  useEffect(() => {
+    if (mode !== 'genius') setSlide(0);
+  }, [mode]);
   useEffect(
     () => () => {
       window.clearTimeout(scrubTimer.current);
@@ -121,6 +128,16 @@ function MusicView({ t }: { t: Track }) {
           });
           break;
         }
+        case 'genius': {
+          if (!geniusOK) break;
+          const v = clamp(slide + e.steps / 9, 0, 1);
+          setSlide(v);
+          if (v >= 1) {
+            setMode('progress');
+            startGenius(os, t.id);
+          }
+          break;
+        }
         case 'rating': {
           const cur = useLibrary.getState().tracks[t.id]?.rating ?? 0;
           useLibrary.getState().setRating(t.id, clamp(cur + dir, 0, 5));
@@ -143,7 +160,8 @@ function MusicView({ t }: { t: Track }) {
       setVolShown(false);
       setMode((m) => {
         if (m === 'progress') return 'scrub';
-        if (m === 'scrub') return 'rating';
+        if (m === 'scrub') return os.caps.genius ? 'genius' : 'rating';
+        if (m === 'genius') return 'rating';
         if (m === 'rating') return 'shuffle';
         if (m === 'shuffle') return hasLyrics ? 'lyrics' : 'progress';
         return 'progress';
@@ -173,6 +191,24 @@ function MusicView({ t }: { t: Track }) {
           {max < 1 && <div className="cl-bar-limit" style={{ left: `${max * 100}%` }} />}
         </div>
         <SpeakerLevel loud />
+      </div>
+    );
+  } else if (mode === 'genius') {
+    bottom = (
+      <div className="cl-np-genius">
+        <GeniusGlyph size={16} />
+        {geniusOK ? (
+          <div className="cl-np-slider">
+            <span className="cl-np-slider-label" style={{ opacity: 1 - slide * 1.6 }}>
+              Start Genius
+            </span>
+            <span className="cl-np-slider-knob" style={{ left: `calc(${slide} * (100% - 34px) + 1px)` }}>
+              <GeniusGlyph size={12} color="#fff" />
+            </span>
+          </div>
+        ) : (
+          <span className="cl-np-genius-na">Genius is not available for this song</span>
+        )}
       </div>
     );
   } else if (mode === 'rating') {

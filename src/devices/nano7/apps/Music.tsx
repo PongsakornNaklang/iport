@@ -49,7 +49,6 @@ function MusicRoot() {
   const play = usePlayList();
   const mixes = useMemo(() => geniusMixes(tracks), [tracks]);
   const hasComp = compilations(tracks).length > 0;
-  const books = audiobooks(tracks).length > 0;
   return (
     <Page>
       <Row icon={<Glyph.shuffle size={20} />} title="Shuffle" onClick={() => all.length && play(all.map((t) => t.id), 0, { shuffle: true })} />
@@ -60,8 +59,8 @@ function MusicRoot() {
       <Row icon={<Glyph.songs size={20} />} title="Songs" chevron onClick={() => nav.push(page('Songs', <SongsPage />))} />
       <Row icon={<Glyph.genres size={20} />} title="Genres" chevron onClick={() => nav.push(page('Genres', <GroupsPage kind="genre" />))} />
       <Row icon={<Glyph.composers size={20} />} title="Composers" chevron onClick={() => nav.push(page('Composers', <GroupsPage kind="composer" />))} />
-      {group && hasComp && <Row icon={<Glyph.compilations size={20} />} title="Compilations" chevron onClick={() => nav.push(page('Compilations', <AlbumsPage compilationsOnly />))} />}
-      {books && <Row icon={<Glyph.audiobooks size={20} />} title="Audiobooks" chevron onClick={() => nav.push(page('Audiobooks', <AudiobooksList />))} />}
+      {(group || hasComp) && <Row icon={<Glyph.compilations size={20} />} title="Compilations" chevron onClick={() => nav.push(page('Compilations', <AlbumsPage compilationsOnly />))} />}
+      <Row icon={<Glyph.audiobooks size={20} />} title="Audiobooks" chevron onClick={() => nav.push(page('Audiobooks', <AudiobooksList />))} />
     </Page>
   );
 }

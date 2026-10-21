@@ -294,6 +294,17 @@ class SolitaireGame implements GameImpl {
     this.phaseT = 0;
   }
 
+  /** Jump to the end of the deal animation. */
+  private finishDeal(): void {
+    this.layout();
+    for (const c of this.cards) {
+      c.wait = 0;
+      c.flipT0 = -1;
+      this.snap(c);
+    }
+    this.setPhase('play');
+  }
+
   // ---------------------------------------------------------------- rules
 
   private canFound(c: Card, f: number): boolean {
@@ -492,7 +503,12 @@ class SolitaireGame implements GameImpl {
       } else if (e.button === 'menu') this.setPhase('title');
       return;
     }
-    if (ph !== 'play') return;
+    if (ph === 'deal') {
+      // any press skips the deal animation; a scroll also moves the hand
+      if (e.type !== 'scroll' && !(e.type === 'click' && e.button !== 'menu')) return;
+      this.finishDeal();
+      if (e.type === 'click') return;
+    } else if (ph !== 'play') return;
     if (e.type === 'scroll') {
       this.cursor = (((this.cursor + e.steps) % ORDER.length) + ORDER.length) % ORDER.length;
       return;
@@ -690,7 +706,7 @@ class SolitaireGame implements GameImpl {
     const tg = this.trail?.getContext('2d');
     this.autoT -= dt;
     if (this.autoT <= 0 && this.queue.length) {
-      this.autoT = 0.2;
+      this.autoT = 0.15;
       const c = this.queue.shift()!;
       // pull it off its foundation and throw it
       for (let f = F0; f < T0; f++) {
@@ -858,7 +874,7 @@ class SolitaireGame implements GameImpl {
     }
     const y = STATUS / 2 + 0.5;
     text(g, 'Moves', 5, y, { size: 9, weight: 600, color: tp.barDim, base: 'middle' });
-    text(g, String(this.moves), 35, y, { size: 10, weight: 800, color: tp.barText, base: 'middle' });
+    text(g, String(this.moves), 9 + g.measureText('Moves').width, y, { size: 10, weight: 800, color: tp.barText, base: 'middle' });
     text(g, this.draw3 ? 'Draw Three' : 'Draw One', w / 2, y, { size: 9, weight: 700, color: tp.barDim, align: 'center', base: 'middle' });
     text(g, fmtTime(this.time), w - 5, y, { size: 10, weight: 800, color: tp.barText, align: 'right', base: 'middle' });
   }
@@ -908,7 +924,7 @@ class SolitaireGame implements GameImpl {
       align: 'center',
       base: 'middle',
     });
-    drawPrompt(g, 'Press Center to deal', w / 2, h - 18, this.t, ui, 11);
+    drawPrompt(g, 'Press Center to start', w / 2, h - 18, this.t, ui, 11);
   }
 
   private drawWin(g: Ctx): void {
