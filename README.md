@@ -4,28 +4,82 @@ A faithful iPod simulator that runs in your browser. Pick a model, load your own
 music (or stream from YouTube, SoundCloud and free sources), spin it around in
 3D, and design your own colorway.
 
-**Models** (newest first)
+![iPod touch, iPod nano, iPod shuffle and iPod classic shown side by side at their real relative sizes](docs/screenshots/lineup.png)
+
+**Current version:** 1.0.0 · see [CHANGELOG.md](CHANGELOG.md)
+
+## Models
 
 | Model | Year | Highlights |
 | --- | --- | --- |
-| iPod touch (7th generation) | 2019 | iOS-style home screen, Music, Podcasts, Videos, Photos, Camera, Clock, Calculator, Notes, Weather, Voice Memos, Control Center, lock screen |
-| iPod nano (7th generation) | 2012 | Circular app icons, Music, Videos, FM-style Radio, Fitness, Photos, Clock |
-| iPod shuffle (4th generation) | 2010 | Clickable control pad, three-way switch, status light, VoiceOver |
-| iPod classic (6th generation, 160GB) | 2009 | Click Wheel, Cover Flow, Now Playing, On-The-Go, Genius, Extras (alarms, clocks, games, notes, stopwatch, voice memos…), full Settings |
+| iPod touch (7th generation) | 2019 | Lock screen, home screen, Control Center, app switcher, Music with synced lyrics, Podcasts, TV, Photos, Camera, Clock, Calculator, Notes, Calendar, Contacts, Voice Memos, Weather, Settings, iTunes Store previews |
+| iPod nano (7th generation) | 2012 | Circular app icons, Music, Videos that turn the iPod sideways, FM-style Radio, Fitness, Photos, Clock, Podcasts, iTunes U |
+| iPod shuffle (4th generation) | 2010 | Clickable control pad, three-way switch, status light, VoiceOver with spoken playlists |
+| iPod classic (6th generation, 160GB) | 2009 | Click Wheel, Cover Flow, Now Playing with Genius and lyrics, On-The-Go, Extras, full Settings, five games |
 
-**Music sources**
+### iPod classic
 
-- Your own files (MP3, AAC/M4A, FLAC, WAV, OGG, video) — tags and album art are read in the browser and kept in IndexedDB; nothing is uploaded.
-- YouTube and SoundCloud links (and YouTube search) through their official embedded players.
-- Free sources: Audius, the Internet Archive, internet radio (radio-browser.info), podcasts, 30-second iTunes previews, any direct audio URL.
+Cover Flow, Now Playing and the polished steel back with your own engraving.
 
-**Everything else**
+![iPod classic showing Cover Flow, Now Playing, and its engraved stainless steel back](docs/screenshots/ipod-classic.png)
 
-- Real 3D body: drag to spin, inertia, zoom, front/back/side views.
-- Customize every colored part, materials, wallpapers, screen theme, engraving on the back, and the backdrop.
-- Save designs as presets, share them as a link, export/import them as a file.
-- Shared player: switching models keeps the music playing. Queue and position are remembered between visits.
-- Equalizer (all iPod presets), Sound Check, sleep timer, alarms, Media Session (keyboard media keys / lock-screen controls).
+### iPod touch, nano and shuffle
+
+![iPod touch lock and home screens, iPod nano home screen, and iPod shuffle](docs/screenshots/touch-nano-shuffle.png)
+
+### Click Wheel games
+
+Brick, Parachute, Solitaire and Vortex (plus Music Quiz) under Extras ▸ Games on the iPod classic.
+
+![Brick, Parachute, Solitaire and Vortex games](docs/screenshots/games.png)
+
+## Features
+
+### EarPods that plug in
+
+Press play and an EarPods cable rises from the bottom of the window and clicks
+into the headphone jack. The cable is a physics simulation: it sags, swings when
+you turn the iPod, and you can grab it. Pull the plug out and the music pauses,
+just like a real iPod.
+
+![iPod classic playing a song with an EarPods cable plugged into its headphone jack](docs/screenshots/earpods.png)
+
+### Real 3D
+
+Drag the background to spin the iPod, scroll to zoom, or use Front, Back, Side
+and 360° at the bottom of the page.
+
+![iPod classic seen at an angle, showing its thickness and edges](docs/screenshots/classic-side.png)
+
+### Make it yours
+
+Every colored part, the materials, wallpapers, screen theme, engraving on the
+back and the backdrop. Save a design as a preset, share it as a link, or export
+all your presets to a file.
+
+![The Customize panel next to an iPod classic](docs/screenshots/customize.png)
+
+![The Presets tab with saved designs and showcase looks](docs/screenshots/presets.png)
+
+### Your music, from anywhere
+
+- **Your own files:** MP3, AAC/M4A, FLAC, WAV, OGG and video. Tags and album art
+  are read in the browser and kept in IndexedDB; nothing is uploaded. Drag files
+  anywhere onto the page.
+- **YouTube and SoundCloud:** paste a link or search, played through their
+  official embedded players.
+- **Free sources:** Audius, the Internet Archive, internet radio
+  (radio-browser.info), podcasts, 30-second iTunes previews and direct links.
+
+![The Library panel's Add Music tab with all music sources](docs/screenshots/library.png)
+
+### Everything else
+
+- One shared player: switching models keeps the music playing, and the queue and
+  position are remembered between visits.
+- Equalizer with all iPod presets, Sound Check, synced lyrics, sleep timer,
+  alarms, and keyboard / lock-screen media keys.
+- Works on phones and installs as a web app.
 
 ## Develop
 
@@ -36,15 +90,32 @@ npm run build      # type-check + production build into dist/
 npm test           # unit tests
 ```
 
-The serverless functions in `api/` (YouTube search, podcast feed proxy…) run on
-Vercel. Locally, use `npx vercel dev` if you want them; the rest of the app
-works with `npm run dev`.
+Requires Node 20.19+ or 22.12+. `npm run dev` also serves the functions in `api/`
+(YouTube search, podcast feed proxy and so on), so every source works locally.
 
 See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for how the code is organised.
 
+## Versioning
+
+iPort follows [Semantic Versioning](https://semver.org/):
+
+- **MAJOR** (2.0.0): something users relied on changes or goes away.
+- **MINOR** (1.1.0): new features that keep everything working.
+- **PATCH** (1.0.1): bug fixes and polish.
+
+The app shows its version and build in the Help panel (?) and in the logo's tooltip.
+
+To release:
+
+1. Move the notes under **Unreleased** in [CHANGELOG.md](CHANGELOG.md) to a new
+   version heading and commit.
+2. Run `npm run release:patch`, `npm run release:minor` or `npm run release:major`.
+   This bumps `package.json`, commits "Release vX.Y.Z" and creates the `vX.Y.Z` tag.
+3. Push the commit and the tag: `git push && git push --tags`.
+
 ## Deploy to Vercel
 
-1. Push this repository to GitHub (already done if you are reading this there).
+1. Push this repository to GitHub.
 2. Go to <https://vercel.com/new>, choose **Import Git Repository**, and pick this repo.
 3. Vercel detects **Vite** automatically (`vercel.json` sets build command `npm run build` and output `dist`). Click **Deploy**.
 4. Every push to the default branch redeploys; pull requests get preview URLs.
@@ -58,9 +129,16 @@ No environment variables or API keys are needed.
 3. Vercel จะตรวจเจอว่าเป็นโปรเจกต์ **Vite** เอง (ตั้งค่าไว้ใน `vercel.json` แล้ว) กด **Deploy** ได้เลย
 4. หลังจากนั้นทุกครั้งที่ push โค้ดขึ้น branch หลัก Vercel จะ deploy ใหม่ให้อัตโนมัติ — ไม่ต้องตั้งค่า API key ใด ๆ
 
-## Disclaimer
+## License and copyright
 
-iPort is a fan-made tribute and is not affiliated with or endorsed by Apple Inc.
-iPod, iPod classic, iPod nano, iPod shuffle, iPod touch, Click Wheel and Cover
-Flow are trademarks of Apple Inc. All graphics are drawn from scratch with CSS
-and SVG.
+Copyright © 2026 Pongsakorn Naklang. All rights reserved.
+
+iPort is proprietary software: no license is granted to copy, modify,
+redistribute or host it without written permission. See [LICENSE](LICENSE).
+Open-source components keep their own licenses; see
+[THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
+
+Apple, the Apple logo, iPod, iPod classic, iPod nano, iPod shuffle, iPod touch,
+Click Wheel, Cover Flow, EarPods, iTunes and iOS are trademarks of Apple Inc.
+iPort is an independent fan project and is not affiliated with, sponsored or
+endorsed by Apple Inc. All graphics are drawn from scratch with CSS and SVG.

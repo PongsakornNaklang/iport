@@ -11,6 +11,7 @@ import { useLibrary } from './core/library/store';
 import { seedDemoLibrary } from './core/library/demo';
 import { player, usePlayer } from './core/player/player';
 import './core/alarms';
+import { APP_COMMIT, APP_VERSION, COPYRIGHT } from './version';
 import { GlobalDropOverlay, useGlobalFileDrop } from './ui/library/globalDrop';
 
 // Dev-only handle for debugging and automated checks.
@@ -98,7 +99,7 @@ export function App() {
   return (
     <div className={`app ${darkScene ? 'scene-dark' : ''}`}>
       <header className="topbar">
-        <div className="brand">
+        <div className="brand" title={`iPort ${APP_VERSION} (${APP_COMMIT}) · ${COPYRIGHT}`}>
           <IconLogo className="brand-mark" />
           <span>iPort</span>
           <small>iPod for the web</small>

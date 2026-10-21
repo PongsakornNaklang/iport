@@ -1,6 +1,7 @@
 import { useCustomize } from '../core/customize/store';
 import { getModel } from '../devices/registry';
 import { Panel } from './Panel';
+import { APP_COMMIT, APP_VERSION, BUILD_DATE, COPYRIGHT } from '../version';
 import './help.css';
 
 function K({ children }: { children: string }) {
@@ -171,7 +172,22 @@ export default function HelpPanel({ onClose }: { onClose: () => void }) {
           as a file.
         </p>
 
-        <p className="tiny" style={{ marginTop: 24 }}>
+        <div className="help-about">
+          <div className="help-version">
+            iPort {APP_VERSION}
+            <span className="tiny">
+              {' '}
+              · build {APP_COMMIT}
+              {BUILD_DATE && ` · ${BUILD_DATE}`}
+            </span>
+          </div>
+          <div className="tiny">{COPYRIGHT}</div>
+          <a className="tiny help-link" href="third-party-notices.txt" target="_blank" rel="noreferrer">
+            Open-source licenses
+          </a>
+        </div>
+
+        <p className="tiny" style={{ marginTop: 12 }}>
           iPort is a fan-made tribute and is not affiliated with or endorsed by Apple Inc. iPod, iPod classic, iPod nano, iPod shuffle, iPod
           touch, Click Wheel and Cover Flow are trademarks of Apple Inc. Music from YouTube and SoundCloud plays through their official
           embedded players.

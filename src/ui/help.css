@@ -44,3 +44,24 @@
   width: 40%;
   white-space: nowrap;
 }
+.help-about {
+  margin-top: 28px;
+  padding-top: 14px;
+  border-top: 0.5px solid var(--ui-line-strong);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.help-version {
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.help-link {
+  color: var(--ui-accent);
+  text-decoration: none;
+  width: fit-content;
+}
+.help-link:hover {
+  text-decoration: underline;
+}

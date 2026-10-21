@@ -1,15 +1,26 @@
 {
   "name": "iport",
   "private": true,
-  "version": "0.1.0",
+  "version": "1.0.0",
   "type": "module",
   "description": "iPod simulator for the web — multiple models, real OS feel, 3D, customizable.",
+  "author": "Pongsakorn Naklang",
+  "license": "UNLICENSED",
+  "homepage": "https://github.com/PongsakornNaklang/iport",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/PongsakornNaklang/iport.git"
+  },
   "scripts": {
     "dev": "vite",
+    "prebuild": "node scripts/notices.mjs",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "typecheck": "tsc -b",
-    "test": "vitest run"
+    "test": "vitest run",
+    "release:patch": "npm version patch -m \"Release v%s\"",
+    "release:minor": "npm version minor -m \"Release v%s\"",
+    "release:major": "npm version major -m \"Release v%s\""
   },
   "dependencies": {
     "idb-keyval": "^6.3.0",

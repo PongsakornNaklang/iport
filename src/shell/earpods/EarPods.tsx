@@ -442,7 +442,8 @@ export function useEarPods({
       // physics (2 substeps for stability)
       const steps = 2;
       // the bottom of the window is a desk the cable can lie on (not near the anchor, which is below it)
-      const floor = H - Math.max(6, MM.cable * mm);
+      // (only once unplugged: while plugged in, spare cable hangs out of view)
+      const floor = s.phase === 'free' ? H - Math.max(6, MM.cable * mm) : undefined;
       for (let i = 0; i < steps; i++)
         r.step(dt / steps, { gravity: 2400, damping: 0.985, iterations: 24, bend: 0.12, floor, floorFrom: 4 });
 
