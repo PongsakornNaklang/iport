@@ -11,6 +11,7 @@ import { useLibrary } from './core/library/store';
 import { seedDemoLibrary } from './core/library/demo';
 import { usePlayer } from './core/player/player';
 import './core/alarms';
+import { GlobalDropOverlay, useGlobalFileDrop } from './ui/library/globalDrop';
 
 const LibraryPanel = lazy(() => import('./ui/library/LibraryPanel'));
 const CustomizePanel = lazy(() => import('./ui/customize/CustomizePanel'));
@@ -22,6 +23,8 @@ export function App() {
   const [panel, setPanel] = useState<PanelId>(null);
   const toastMsg = useToast((s) => s.message);
   const toastSerial = useToast((s) => s.serial);
+  // Drag songs, videos or photos anywhere onto the page to import them.
+  const dropActive = useGlobalFileDrop();
   const hydrated = useLibrary((s) => s.hydrated);
   const seeded = useLibrary((s) => s.seeded);
   const backdrop = useCustomize((s) => s.scene.backdrop);
@@ -122,6 +125,7 @@ export function App() {
           {panel === 'help' && <HelpPanel onClose={() => setPanel(null)} />}
         </Suspense>
       </main>
+      <GlobalDropOverlay active={dropActive} />
       {toastMsg && (
         <div className="toast" key={toastSerial} role="status">
           {toastMsg}
