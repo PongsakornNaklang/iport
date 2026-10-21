@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
-import { Box3D, Device3D, type EdgeSlice } from '../../shell/Device3D';
+import { Box3D, Device3D, type CornerRadii, type EdgeSlice } from '../../shell/Device3D';
 import { isTypingTarget } from '../../shell/keyboard';
 import { usePlaylists } from '../../core/library/selectors';
 import { useSettings } from '../../core/settings/store';
@@ -27,6 +27,8 @@ const BODY_CZ = TOTAL_D / 2 - BODY_D / 2;
 const CLIP_CZ = -(BODY_D / 2 + GAP + CLIP_T / 2);
 const CLIP_W = 262;
 const CLIP_H = 282;
+/** the clip's corners: tighter at the hinge (top), wider and slightly oval at the bottom */
+const CLIP_RADIUS: CornerRadii = { x: [18, 18, 30, 30], y: [18, 18, 26, 26] };
 /** the clip pivots 1.6 mm below the top edge */
 const HINGE_DROP = 16;
 
@@ -181,8 +183,8 @@ export default function IpodShuffle({ model, appearance }: DeviceProps) {
           depth={BODY_D}
           radius={RADIUS}
           breaks={BODY_BREAKS}
-          frontInset={1}
-          backInset={1}
+          frontInset={BODY_FACE_INSET}
+          backInset={BODY_FACE_INSET}
           edge={bodyEdge}
           front={<Front press={padPress} zone={zone} />}
           back={<UnderClip />}
@@ -206,12 +208,19 @@ export default function IpodShuffle({ model, appearance }: DeviceProps) {
 
 // ---------------------------------------------------------------- body
 
+/**
+ * The front and back are flat where the rounded edge meets them. (Wider
+ * faces would overhang the rounding, their rims sticking out at the corners.)
+ * Content on the faces that is placed in px from their edge is offset by
+ * this in shuffle4.css.
+ */
+const BODY_FACE_INSET = 6;
 /** where bodyEdge's darker rim line starts and ends, from the front and from the back */
 const BODY_BREAKS = [5.5, 8.6].flatMap((d) => [d / BODY_D, 1 - d / BODY_D]);
 
 /** Slightly rounded front/back edges (r ≈ 0.6 mm) with a polished catch-light. */
 function bodyEdge(t: number): EdgeSlice {
-  const r = 6;
+  const r = BODY_FACE_INSET;
   const d = Math.min(t, 1 - t) * BODY_D;
   const inset = d < r ? r - Math.sqrt(r * r - (r - d) * (r - d)) : 0;
   const shine = d < r ? Math.round((1 - d / r) * 30) : 0;
@@ -367,7 +376,11 @@ function TopEdge({
   return (
     <>
       {/* headphone port */}
-      <OnTop H={H} x={JACK_X} w={44} d={44} className="s4-jack" />
+      <OnTop H={H} x={JACK_X} w={44} d={44} className="s4-jack">
+        <i className="s4-jack-bore">
+          <b />
+        </i>
+      </OnTop>
       {/* status light */}
       <OnTop H={H} x={LED_X} w={30} d={30} lift={2.2} className={`s4-spill s4-spill-${led}`} />
       <OnTop H={H} x={LED_X} w={8} d={8} lift={2.6} className={`s4-led s4-led-${led}`} />
@@ -481,9 +494,9 @@ function Clip({
             width={CLIP_W}
             height={CLIP_H}
             depth={CLIP_T}
-            radius="18px 18px 30px 30px / 18px 18px 26px 26px"
-            slices={5}
+            radius={CLIP_RADIUS}
             edge={clipEdge}
+            breaks={[0.5]}
             backInset={1.2}
             front={<div className="s4-face s4-clip-in" />}
             back={

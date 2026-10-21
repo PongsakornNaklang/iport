@@ -4,8 +4,8 @@
  * volume / play-pause on the left edge, Sleep/Wake on top, Lightning +
  * headphone jack at the bottom.
  */
-import { useEffect, useRef, useState, type CSSProperties } from 'react';
-import { Box3D, Device3D, EdgeDecal } from '../../shell/Device3D';
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
+import { Box3D, Device3D, EdgeDecal, Slab3D, type EdgeSlice } from '../../shell/Device3D';
 import { isTypingTarget } from '../../shell/keyboard';
 import { player, usePlayer } from '../../core/player/player';
 import { useLibrary } from '../../core/library/store';
@@ -138,9 +138,24 @@ function SideButton({
   }, [down]);
   const px = axis === 'x' ? x + push : x;
   const py = axis === 'y' ? y + push : y;
+  // a pill: rounded ends, and a slightly rounded rim around the outer face
+  const edge = useMemo(() => {
+    const rim = 1.2;
+    return (t: number): EdgeSlice => {
+      const dd = t * (axis === 'x' ? w : h);
+      return {
+        inset: dd < rim ? rim - Math.sqrt(rim * rim - (rim - dd) * (rim - dd)) : 0,
+        color: faces[axis === 'x' ? 'top' : 'left'] ?? color,
+      };
+    };
+  }, [axis, w, h, faces, color]);
   return (
     <>
-      <Box3D x={px} y={py} w={w} h={h} d={d} color={color} faces={faces} radius={Math.min(d, axis === 'x' ? h : w) / 2} title={title} {...handlers} />
+      {axis === 'x' ? (
+        <Slab3D x={px} y={py} facing={x < 0 ? '-x' : '+x'} w={d} h={h} t={w} radius={d / 2} face={faces[x < 0 ? 'left' : 'right'] ?? color} edge={edge} title={title} {...handlers} />
+      ) : (
+        <Slab3D x={px} y={py} facing={y < 0 ? '-y' : '+y'} w={w} h={d} t={h} radius={d / 2} face={faces[y < 0 ? 'top' : 'bottom'] ?? color} edge={edge} title={title} {...handlers} />
+      )}
       {/* generous invisible hit area so the thin buttons are easy to press */}
       <Box3D
         x={axis === 'x' ? x - 5 * Math.sign(x) : x}

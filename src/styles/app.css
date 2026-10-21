@@ -496,7 +496,7 @@ button {
   position: relative;
   transform-style: preserve-3d;
 }
-.d3-slice {
+.d3-lining {
   position: absolute;
   pointer-events: none;
 }
@@ -541,6 +541,15 @@ button {
   width: 0;
   height: 0;
   transform-style: preserve-3d;
+}
+.d3-slab {
+  position: absolute;
+  transform-style: preserve-3d;
+}
+.d3-slab-face {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
 }
 .d3-box-face {
   position: absolute;

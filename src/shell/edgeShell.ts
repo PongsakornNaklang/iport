@@ -25,6 +25,41 @@ export interface ShellSlice {
   color: string;
 }
 
+/**
+ * Elliptical corner radii, px, in CSS order: top-left, top-right,
+ * bottom-right, bottom-left; `x` horizontal and `y` vertical.
+ */
+export interface CornerRadii {
+  x: [number, number, number, number];
+  y: [number, number, number, number];
+}
+
+/** A corner radius for every corner, or one per corner. */
+export type Radius = number | CornerRadii;
+
+export function cornerRadii(r: Radius): CornerRadii {
+  return typeof r === 'number' ? { x: [r, r, r, r], y: [r, r, r, r] } : r;
+}
+
+/** CSS border-radius of the outline pulled in by `inset` px. */
+export function radiusCss(r: Radius, inset: number): string {
+  const c = cornerRadii(r);
+  const px = (v: number) => `${Math.max(0, v - inset)}px`;
+  return `${c.x.map(px).join(' ')} / ${c.y.map(px).join(' ')}`;
+}
+
+/** largest radius of curvature anywhere on the corners (for chord error) */
+function maxCurvatureRadius(r: Radius): number {
+  const c = cornerRadii(r);
+  let m = 0;
+  for (let i = 0; i < 4; i++) {
+    const a = c.x[i];
+    const b = c.y[i];
+    if (a > 0 && b > 0) m = Math.max(m, (a * a) / b, (b * b) / a);
+  }
+  return m;
+}
+
 /** A background laid out like a slice at some inset, mapped onto a facet. */
 export interface FacetLayer {
   color: string;
@@ -160,8 +195,9 @@ function straight(inset: (t: number) => number, ta: number, tb: number, ia: numb
  * every edge that is the body's own color rather than the page. They lie
  * entirely inside the (convex) shell, so nothing has to be depth-split.
  */
-export function liningSlices(edge: (t: number) => ShellSlice, depth: number, R: number): { t: number; inset: number; color: string }[] {
+export function liningSlices(edge: (t: number) => ShellSlice, depth: number, radius: Radius): { t: number; inset: number; color: string }[] {
   const n = Math.max(3, Math.min(8, Math.round(depth / 10)));
+  const R = maxCurvatureRadius(radius);
   const margin = 0.6 + R * (1 - Math.cos(Math.PI / 4 / cornerFacets(R))); // clear of the corner chords
   const out: { t: number; inset: number; color: string }[] = [];
   for (let k = 0; k < n; k++) {
@@ -175,25 +211,27 @@ export function liningSlices(edge: (t: number) => ShellSlice, depth: number, R: 
 
 /** facets per rounded corner, so the chords stay within ~0.5 px of the arc */
 export function cornerFacets(R: number): number {
-  return Math.max(3, Math.min(8, Math.ceil(R / 9)));
+  return Math.max(4, Math.min(8, Math.ceil(R / 9)));
 }
 
 /**
- * Build the facets for a rounded-rectangle body of size W × H × depth whose
- * outline has corner radius R (the outline at inset i has radius R - i).
+ * Build the facets for a rounded-rectangle body of size W × H × depth. The
+ * corners are elliptical with the given radii; the outline at inset i has
+ * radii pulled in by i (as CSS draws an inset box with the same corners).
  */
-export function buildShell(W: number, H: number, depth: number, R: number, edge: (t: number) => ShellSlice, breaks?: number[]): Facet[] {
+export function buildShell(W: number, H: number, depth: number, radius: Radius, edge: (t: number) => ShellSlice, breaks?: number[]): Facet[] {
   const half = depth / 2;
   const bands = makeBands(edge, depth, breaks);
-  const K = cornerFacets(R);
+  const { x: rx, y: ry } = cornerRadii(radius);
   const facets: Facet[] = [];
-  const corners: { c: V2; a0: number }[] = [
-    { c: [R, R], a0: Math.PI }, // top-left: 180°..270°
-    { c: [W - R, R], a0: Math.PI * 1.5 }, // top-right
-    { c: [W - R, H - R], a0: 0 }, // bottom-right
-    { c: [R, H - R], a0: Math.PI * 0.5 }, // bottom-left
+  // corner centres (the same at every inset) and the quarter each one covers
+  const corner = (c: V2, a0: number, cx: number, cy: number) => ({ c, a0, rx: cx, ry: cy, K: cornerFacets(Math.max(cx, cy)) });
+  const corners = [
+    corner([rx[0], ry[0]], Math.PI, rx[0], ry[0]), // top-left: 180°..270°
+    corner([W - rx[1], ry[1]], Math.PI * 1.5, rx[1], ry[1]), // top-right
+    corner([W - rx[2], H - ry[2]], 0, rx[2], ry[2]), // bottom-right
+    corner([rx[3], H - ry[3]], Math.PI * 0.5, rx[3], ry[3]), // bottom-left
   ];
-  const halfStep = Math.PI / 4 / K;
 
   // The sides stop a hair short of the front and back faces: where they would
   // touch a face's plane exactly, rounding lets their edge poke through it.
@@ -208,8 +246,6 @@ export function buildShell(W: number, H: number, depth: number, R: number, edge:
   bands.forEach((b, bi) => {
     const za = zAt(b.ta);
     const zb = zAt(b.tb);
-    const ra = Math.max(0, R - b.ia);
-    const rb = Math.max(0, R - b.ib);
     // Don't overlap past the front and back faces (it would show as a lip),
     // or across a step (it would cover part of a recessed seam).
     const step = b.ta === b.tb;
@@ -285,25 +321,36 @@ export function buildShell(W: number, H: number, depth: number, R: number, edge:
       out.push({ key: `${bi}-${key}`, matrix, w, h: hh, clip, base, blend });
     };
 
-    // straight walls (each runs from R to W-R / H-R whatever the inset)
+    // straight walls (each runs between its corners whatever the inset)
     const none = () => 0;
-    add('top', [R, b.ia], [W - R, b.ia], [R, b.ib], [W - R, b.ib], [0, -1], (i) => [W / 2, i], none);
-    add('right', [W - b.ia, R], [W - b.ia, H - R], [W - b.ib, R], [W - b.ib, H - R], [1, 0], (i) => [W - i, H / 2], none);
-    add('bottom', [W - R, H - b.ia], [R, H - b.ia], [W - R, H - b.ib], [R, H - b.ib], [0, 1], (i) => [W / 2, H - i], none);
-    add('left', [b.ia, H - R], [b.ia, R], [b.ib, H - R], [b.ib, R], [-1, 0], (i) => [i, H / 2], none);
+    add('top', [rx[0], b.ia], [W - rx[1], b.ia], [rx[0], b.ib], [W - rx[1], b.ib], [0, -1], (i) => [W / 2, i], none);
+    add('right', [W - b.ia, ry[1]], [W - b.ia, H - ry[2]], [W - b.ib, ry[1]], [W - b.ib, H - ry[2]], [1, 0], (i) => [W - i, H / 2], none);
+    add('bottom', [W - rx[2], H - b.ia], [rx[3], H - b.ia], [W - rx[2], H - b.ib], [rx[3], H - b.ib], [0, 1], (i) => [W / 2, H - i], none);
+    add('left', [b.ia, H - ry[3]], [b.ia, ry[0]], [b.ib, H - ry[3]], [b.ib, ry[0]], [-1, 0], (i) => [i, H / 2], none);
 
     // rounded corners
-    const sag = (i: number) => {
-      const rho = Math.max(0, R - i);
-      return rho * (1 - Math.cos(halfStep + (rho > 0 ? OVER / rho : 0)));
-    };
-    corners.forEach(({ c, a0 }, ci) => {
+    corners.forEach(({ c, a0, rx: cx, ry: cy, K }, ci) => {
+      const halfStep = Math.PI / 4 / K;
+      // the corner's outline at inset i, at angle t
+      const p = (i: number, t: number): V2 => [c[0] + Math.max(0, cx - i) * Math.cos(t), c[1] + Math.max(0, cy - i) * Math.sin(t)];
+      // how far the outline bows away from a facet's chord, plus the overlap
+      const sag = (i: number) => {
+        const a = Math.max(0, cx - i);
+        const bb = Math.max(0, cy - i);
+        const rho = a > 0 && bb > 0 ? Math.max((a * a) / bb, (bb * bb) / a) : Math.max(a, bb);
+        return rho * (1 - Math.cos(halfStep + (rho > 0 ? OVER / rho : 0)));
+      };
       for (let j = 0; j < K; j++) {
         const t0 = a0 + (j / K) * (Math.PI / 2);
         const t1 = a0 + ((j + 1) / K) * (Math.PI / 2);
         const tm = (t0 + t1) / 2;
-        const p = (r: number, t: number): V2 => [c[0] + r * Math.cos(t), c[1] + r * Math.sin(t)];
-        add(`c${ci}-${j}`, p(ra, t0), p(ra, t1), p(rb, t0), p(rb, t1), [Math.cos(tm), Math.sin(tm)], (i) => p(Math.max(0, R - i), tm), sag);
+        // outward normal of the ellipse at tm
+        const ea = Math.max(1e-3, cx - (b.ia + b.ib) / 2);
+        const eb = Math.max(1e-3, cy - (b.ia + b.ib) / 2);
+        const nx = eb * Math.cos(tm);
+        const ny = ea * Math.sin(tm);
+        const nl = Math.hypot(nx, ny) || 1;
+        add(`c${ci}-${j}`, p(b.ia, t0), p(b.ia, t1), p(b.ib, t0), p(b.ib, t1), [nx / nl, ny / nl], (i) => p(i, tm), sag);
       }
     });
   });

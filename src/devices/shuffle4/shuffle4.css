@@ -208,7 +208,7 @@
   position: absolute;
   left: 0;
   right: 0;
-  top: 176px;
+  top: 171px; /* 177 px from the top of the body; the face is inset 6 px */
   text-align: center;
   font:
     500 6.2px/1.45 -apple-system,
@@ -265,12 +265,45 @@
 }
 
 .s4-jack {
+  position: relative;
   border-radius: 50%;
-  background:
-    radial-gradient(circle at 50% 50%, #050505 0 9px, #111 11px, #1d1d1f 14.5px, rgba(0, 0, 0, 0) 15.5px),
-    radial-gradient(circle at 50% 38%, #3a3a3c 0 15px, rgba(0, 0, 0, 0) 16px),
-    conic-gradient(from calc(var(--lx, 0) * 120deg), #f4f4f4, #9a9a9c, #e9e9ea, #7d7d80, #f4f4f4);
+  /* the polished ring around the opening */
+  background: conic-gradient(from calc(var(--lx, 0) * 120deg), #f4f4f4, #9a9a9c, #e9e9ea, #7d7d80, #f4f4f4);
   box-shadow: 0 0 0 0.8px rgba(0, 0, 0, 0.35);
+}
+/* the bore: its wall, darker the deeper it goes */
+.s4-jack-bore {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 31px;
+  height: 31px;
+  margin: -15.5px 0 0 -15.5px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: radial-gradient(circle, #0b0b0c 0 40%, #18181a 70%, #2a2a2c 92%, #1a1a1b);
+  box-shadow: inset 0 0 1.5px 0.6px rgba(0, 0, 0, 0.8);
+}
+/*
+ * The bottom of the bore, seen through the opening. Looking in at an angle
+ * it slides away from the far wall: by depth × (sideways ÷ inward) parts of
+ * the view direction (see Stage), so the wall shows on the far side only.
+ * The decal's x is the device's x and its y the device's z.
+ */
+.s4-jack-bore b {
+  --k: calc(-1 / max(var(--vy, 1), 0.08));
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 25px;
+  height: 25px;
+  margin: -12.5px 0 0 -12.5px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #000 0 55%, #040404 80%, rgba(4, 4, 4, 0));
+  transform: translate(
+    clamp(-30px, calc(var(--vx, 0) * var(--k) * 14px), 30px),
+    clamp(-30px, calc(var(--vz, 0) * var(--k) * 14px), 30px)
+  );
 }
 
 .s4-led {
@@ -607,9 +640,10 @@
 /* soft shadow the clip casts on the body */
 .s4-clipshadow {
   position: absolute;
-  left: 8px;
-  right: 8px;
-  top: 0;
+  /* 9 px in from the body's sides; the face is inset 6 px */
+  left: 3px;
+  right: 3px;
+  top: -5px;
   height: 296px;
   pointer-events: none;
   background:

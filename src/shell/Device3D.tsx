@@ -1,5 +1,7 @@
 import { useMemo, type CSSProperties, type ReactNode } from 'react';
-import { buildShell, liningSlices } from './edgeShell';
+import { buildShell, liningSlices, radiusCss, type Radius } from './edgeShell';
+
+export type { CornerRadii, Radius } from './edgeShell';
 
 /**
  * A device body with real thickness, built from CSS 3D planes.
@@ -7,16 +9,15 @@ import { buildShell, liningSlices } from './edgeShell';
  *  - `front` and `back` are ordinary DOM (fully interactive on the front).
  *  - The sides follow an edge profile: each depth has an inset and a color,
  *    which gives curved/chamfered edges (iPod classic's chrome back, iPod
- *    touch's rounded aluminium sides…). With a numeric corner radius the
- *    sides are one continuous faceted surface (see edgeShell.ts); otherwise
- *    they are a stack of rounded slices.
+ *    touch's rounded aluminium sides…). They are one continuous faceted
+ *    surface, see edgeShell.ts.
  *
  * The coordinate origin is the centre of the device; +z points at the viewer.
  */
 export interface EdgeSlice {
-  /** how far this slice is pulled in from the outline, px */
+  /** how far the outline is pulled in at this depth, px */
   inset?: number;
-  /** CSS background for this slice */
+  /** CSS background of the edge at this depth (laid out across the whole device box) */
   color: string;
 }
 
@@ -24,8 +25,8 @@ export interface Device3DProps {
   width: number;
   height: number;
   depth: number;
-  /** corner radius of the outline, px (or CSS radius string for elliptical corners) */
-  radius: number | string;
+  /** corner radius of the outline, px, or elliptical radii per corner */
+  radius: Radius;
   front: ReactNode;
   back: ReactNode;
   /** Edge profile from the front (t=0) to the back (t=1). */
@@ -35,8 +36,6 @@ export interface Device3DProps {
    * the edge of the cover glass), so the surface breaks exactly there.
    */
   breaks?: number[];
-  /** slice count, only used for non-numeric radii */
-  slices?: number;
   /** Inset of the front/back faces (when the edge curves in towards a face). */
   frontInset?: number;
   backInset?: number;
@@ -54,10 +53,6 @@ export interface Device3DProps {
   className?: string;
 }
 
-function radiusMinus(r: number | string, inset: number): number | string {
-  return typeof r === 'number' ? Math.max(0, r - inset) : r;
-}
-
 export function Device3D({
   width,
   height,
@@ -67,7 +62,6 @@ export function Device3D({
   back,
   edge,
   breaks,
-  slices,
   frontInset = 0,
   backInset = 0,
   frontStyle,
@@ -78,14 +72,12 @@ export function Device3D({
 }: Device3DProps) {
   const half = depth / 2;
   const breakKey = breaks?.join(',') ?? '';
+  const radiusKey = radiusCss(radius, 0);
   const sides = useMemo(
-    () =>
-      typeof radius === 'number' ? (
-        <Shell width={width} height={height} depth={depth} radius={radius} edge={edge} breaks={breakKey} frontInset={frontInset} backInset={backInset} />
-      ) : (
-        <Slices width={width} height={height} depth={depth} radius={radius} edge={edge} slices={slices} />
-      ),
-    [width, height, depth, radius, edge, breakKey, slices, frontInset, backInset],
+    () => <Shell width={width} height={height} depth={depth} radius={radius} edge={edge} breaks={breakKey} frontInset={frontInset} backInset={backInset} />,
+    // radius by value (callers may pass a new object each render)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [width, height, depth, radiusKey, edge, breakKey, frontInset, backInset],
   );
 
   return (
@@ -96,7 +88,7 @@ export function Device3D({
         className="d3-face d3-back"
         style={{
           inset: backInset,
-          borderRadius: radiusMinus(radius, backInset),
+          borderRadius: radiusCss(radius, backInset),
           transform: `rotateY(180deg) translateZ(${half}px)`,
           ...backStyle,
         }}
@@ -107,7 +99,7 @@ export function Device3D({
         className="d3-face d3-front"
         style={{
           inset: frontInset,
-          borderRadius: radiusMinus(radius, frontInset),
+          borderRadius: radiusCss(radius, frontInset),
           transform: `translateZ(${half}px)`,
           ...frontStyle,
         }}
@@ -133,7 +125,7 @@ function Shell({
   width: number;
   height: number;
   depth: number;
-  radius: number;
+  radius: Radius;
   edge: (t: number) => EdgeSlice;
   breaks: string;
   frontInset: number;
@@ -161,7 +153,7 @@ function Shell({
         className="d3-cap"
         style={{
           inset,
-          borderRadius: Math.max(0, radius - inset),
+          borderRadius: radiusCss(radius, inset),
           background: s.color,
           transform: `translateZ(${z}px)${turn ? ' rotateY(180deg)' : ''}`,
         }}
@@ -191,54 +183,80 @@ function Shell({
       {lining.map((l) => (
         <div
           key={l.t}
-          className="d3-slice"
-          style={{ inset: l.inset, borderRadius: Math.max(0, radius - l.inset), background: l.color, transform: `translateZ(${(half - l.t * depth).toFixed(2)}px)` }}
+          className="d3-lining"
+          style={{ inset: l.inset, borderRadius: radiusCss(radius, l.inset), background: l.color, transform: `translateZ(${(half - l.t * depth).toFixed(2)}px)` }}
         />
       ))}
     </>
   );
 }
 
-/** The sides as a stack of rounded slices (for elliptical corner radii). */
-function Slices({
-  width,
-  height,
-  depth,
+/**
+ * A rounded slab standing out of one of the device's edges (side buttons):
+ * a small Device3D turned so its front face points along `facing`.
+ *
+ *  - facing ±x: the outer face is `w` along the device's z by `h` along y
+ *  - facing ±y: the outer face is `w` along the device's x by `h` along z
+ *
+ * `t` is how far it stands out (its depth); x/y/z is its centre relative to
+ * the device centre.
+ */
+export function Slab3D({
+  x,
+  y,
+  z = 0,
+  facing,
+  w,
+  h,
+  t,
   radius,
+  face,
   edge,
-  slices,
+  title,
+  className,
+  onPointerDown,
+  onPointerUp,
 }: {
-  width: number;
-  height: number;
-  depth: number;
-  radius: number | string;
+  x: number;
+  y: number;
+  z?: number;
+  facing: '-x' | '+x' | '-y' | '+y';
+  w: number;
+  h: number;
+  t: number;
+  radius: number;
+  /** CSS background of the outer face */
+  face: string;
   edge: (t: number) => EdgeSlice;
-  slices?: number;
+  title?: string;
+  className?: string;
+  onPointerDown?: (e: React.PointerEvent) => void;
+  onPointerUp?: (e: React.PointerEvent) => void;
 }) {
-  void width;
-  void height;
-  const n = slices ?? Math.max(6, Math.min(28, Math.round(depth / 2.2)));
-  const half = depth / 2;
-  const els: ReactNode[] = [];
-  for (let i = 0; i < n; i++) {
-    const t = (i + 0.5) / n;
-    const z = half - t * depth;
-    const s = edge(t);
-    const inset = s.inset ?? 0;
-    els.push(
-      <div
-        key={i}
-        className="d3-slice"
-        style={{
-          inset,
-          borderRadius: radiusMinus(radius, inset),
-          background: s.color,
-          transform: `translateZ(${z.toFixed(2)}px)`,
-        }}
-      />,
-    );
-  }
-  return <>{els}</>;
+  const turn = { '-x': 'rotateY(-90deg)', '+x': 'rotateY(90deg)', '-y': 'rotateX(90deg)', '+y': 'rotateX(-90deg)' }[facing];
+  return (
+    <div
+      className={`d3-box ${className ?? ''}`}
+      data-control={onPointerDown ? '' : undefined}
+      title={title}
+      onPointerDown={onPointerDown}
+      onPointerUp={onPointerUp}
+      style={{ transform: `translate3d(${x}px, ${y}px, ${z}px) ${turn}` }}
+    >
+      <div className="d3-slab" style={{ left: -w / 2, top: -h / 2 }}>
+        <Device3D
+          width={w}
+          height={h}
+          depth={t}
+          radius={Math.min(radius, w / 2, h / 2)}
+          edge={edge}
+          frontInset={edge(0).inset ?? 0}
+          front={<div className="d3-slab-face" style={{ background: face }} />}
+          back={null}
+        />
+      </div>
+    </div>
+  );
 }
 
 /**

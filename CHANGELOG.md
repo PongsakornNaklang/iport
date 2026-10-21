@@ -22,6 +22,11 @@ The running app shows its version and build in the Help panel (?).
 - Spinning the iPod classic and iPod nano is noticeably smoother.
 - The iPod classic's headphone jack, dock connector and Hold switch follow
   the curve of the steel edge, so the edge no longer hides part of them.
+- iPod shuffle: the clip's edge is smooth too, the front and back no longer
+  stick out at the corners, and the headphone port looks like a real hole
+  from every angle.
+- iPod nano: the side and top buttons are rounded pills without the stray
+  dash above and below them.
 
 ## [1.0.0] - 2026-10-21
 

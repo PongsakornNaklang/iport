@@ -154,6 +154,11 @@ export function Stage() {
     const ely = (Math.round(Math.sin(rxRad) * 20) / 20).toFixed(2);
     if (elx !== edgeLight.current.x) el.style.setProperty('--elx', (edgeLight.current.x = elx));
     if (ely !== edgeLight.current.y) el.style.setProperty('--ely', (edgeLight.current.y = ely));
+    // Where the camera looks, in device coordinates (x right, y down, z out of
+    // the front): lets holes and recesses show their inner walls (parallax).
+    el.style.setProperty('--vx', (Math.cos(rxRad) * Math.sin(ryRad)).toFixed(3));
+    el.style.setProperty('--vy', (-Math.sin(rxRad)).toFixed(3));
+    el.style.setProperty('--vz', (-Math.cos(rxRad) * Math.cos(ryRad)).toFixed(3));
     const sh = shadowRef.current;
     if (sh) {
       const m = modelRef.current;
