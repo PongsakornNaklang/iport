@@ -83,8 +83,8 @@ interface Jack {
   aMm: Vec;
   /** stage px per mm across the plug (not foreshortened) */
   mm: number;
-  /** jack faces the viewer (draw on top of the device) */
-  facing: boolean;
+  /** how much the opening points at the camera: 1 = straight at us, -1 = straight away */
+  dz: number;
 }
 
 export function useEarPods({
@@ -170,7 +170,7 @@ export function useEarPods({
     const { w, h } = stageSize();
     const j = s.lastJack;
     if (!s.rope || s.phase === 'hidden') {
-      const ax = Math.max(40, Math.min(w - 40, (j?.p.x ?? w / 2) + (modelRef.current.jack?.ny === -1 ? -60 : 36)));
+      const ax = Math.max(40, Math.min(w - 40, (j?.p.x ?? w / 2) + (modelRef.current.jack?.ny === -1 ? -60 : 70)));
       s.anchor = { x: ax, y: h + 40 };
       const r = new Rope(POINTS, ax, h + 40, 18, 0, 1);
       // start coiled just below the window so the plug appears right away
@@ -320,16 +320,20 @@ export function useEarPods({
       };
       const p = c(0);
       const n = sub(c(1), p);
-      const kx = len(sub(c(2), p)) / MARK;
-      const kz = len(sub(c(3), p)) / MARK;
-      const k = Math.max(kx, kz, 0.05);
+      const ax = sub(c(2), p);
+      const az = sub(c(3), p);
+      // three orthogonal device axes: their projected lengths give the true scale
+      // (for a rotation, the squared lengths of the projected axes sum to 2 k²)
+      const k = Math.max(0.05, Math.sqrt((len(n) ** 2 + len(ax) ** 2 + len(az) ** 2) / 2) / MARK);
+      // how foreshortened the jack axis is → how much it points at / away from us
+      const f = Math.min(1, len(n) / (MARK * k));
+      const toward = jack.ny * Math.sin((liveOrientation.rx * Math.PI) / 180);
+      const dz = Math.sign(toward || 0) * Math.sqrt(Math.max(0, 1 - f * f));
       // small iPods are shown enlarged; cap the plug so it doesn't fill the window
       const cap = Math.min(1, MAX_PX_PER_MM / (jack.pxPerMm * k));
       const mm = jack.pxPerMm * k * cap;
       const aMm = mul(n, (jack.pxPerMm / MARK) * cap);
-      // does the opening point at the camera? (rotateX tilts the top/bottom edge towards us)
-      const nz = jack.ny * Math.sin((liveOrientation.rx * Math.PI) / 180);
-      return { p, aMm, mm, facing: nz > 0.3 };
+      return { p, aMm, mm, dz };
     };
 
     const loop = (now: number) => {
@@ -362,14 +366,14 @@ export function useEarPods({
       const n = r.count;
 
       // anchor drifts to stay below the jack as the stage resizes / pans
-      const targetAx = Math.max(40, Math.min(W - 40, (jk?.p.x ?? W / 2) + (modelRef.current.jack?.ny === -1 ? -60 : 36)));
+      const targetAx = Math.max(40, Math.min(W - 40, (jk?.p.x ?? W / 2) + (modelRef.current.jack?.ny === -1 ? -60 : 70)));
       s.anchor.x += (targetAx - s.anchor.x) * 0.02;
       s.anchor.y = H + 40;
       r.pinAt(0, s.anchor.x, s.anchor.y);
 
-      // keep enough cable out: ~15% slack plus a loop
+      // keep a little slack so it can sway, but not so much that it loops
       const end = plugEnd()!;
-      let want = len(sub(end, s.anchor)) * 1.12 + 90 + 26 * mm;
+      let want = len(sub(end, s.anchor)) * 1.05 + 24 + 6 * mm;
       if (s.drag) {
         const dp = r.pts[s.drag.index];
         want = Math.max(want, (len(sub(dp, s.anchor)) + len(sub(dp, end))) * 1.05);
@@ -378,6 +382,7 @@ export function useEarPods({
 
       let axis: Vec = plugAxis();
       let axisMm: Vec = mul(axis, mm);
+      let dz = 0; // how much the plug points at the camera
       let showTip = true;
       const seat = jk ? add(jk.p, mul(jk.aMm, MM.housing + MM.relief + 0.3)) : end;
 
@@ -392,12 +397,15 @@ export function useEarPods({
           const c1 = add(s.from, mul(s.fromAxis, -Math.min(260, H * 0.35)));
           const c2 = add(approach, mul(norm(jk.aMm), 140 * Math.max(0.6, mm / 4)));
           pos = bezier(s.from, c1, c2, approach, k);
-          axisMm = lerpV(mul(s.fromAxis, mm), jk.aMm, easeInOut(Math.min(1, k * 1.15)));
+          const e = easeInOut(Math.min(1, k * 1.15));
+          axisMm = lerpV(mul(s.fromAxis, mm), jk.aMm, e);
+          dz = jk.dz * e;
         } else {
           const k = easeInOut(Math.min(1, (t - T1) / T2));
           const startPos = s.insertOnly ? s.from : approach;
           pos = lerpV(startPos, seat, k);
           axisMm = jk.aMm;
+          dz = jk.dz;
           if (k >= 1) {
             s.phase = 'plugged';
             s.yank = 0;
@@ -414,6 +422,7 @@ export function useEarPods({
         r.pts[n - 1].pinned = true;
         r.moveTo(n - 1, seat.x, seat.y);
         axisMm = jk.aMm;
+        dz = jk.dz;
         axis = norm(jk.aMm);
         if (len(jk.aMm) > mm * 0.35) pinExit(r, seat, axis);
         else r.pts[n - 2].pinned = false;
@@ -452,12 +461,19 @@ export function useEarPods({
         axisMm = mul(axis, mm);
       }
 
-      // draw on top of the iPod only when the jack faces the camera
-      s.drawFront = !!jk?.facing && (s.phase === 'plugged' || s.phase === 'entering');
+      // The cable lives behind the iPod. It comes in front when the jack's
+      // opening faces the camera, or while you hold it.
+      s.drawFront = dz > 0.12 || !!s.drag;
       const g = s.drawFront ? gf : gb;
-      drawCable(g, r, MM.cable * mm);
       const tail = { x: r.pts[n - 1].x, y: r.pts[n - 1].y };
-      drawPlug(g, tail, axisMm, mm, showTip);
+      // the nearer of plug and cable is drawn last
+      if (dz > 0.15) {
+        drawPlug(g, tail, axisMm, mm, dz, showTip);
+        drawCable(g, r, MM.cable * mm);
+      } else {
+        drawCable(g, r, MM.cable * mm);
+        drawPlug(g, tail, axisMm, mm, dz, showTip);
+      }
     };
     raf = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(raf);
@@ -534,80 +550,154 @@ function drawCable(g: CanvasRenderingContext2D, r: Rope, w: number) {
 }
 
 /**
- * The EarPods 3.5 mm plug. `tail` is where the cable leaves the strain
- * relief; `axisMm` points from the tip towards the cable, one mm long
- * (foreshortened when the plug points at the camera); `mm` is px per mm across.
+ * The EarPods 3.5 mm plug, drawn as a set of 3D cylinders.
+ *
+ * `tail` is where the cable leaves the strain relief. `axisMm` points from
+ * the tip towards the cable and is one millimetre long on screen (shorter
+ * when the plug points at or away from the camera). `mm` is px per mm across
+ * the plug. `dz` is how much the plug's outward end points at the camera
+ * (1 straight at us, -1 straight away): it sets how round the cylinder ends
+ * look and which end you can see.
  */
-function drawPlug(g: CanvasRenderingContext2D, tail: Vec, axisMm: Vec, mm: number, showTip: boolean) {
-  const along = len(axisMm) || mm;
-  const u = norm(axisMm);
-  const v = { x: -u.y, y: u.x };
-  const at = (d: number, w: number): Vec => add(add(tail, mul(u, (d - (MM.housing + MM.relief)) * along)), mul(v, w * mm));
-  // d: 0 = front face of the housing, housing+relief = tail
+interface Section {
+  d0: number;
+  d1: number;
+  w0: number;
+  w1: number;
+  kind: 'plastic' | 'metal' | 'ring';
+}
 
-  const cyl = (d0: number, d1: number, w0: number, w1: number, stops: [number, string][]) => {
-    const a = at(d0, 0);
-    const grad = g.createLinearGradient(a.x - v.x * w0 * mm * 0.5, a.y - v.y * w0 * mm * 0.5, a.x + v.x * w0 * mm * 0.5, a.y + v.y * w0 * mm * 0.5);
-    for (const [o, c] of stops) grad.addColorStop(o, c);
+const PLUG: Section[] = [
+  { d0: -MM.tip, d1: -12.6, w0: 1.4, w1: 3.2, kind: 'metal' },
+  { d0: -12.6, d1: -10.4, w0: 3.2, w1: 3.5, kind: 'metal' },
+  { d0: -10.4, d1: -9.6, w0: 3.5, w1: 3.5, kind: 'ring' },
+  { d0: -9.6, d1: -6.8, w0: 3.5, w1: 3.5, kind: 'metal' },
+  { d0: -6.8, d1: -6, w0: 3.5, w1: 3.5, kind: 'ring' },
+  { d0: -6, d1: 0, w0: 3.5, w1: 3.5, kind: 'metal' },
+  { d0: 0, d1: 0.7, w0: 4.8, w1: MM.width, kind: 'plastic' },
+  { d0: 0.7, d1: MM.housing, w0: MM.width, w1: MM.width, kind: 'plastic' },
+  { d0: MM.housing, d1: MM.housing + MM.relief, w0: MM.width * 0.97, w1: MM.reliefEnd, kind: 'plastic' },
+];
+
+const SIDE_STOPS: Record<Section['kind'], [number, string][]> = {
+  plastic: [
+    [0, '#c3c4c9'],
+    [0.2, '#efeff1'],
+    [0.42, '#ffffff'],
+    [0.76, '#e8e8eb'],
+    [1, '#b6b7bc'],
+  ],
+  metal: [
+    [0, '#74777d'],
+    [0.28, '#f2f3f5'],
+    [0.5, '#c2c4c8'],
+    [0.8, '#8a8d93'],
+    [1, '#585b61'],
+  ],
+  ring: [
+    [0, '#0d0d0e'],
+    [0.4, '#3a3a3d'],
+    [1, '#111112'],
+  ],
+};
+const CAP_FILL: Record<Section['kind'], [string, string]> = {
+  plastic: ['#ffffff', '#dedee2'],
+  metal: ['#e9eaec', '#9a9da2'],
+  ring: ['#2a2a2c', '#111'],
+};
+
+function drawPlug(g: CanvasRenderingContext2D, tail: Vec, axisMm: Vec, mm: number, dz: number, showTip: boolean) {
+  const along = len(axisMm);
+  const u = along > 1e-3 ? norm(axisMm) : { x: 0, y: 1 };
+  const v = { x: -u.y, y: u.x };
+  const rot = Math.atan2(v.y, v.x);
+  const round = Math.min(1, Math.abs(dz)); // minor/major ratio of the cylinder ends
+  const total = MM.housing + MM.relief;
+  const at = (d: number): Vec => add(tail, mul(u, (d - total) * along));
+
+  const parts = PLUG.filter((p) => showTip || p.d0 >= 0);
+  // far to near: when the outward end points at us, larger d is nearer
+  const order = dz >= 0 ? parts : [...parts].reverse();
+
+  const ellipse = (c: Vec, r: number) => {
     g.beginPath();
-    const p1 = at(d0, -w0 / 2);
-    const p2 = at(d1, -w1 / 2);
-    const p3 = at(d1, w1 / 2);
-    const p4 = at(d0, w0 / 2);
-    g.moveTo(p1.x, p1.y);
-    g.lineTo(p2.x, p2.y);
-    g.lineTo(p3.x, p3.y);
-    g.lineTo(p4.x, p4.y);
-    g.closePath();
-    g.fillStyle = grad;
+    g.ellipse(c.x, c.y, Math.max(0.01, r), Math.max(0.01, r * round), rot, 0, Math.PI * 2);
     g.fill();
   };
-  const plastic: [number, string][] = [
-    [0, '#c9cace'],
-    [0.22, '#f1f1f3'],
-    [0.42, '#ffffff'],
-    [0.75, '#e9e9ec'],
-    [1, '#b9babf'],
-  ];
-  const metal: [number, string][] = [
-    [0, '#7d8086'],
-    [0.3, '#f2f3f5'],
-    [0.5, '#c4c6ca'],
-    [0.8, '#8d9096'],
-    [1, '#5d6066'],
-  ];
 
+  const body = (p: Section) => {
+    const c0 = at(p.d0);
+    const c1 = at(p.d1);
+    const r0 = (p.w0 / 2) * mm;
+    const r1 = (p.w1 / 2) * mm;
+    const rMax = Math.max(r0, r1);
+    const grad = g.createLinearGradient(c0.x - v.x * rMax, c0.y - v.y * rMax, c0.x + v.x * rMax, c0.y + v.y * rMax);
+    for (const [o, c] of SIDE_STOPS[p.kind]) grad.addColorStop(o, c);
+    g.fillStyle = grad;
+    // the side of the cylinder: a band between the two end ellipses
+    g.beginPath();
+    g.moveTo(c0.x + v.x * r0, c0.y + v.y * r0);
+    g.lineTo(c1.x + v.x * r1, c1.y + v.y * r1);
+    g.lineTo(c1.x - v.x * r1, c1.y - v.y * r1);
+    g.lineTo(c0.x - v.x * r0, c0.y - v.y * r0);
+    g.closePath();
+    g.fill();
+    if (round > 0.02) {
+      ellipse(c0, r0);
+      ellipse(c1, r1);
+    }
+  };
+
+  const nearCap = (p: Section, i: number) => {
+    if (round < 0.08) return;
+    const nearD = dz >= 0 ? p.d1 : p.d0;
+    const nearW = dz >= 0 ? p.w1 : p.w0;
+    // hidden when the next nearer part is at least as wide at the joint
+    const next = order[i + 1];
+    if (next) {
+      const nextW = dz >= 0 ? next.w0 : next.w1;
+      if (nextW >= nearW * 0.98) return;
+    }
+    const c = at(nearD);
+    const r = (nearW / 2) * mm;
+    const [hi, lo] = CAP_FILL[p.kind];
+    const grad = g.createRadialGradient(c.x - v.x * r * 0.3, c.y - v.y * r * 0.3, 0, c.x, c.y, r);
+    grad.addColorStop(0, hi);
+    grad.addColorStop(1, lo);
+    g.fillStyle = grad;
+    ellipse(c, r);
+    g.strokeStyle = 'rgba(0,0,0,0.12)';
+    g.lineWidth = Math.max(0.5, mm * 0.1);
+    g.beginPath();
+    g.ellipse(c.x, c.y, r, r * round, rot, 0, Math.PI * 2);
+    g.stroke();
+  };
+
+  // soft shadow from the whole plug
   g.save();
   g.shadowColor = 'rgba(0,0,0,0.18)';
   g.shadowBlur = Math.max(3, mm * 1.6);
   g.shadowOffsetY = Math.max(2, mm * 0.8);
+  g.fillStyle = '#e9e9ec';
+  for (const p of parts) if (p.kind === 'plastic') body(p);
+  g.restore();
 
-  // metal tip: sleeve, ring, ring, tip
-  if (showTip) {
-    const tw = MM.tipWidth;
-    cyl(-6, 0, tw, tw, metal);
-    cyl(-6.8, -6, tw, tw, [[0, '#111'], [1, '#2a2a2c']]);
-    cyl(-9.6, -6.8, tw, tw, metal);
-    cyl(-10.4, -9.6, tw, tw, [[0, '#111'], [1, '#2a2a2c']]);
-    cyl(-12.6, -10.4, tw, tw * 0.92, metal);
-    cyl(-MM.tip, -12.6, tw * 0.4, tw * 0.92, metal);
+  order.forEach((p, i) => {
+    body(p);
+    nearCap(p, i);
+  });
+
+  // fine seam between housing and strain relief (only when seen from the side)
+  if (round < 0.6) {
+    const s1 = add(at(MM.housing), mul(v, (-MM.width / 2) * mm));
+    const s2 = add(at(MM.housing), mul(v, (MM.width / 2) * mm));
+    g.save();
+    g.strokeStyle = 'rgba(0,0,0,0.12)';
+    g.lineWidth = Math.max(0.5, mm * 0.12);
+    g.beginPath();
+    g.moveTo(s1.x, s1.y);
+    g.lineTo(s2.x, s2.y);
+    g.stroke();
+    g.restore();
   }
-  // housing (with rounded front corners drawn as a slightly narrower front band)
-  cyl(0, 0.6, MM.width * 0.9, MM.width, plastic);
-  cyl(0.6, MM.housing, MM.width, MM.width, plastic);
-  // strain relief taper
-  cyl(MM.housing, MM.housing + MM.relief, MM.width * 0.96, MM.reliefEnd, plastic);
-  g.restore();
-
-  // fine seam between housing and relief
-  g.save();
-  const s1 = at(MM.housing, -MM.width / 2);
-  const s2 = at(MM.housing, MM.width / 2);
-  g.strokeStyle = 'rgba(0,0,0,0.12)';
-  g.lineWidth = Math.max(0.5, mm * 0.12);
-  g.beginPath();
-  g.moveTo(s1.x, s1.y);
-  g.lineTo(s2.x, s2.y);
-  g.stroke();
-  g.restore();
 }

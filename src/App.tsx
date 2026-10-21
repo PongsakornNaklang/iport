@@ -15,7 +15,7 @@ import { APP_COMMIT, APP_VERSION, COPYRIGHT } from './version';
 import { GlobalDropOverlay, useGlobalFileDrop } from './ui/library/globalDrop';
 
 // Dev-only handle for debugging and automated checks.
-if (import.meta.env.DEV) Object.assign(window, { iport: { player, usePlayer, useLibrary, useCustomize } });
+if (import.meta.env.DEV) Object.assign(window, { iport: { player, usePlayer, useLibrary, useCustomize, useStage } });
 
 const LibraryPanel = lazy(() => import('./ui/library/LibraryPanel'));
 const CustomizePanel = lazy(() => import('./ui/customize/CustomizePanel'));
