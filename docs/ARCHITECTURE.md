@@ -27,6 +27,7 @@ src/
     customize/store.ts  useCustomize: current model, appearance per model, scene, presets
     sound/click.ts      playClick() (clicker), playTone(), playTap(), playLock(), alarm sound
     alarms.ts           useAlarmState { ringing }, dismissAlarm(), snoozeAlarm()
+    lyrics.ts           useLyrics(track) → { plain, lines (time-synced), loading } via LRCLIB; activeLine()
     util/               format.ts (formatTime, compareTitles, indexLetter, formatClock),
                         hooks.ts (useNow, useBattery, useInterval), id.ts (uid)
   shell/

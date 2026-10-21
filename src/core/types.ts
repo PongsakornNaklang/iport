@@ -49,6 +49,10 @@ export interface Track {
   /** Remote URL, or `idb:<key>` for artwork blobs stored locally. */
   artwork?: string;
   lyrics?: string;
+  /** time-synced lyrics in LRC format ("[mm:ss.xx] line") */
+  syncedLyrics?: string;
+  /** set once an online lyrics lookup has been tried (avoids re-fetching) */
+  lyricsChecked?: boolean;
 
   // Podcasts / audiobooks
   show?: string;
