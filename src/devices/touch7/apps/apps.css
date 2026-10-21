@@ -2222,9 +2222,9 @@
 }
 .t7cam-modes button {
   width: 74px;
-  font-size: 12.5px !important;
+  font-size: 12px !important;
   font-weight: 500 !important;
-  letter-spacing: 0.6px !important;
+  letter-spacing: 0.3px !important;
   color: #fff !important;
   height: 22px;
   white-space: nowrap;

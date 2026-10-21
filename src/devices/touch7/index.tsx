@@ -223,6 +223,27 @@ export default function IpodTouch({ model, appearance }: DeviceProps) {
         edge={edge}
         frontStyle={{ overflow: 'clip' }}
         backStyle={{ overflow: 'clip' }}
+        decals={
+          <>
+            {/* bottom edge: headphone jack, Lightning, speaker */}
+            <EdgeDecal side="bottom" offset={-96} length={22} thickness={22} width={width} height={height} depth={depth}>
+              <div className="t7-jack" />
+            </EdgeDecal>
+            <EdgeDecal side="bottom" offset={0} length={50} thickness={12} width={width} height={height} depth={depth}>
+              <div className="t7-lightning" />
+            </EdgeDecal>
+            <EdgeDecal side="bottom" offset={78} length={64} thickness={8} width={width} height={height} depth={depth}>
+              <div className="t7-speaker">
+                {Array.from({ length: 8 }, (_, i) => (
+                  <span key={i} />
+                ))}
+              </div>
+            </EdgeDecal>
+            <EdgeDecal side="top" offset={-40} length={6} thickness={6} width={width} height={height} depth={depth} zOffset={-half * 0.1}>
+              <div className="t7-pinhole" />
+            </EdgeDecal>
+          </>
+        }
         front={
           <div className={`t7-front ${darkFront ? 'dark' : 'light'}`} style={{ background: front }}>
             <div className="t7-glass-edge" />
@@ -254,7 +275,7 @@ export default function IpodTouch({ model, appearance }: DeviceProps) {
           </div>
         }
         back={
-          <div className="t7-backside" style={{ background: back, ['--t7-back' as string]: back }}>
+          <div className={`t7-backside ${luminance(back) > 0.55 ? 'lightback' : ''}`} style={{ background: back, ['--t7-back' as string]: back }}>
             <div className="t7-back-tex" />
             <div className="t7-back-sheen" />
             <div className="t7-rear-cam">
@@ -338,23 +359,6 @@ export default function IpodTouch({ model, appearance }: DeviceProps) {
             volume(-1);
           }}
         />
-        {/* bottom edge: headphone jack, Lightning, speaker */}
-        <EdgeDecal side="bottom" offset={-96} length={22} thickness={22} width={width} height={height} depth={depth}>
-          <div className="t7-jack" />
-        </EdgeDecal>
-        <EdgeDecal side="bottom" offset={0} length={50} thickness={12} width={width} height={height} depth={depth}>
-          <div className="t7-lightning" />
-        </EdgeDecal>
-        <EdgeDecal side="bottom" offset={78} length={64} thickness={8} width={width} height={height} depth={depth}>
-          <div className="t7-speaker">
-            {Array.from({ length: 8 }, (_, i) => (
-              <span key={i} />
-            ))}
-          </div>
-        </EdgeDecal>
-        <EdgeDecal side="top" offset={-40} length={6} thickness={6} width={width} height={height} depth={depth} zOffset={-half * 0.1}>
-          <div className="t7-pinhole" />
-        </EdgeDecal>
       </Device3D>
     </div>
   );

@@ -1,4 +1,4 @@
-import { useMemo, useRef } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { Artwork } from '../../../../core/library/Artwork';
 import { useLibrary } from '../../../../core/library/store';
 import {
@@ -21,7 +21,7 @@ import type { Playlist } from '../../../../core/types';
 import { player } from '../../../../core/player/player';
 import { indexLetter } from '../../../../core/util/format';
 import { Glyph } from '../../os/glyphs';
-import { os } from '../../os/store';
+import { os, usePrefs } from '../../os/store';
 import { Empty, Page, useNav, GlyphButton, screenY } from '../../os/ui';
 import { openVideo } from '../VideoPlayer';
 import { AlbumTile, Bars, Mosaic, PlayShuffle, SongRow, minutes, newPlaylistPrompt, playList, trackMenu, useIsCurrent, useMusic, makeLP } from './common';
@@ -84,15 +84,30 @@ export function LibraryRoot() {
     }
     return out;
   }, [tracks]);
+  const hidden = usePrefs((s) => s.musicHidden);
+  const [edit, setEdit] = useState(false);
+  const toggle = (id: string) => usePrefs.getState().set('musicHidden', hidden.includes(id) ? hidden.filter((x) => x !== id) : [...hidden, id]);
   return (
-    <Page title="Library" right={<button className="t7-tbtn">Edit</button>}>
-      <div className="t7m-libmenu">
-        {ROWS.map((r) => (
-          <div key={r.id} className="t7m-librow" onClick={() => openLibrarySection(r.id, nav.push)}>
+    <Page
+      title="Library"
+      right={
+        <button className={`t7-tbtn ${edit ? 'bold' : ''}`} onClick={() => setEdit(!edit)}>
+          {edit ? 'Done' : 'Edit'}
+        </button>
+      }
+    >
+      <div className={`t7m-libmenu ${edit ? 'editing' : ''}`}>
+        {ROWS.filter((r) => edit || !hidden.includes(r.id)).map((r) => (
+          <div key={r.id} className="t7m-librow" onClick={() => (edit ? toggle(r.id) : openLibrarySection(r.id, nav.push))}>
+            {edit && (
+              <span className={`t7m-libcheck ${hidden.includes(r.id) ? '' : 'on'}`}>
+                {!hidden.includes(r.id) && <Glyph name="checkmark" size={12} />}
+              </span>
+            )}
             <Glyph name={r.glyph} size={24} className="t7m-librow-g" />
             <div className="t7m-librow-main">
               <span>{r.label}</span>
-              <Glyph name="chevron.right" size={14} className="t7-cell-chev" />
+              <Glyph name={edit ? 'list.bullet' : 'chevron.right'} size={14} className="t7-cell-chev" />
             </div>
           </div>
         ))}

@@ -131,7 +131,7 @@ export function LockScreen({ wall, dark }: { wall: string; dark: boolean }) {
             <NotifCard key={n.id} n={n} />
           ))}
         </div>
-        <div className="t7-lock-hint">Press home to open</div>
+        <div className="t7-lock-hint">Press home to unlock</div>
       </div>
       {passcode && <Passcode />}
     </div>

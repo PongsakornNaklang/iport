@@ -158,6 +158,21 @@ export default function Camera() {
     const chunks: Blob[] = [];
     mr.ondataavailable = (e) => e.data.size && chunks.push(e.data);
     const t0 = Date.now();
+    // poster frame for TV / Photos
+    let poster: Blob | null = null;
+    const v = video.current;
+    if (v && v.videoWidth) {
+      const c = document.createElement('canvas');
+      c.width = 480;
+      c.height = Math.round((480 * v.videoHeight) / v.videoWidth);
+      const g = c.getContext('2d')!;
+      if (facing === 'user') {
+        g.translate(c.width, 0);
+        g.scale(-1, 1);
+      }
+      g.drawImage(v, 0, 0, c.width, c.height);
+      c.toBlob((b) => (poster = b), 'image/jpeg', 0.8);
+    }
     mr.onstop = async () => {
       const dur = (Date.now() - t0) / 1000;
       const blob = new Blob(chunks, { type: mr.mimeType || 'video/webm' });
@@ -165,6 +180,11 @@ export default function Camera() {
       const id = uid('t');
       const key = `media:${id}`;
       await putBlob(key, blob);
+      let artwork: string | undefined;
+      if (poster) {
+        await putBlob(`art:${id}`, poster);
+        artwork = `idb:art:${id}`;
+      }
       const d = new Date(t0);
       useLibrary.getState().addTracks([
         {
@@ -178,6 +198,7 @@ export default function Camera() {
           album: 'Camera',
           genre: 'Home Video',
           duration: dur,
+          artwork,
           addedAt: Date.now(),
           playCount: 0,
           skipCount: 0,

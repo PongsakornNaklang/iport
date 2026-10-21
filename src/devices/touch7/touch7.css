@@ -29,10 +29,13 @@
     inset 0 0 8px rgba(0, 0, 0, 0.6);
 }
 .t7-front.light .t7-glass-edge {
+  /* crisp product-shot rim on white backdrops: hairline, polished chamfer, soft falloff */
   box-shadow:
-    inset 0 0 0 1px rgba(0, 0, 0, 0.08),
-    inset 0 1px 2px rgba(255, 255, 255, 0.9),
-    inset 0 0 6px rgba(0, 0, 0, 0.06);
+    inset 0 0 0 0.75px rgba(0, 0, 0, 0.28),
+    inset 0 0 0 2px rgba(255, 255, 255, 0.95),
+    inset 0 0 0 2.75px rgba(0, 0, 0, 0.07),
+    inset 0 1.5px 2px rgba(255, 255, 255, 0.9),
+    inset 0 0 8px rgba(0, 0, 0, 0.07);
 }
 
 .t7-camera-front {
@@ -219,12 +222,17 @@
   position: absolute;
   left: 0;
   right: 0;
-  top: 670px;
+  top: 668px;
   text-align: center;
-  font: 400 11px/1.45 -apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  letter-spacing: 0.4px;
-  color: color-mix(in srgb, var(--t7-back) 70%, #fff);
+  font: 400 11.5px/1.45 -apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  letter-spacing: 0.5px;
+  /* laser engraving: a little darker than light aluminium, lighter than dark */
+  color: color-mix(in srgb, var(--t7-back) 62%, #fff);
   text-shadow: 0 -0.5px 0 rgba(0, 0, 0, 0.3);
+}
+.t7-backside.lightback .t7-engrave {
+  color: color-mix(in srgb, var(--t7-back) 66%, #2a2a2e);
+  text-shadow: 0 0.5px 0 rgba(255, 255, 255, 0.55);
 }
 .t7-reg {
   position: absolute;

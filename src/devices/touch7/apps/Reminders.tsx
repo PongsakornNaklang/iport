@@ -143,7 +143,7 @@ function ListPage({ filter, autoAdd }: { filter: Filter; autoAdd?: boolean }) {
         </button>
       }
       bottom={
-        <button className="t7r-new" style={{ color: m.color }} onClick={() => setAdding(true)}>
+        <button className="t7r-new" style={{ ['--t7-tint' as string]: m.color }} onClick={() => setAdding(true)}>
           <Glyph name="plus.circle.fill" size={22} />
           New Reminder
         </button>

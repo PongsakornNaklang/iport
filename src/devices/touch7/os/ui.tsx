@@ -152,7 +152,7 @@ export function NavStack({
       s.on = true;
       wrap.current!.setPointerCapture(e.pointerId);
       const u = underEl();
-      if (u) u.style.visibility = 'visible';
+      if (u) u.style.visibility = 'inherit';
     }
     const now = performance.now();
     s.v = (dx - s.dx) / Math.max(1, now - s.t);

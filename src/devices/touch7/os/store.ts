@@ -133,6 +133,8 @@ export interface Prefs {
   keyboardClicks: boolean;
   lockSound: boolean;
   musicTab: string;
+  /** Library categories hidden with Edit */
+  musicHidden: string[];
   tvTab: string;
   clockTab: string;
   timer: { endAt: number | null; remaining: number; duration: number; sound: string };
@@ -156,6 +158,7 @@ const DEFAULT_PREFS: Prefs = {
   keyboardClicks: true,
   lockSound: true,
   musicTab: 'library',
+  musicHidden: ['genres', 'compilations', 'composers'],
   tvTab: 'watch',
   clockTab: 'world',
   timer: { endAt: null, remaining: 0, duration: 15 * 60, sound: 'Radar' },

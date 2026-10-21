@@ -584,7 +584,7 @@
   visibility: hidden;
 }
 .t7-tab-pane.on {
-  visibility: visible;
+  visibility: inherit;
 }
 .t7-tab-accessory {
   position: absolute;

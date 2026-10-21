@@ -1174,3 +1174,24 @@
 .t7-app:has(> .t7m-root.np-open) {
   background: #000;
 }
+
+/* Library ▸ Edit: choose the categories shown */
+.t7m-libcheck {
+  width: 22px;
+  height: 22px;
+  margin-right: 10px;
+  border-radius: 50%;
+  border: 1.5px solid var(--t7-label3);
+  display: grid;
+  place-items: center;
+  flex: none;
+  color: #fff;
+  animation: t7-fade-in 200ms;
+}
+.t7m-libcheck.on {
+  border-color: var(--t7-tint);
+  background: var(--t7-tint);
+}
+.t7m-libmenu.editing .t7m-librow-main {
+  color: var(--t7-label);
+}

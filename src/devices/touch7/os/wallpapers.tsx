@@ -28,7 +28,7 @@ const lin = (id: string, stops: [number, string][], x2 = 0, y2 = 1) =>
 function ios15(dark: boolean): string {
   const c = dark
     ? { a: '#030a1f', b: '#0a1d4f', l1: '#1747c9', l2: '#0b6e8f', l3: '#2a1f7a', l4: '#3f7ef0', hi: '#5fa8ff' }
-    : { a: '#a9d0fb', b: '#3d6fe0', l1: '#2f6ff0', l2: '#52c6e6', l3: '#2a3fb0', l4: '#7fb8ff', hi: '#e8f4ff' };
+    : { a: '#6fa3ec', b: '#3d6fe0', l1: '#2f6ff0', l2: '#52c6e6', l3: '#2a3fb0', l4: '#7fb8ff', hi: '#d6e9ff' };
   const defs =
     lin('bg', [
       [0, c.a],
@@ -55,7 +55,7 @@ function ios15(dark: boolean): string {
     <path filter="url(#b2)" fill="url(#g3)" opacity=".55" d="M-60 420 C 160 330, 300 520, 520 420 S 700 330, 720 300 L720 360 C 520 470, 330 560, 140 470 S -60 470,-60 470Z"/>
     <path filter="url(#b1)" fill="${c.l3}" opacity=".85" d="M-80 900 C 160 780, 360 1000, 720 860 L720 1250 L-80 1250Z"/>
     <path filter="url(#b2)" fill="${c.l2}" opacity=".5" d="M-60 820 C 180 720, 340 900, 720 780 L720 820 C 360 960, 200 790, -60 880Z"/>
-    <path filter="url(#b1)" fill="${c.hi}" opacity="${dark ? 0.15 : 0.45}" d="M-60 120 C 200 40, 380 220, 720 120 L720 -60 L-60 -60Z"/>`;
+    <path filter="url(#b1)" fill="${c.hi}" opacity="${dark ? 0.15 : 0.28}" d="M-60 120 C 200 40, 380 220, 720 120 L720 -60 L-60 -60Z"/>`;
   return svg(body, defs);
 }
 
