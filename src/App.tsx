@@ -9,6 +9,7 @@ import { isTypingTarget } from './shell/keyboard';
 import { useStage } from './shell/stageStore';
 import { useLibrary } from './core/library/store';
 import { seedDemoLibrary } from './core/library/demo';
+import { usePlayer } from './core/player/player';
 import './core/alarms';
 
 const LibraryPanel = lazy(() => import('./ui/library/LibraryPanel'));
@@ -46,6 +47,15 @@ export function App() {
   useEffect(() => {
     if (hydrated && !seeded) void seedDemoLibrary();
   }, [hydrated, seeded]);
+
+  // Tell the user when something can't play (the iPod itself just skips it).
+  useEffect(
+    () =>
+      usePlayer.subscribe((s, prev) => {
+        if (s.error && s.error !== prev.error) toast(s.error);
+      }),
+    [],
+  );
 
   // Stage shortcuts that don't clash with device keys.
   useEffect(() => {
