@@ -1058,6 +1058,19 @@ textarea.input {
   color: rgba(255, 255, 255, 0.6);
 }
 
+/* keep the view controls under the iPod when a side panel is open */
+@media (min-width: 901px) {
+  .view-controls {
+    transition: left 520ms var(--ease);
+  }
+  .app:has(.panel.left) .view-controls {
+    left: calc(50% + 210px);
+  }
+  .app:has(.panel.right) .view-controls {
+    left: calc(50% - 210px);
+  }
+}
+
 /* ------------------------------------------------------------------ responsive */
 @media (max-width: 720px) {
   :root {

@@ -266,6 +266,14 @@ let seeding = false;
 export async function seedDemoLibrary(): Promise<void> {
   if (seeding) return;
   seeding = true;
+  try {
+    await seed();
+  } finally {
+    seeding = false;
+  }
+}
+
+async function seed(): Promise<void> {
   const lib = useLibrary.getState();
   lib.setSeeded(true);
   const now = Date.now();
@@ -290,7 +298,10 @@ export async function seedDemoLibrary(): Promise<void> {
       skipCount: 0,
     });
   });
-  lib.addTracks(tracks.splice(0));
+  const added = lib.addTracks(tracks.splice(0));
+  // If the user erases the library while songs are still being made, stop.
+  const marker = added[0]?.id;
+  const erased = () => !!marker && !useLibrary.getState().tracks[marker];
 
   if (typeof OfflineAudioContext === 'undefined') return;
   try {
@@ -298,6 +309,7 @@ export async function seedDemoLibrary(): Promise<void> {
     for (let i = 0; i < SONGS.length; i++) {
       const s = SONGS[i];
       const buf = await renderSong(s);
+      if (erased()) return;
       const id = uid('t');
       const key = `media:${id}`;
       await putBlob(key, toWav(buf));
@@ -308,23 +320,26 @@ export async function seedDemoLibrary(): Promise<void> {
           await putBlob(artKey, art);
         }
       }
-      useLibrary.getState().addTracks([{
-        id,
-        source: 'local',
-        ref: key,
-        mediaType: 'music',
-        title: s.title,
-        artist: 'iPort Demo Band',
-        album: 'Hello, iPod',
-        genre: s.genre,
-        year: 2026,
-        trackNo: i + 1,
-        duration: buf.duration,
-        artwork: artKey ? `idb:${artKey}` : undefined,
-        addedAt: now - i,
-        playCount: 0,
-        skipCount: 0,
-      }]);
+      if (erased()) return;
+      useLibrary.getState().addTracks([
+        {
+          id,
+          source: 'local',
+          ref: key,
+          mediaType: 'music',
+          title: s.title,
+          artist: 'iPort Demo Band',
+          album: 'Hello, iPod',
+          genre: s.genre,
+          year: 2026,
+          trackNo: i + 1,
+          duration: buf.duration,
+          artwork: artKey ? `idb:${artKey}` : undefined,
+          addedAt: now - i,
+          playCount: 0,
+          skipCount: 0,
+        },
+      ]);
     }
   } catch (e) {
     console.warn('[demo] could not synthesize demo songs', e);

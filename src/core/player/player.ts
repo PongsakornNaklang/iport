@@ -17,6 +17,7 @@ import { SoundCloudAdapter } from './adapters/soundcloud';
 import type { AdapterCallbacks, MediaAdapter } from './adapters/types';
 import { onHostChange } from './mediaHost';
 import { resolveArtwork } from '../library/artwork';
+import { splitArtistTitle } from '../sources/youtube';
 
 export interface PlayerState {
   /** Track ids in playback order (shuffled when shuffle is on). */
@@ -113,8 +114,16 @@ function makeCallbacks(kind: MediaAdapter['kind']): AdapterCallbacks {
       const t = useLibrary.getState().tracks[id];
       if (!t) return;
       const patch: Partial<Track> = {};
-      if (meta.title && (!t.title || t.title === t.ref || /^(loading|youtube video|soundcloud track)/i.test(t.title))) patch.title = meta.title;
-      if (meta.artist && (!t.artist || /^unknown artist$|^youtube$|^soundcloud$/i.test(t.artist))) patch.artist = meta.artist;
+      const placeholderArtist = !t.artist || /^unknown artist$|^youtube$|^soundcloud$/i.test(t.artist);
+      if (meta.title && (!t.title || t.title === t.ref || /^(loading|youtube video|soundcloud track)/i.test(t.title))) {
+        if (t.source === 'youtube') {
+          // "Artist - Song (Official Video)" → artist + song
+          const split = splitArtistTitle(meta.title, meta.artist);
+          patch.title = split.title;
+          if (placeholderArtist) patch.artist = split.artist;
+        } else patch.title = meta.title;
+      }
+      if (meta.artist && placeholderArtist && !patch.artist) patch.artist = meta.artist;
       if (meta.duration && !t.duration) patch.duration = meta.duration;
       if (meta.artwork && !t.artwork) patch.artwork = meta.artwork;
       if (Object.keys(patch).length) {
