@@ -19,7 +19,11 @@ const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
 
 /** Space taken by the floating top bar and the view controls (px). */
 const TOP_BAR = 64;
+/** room for the view controls: along the bottom on phones, on the right edge otherwise (see app.css) */
 const BOTTOM_BAR = 76;
+const SIDE_BAR = 68;
+const WIDE = 720;
+const barsFor = (width: number) => (width > WIDE ? { bottom: 28, right: SIDE_BAR } : { bottom: BOTTOM_BAR, right: 0 });
 
 
 /**
@@ -46,6 +50,7 @@ export function Stage() {
   const frontCanvas = useRef<HTMLCanvasElement>(null);
   const jackRef = useRef<HTMLDivElement>(null);
   const [fit, setFit] = useState(0.8);
+  const [bars, setBars] = useState(() => barsFor(typeof window === 'undefined' ? 1200 : window.innerWidth));
 
   // Orientation lives in a ref and is applied directly to the DOM each frame.
   const st = useRef({
@@ -71,8 +76,10 @@ export function Stage() {
       const r = el.getBoundingClientRect();
       const fh = model.fitHeight ?? 0.86;
       // leave room for the floating top bar and the view controls
-      const usableH = Math.max(160, r.height - TOP_BAR - (inset.bottom || BOTTOM_BAR));
-      const usableW = Math.max(200, r.width - inset.left - inset.right);
+      const b = barsFor(r.width);
+      setBars((cur) => (cur.bottom === b.bottom && cur.right === b.right ? cur : b));
+      const usableH = Math.max(160, r.height - TOP_BAR - (inset.bottom || b.bottom));
+      const usableW = Math.max(200, r.width - inset.left - inset.right - b.right);
       const f = Math.min((usableH * fh) / model.size.height, (usableW * 0.86) / model.size.width);
       setFit(clamp(f, 0.2, 3));
     };
@@ -235,8 +242,8 @@ export function Stage() {
 
   const Device = useMemo(() => deviceComponent(model), [model]);
   const scale = fit * zoom;
-  const shiftX = (inset.left - inset.right) / 2;
-  const centerY = (TOP_BAR - (inset.bottom || BOTTOM_BAR)) / 2;
+  const shiftX = (inset.left - inset.right - bars.right) / 2;
+  const centerY = (TOP_BAR - (inset.bottom || bars.bottom)) / 2;
 
   return (
     <div

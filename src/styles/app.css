@@ -620,6 +620,59 @@ button {
   width: 16px;
   height: 16px;
 }
+.vc-zoom {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.view-controls .vc-zoom-val {
+  min-width: 48px;
+  font-variant-numeric: tabular-nums;
+}
+/*
+ * On larger screens the controls stand as a slim pill on the right edge,
+ * clear of the iPod and of the EarPods cable below it (the stage reserves
+ * that strip, see Stage.tsx). Labels become tooltips.
+ */
+@media (min-width: 721px) {
+  .view-controls {
+    left: auto;
+    right: 16px;
+    top: calc(50% + var(--topbar-h) / 2);
+    bottom: auto;
+    transform: translateY(-50%);
+    flex-direction: column;
+    transition: right 520ms var(--ease);
+  }
+  .view-controls button {
+    width: 36px;
+    padding: 0;
+    justify-content: center;
+  }
+  .view-controls button .lbl {
+    display: none;
+  }
+  .view-controls .sep {
+    width: 20px;
+    height: 1px;
+    margin: 4px 0;
+  }
+  .vc-zoom {
+    flex-direction: column-reverse;
+  }
+  .view-controls .vc-zoom-val {
+    min-width: 0;
+    font-size: 11px;
+    letter-spacing: -0.2px;
+  }
+  .app:has(.panel.right) .view-controls {
+    right: calc(14px + min(392px, 100vw - 28px) + 12px);
+  }
+  /* nothing along the bottom any more (:root: this comes before the base rule) */
+  :root .toast {
+    bottom: 32px;
+  }
+}
 
 .hint {
   position: absolute;
@@ -1095,17 +1148,6 @@ textarea.input {
 }
 
 /* keep the view controls under the iPod when a side panel is open */
-@media (min-width: 901px) {
-  .view-controls {
-    transition: left 520ms var(--ease);
-  }
-  .app:has(.panel.left) .view-controls {
-    left: calc(50% + 210px);
-  }
-  .app:has(.panel.right) .view-controls {
-    left: calc(50% - 210px);
-  }
-}
 
 /* ------------------------------------------------------------------ responsive */
 @media (max-width: 720px) {

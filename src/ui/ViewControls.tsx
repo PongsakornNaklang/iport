@@ -24,15 +24,18 @@ export function ViewControls() {
         <span className="lbl">360°</span>
       </button>
       <span className="sep" />
-      <button onClick={() => st().setZoom(zoom / 1.15)} title="Zoom out">
-        <IconMinus />
-      </button>
-      <button onClick={() => st().setZoom(1)} title="Reset zoom" style={{ minWidth: 48, fontVariantNumeric: 'tabular-nums' }}>
-        {Math.round(zoom * 100)}%
-      </button>
-      <button onClick={() => st().setZoom(zoom * 1.15)} title="Zoom in">
-        <IconPlus />
-      </button>
+      {/* − % + in a row; stacked vertically it reads + % − (see app.css) */}
+      <div className="vc-zoom">
+        <button onClick={() => st().setZoom(zoom / 1.15)} title="Zoom out">
+          <IconMinus />
+        </button>
+        <button className="vc-zoom-val" onClick={() => st().setZoom(1)} title="Reset zoom">
+          {Math.round(zoom * 100)}%
+        </button>
+        <button onClick={() => st().setZoom(zoom * 1.15)} title="Zoom in">
+          <IconPlus />
+        </button>
+      </div>
     </div>
   );
 }

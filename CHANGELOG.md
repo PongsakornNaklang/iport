@@ -14,6 +14,11 @@ The running app shows its version and build in the Help panel (?).
 
 ## [Unreleased]
 
+### Changed
+- The view controls (Front, Back, Side, 360°, zoom) are a slim pill on the
+  right edge of the window instead of a bar along the bottom, leaving room
+  for the iPod and its EarPods cable. Phones keep them along the bottom.
+
 ### Fixed
 - The sides of every iPod are now one continuous surface. Seen edge-on or
   zoomed in they no longer show stripes, gaps or saw-tooth corners, and their
