@@ -24,6 +24,8 @@ export function App() {
   const toastSerial = useToast((s) => s.serial);
   const hydrated = useLibrary((s) => s.hydrated);
   const seeded = useLibrary((s) => s.seeded);
+  const backdrop = useCustomize((s) => s.scene.backdrop);
+  const darkScene = backdrop === 'studio' || backdrop === 'aurora' || backdrop === 'desk';
 
   // ?model=classic opens a specific iPod (handy for links and testing).
   useEffect(() => {
@@ -76,8 +78,11 @@ export function App() {
   useEffect(() => {
     const update = () => {
       const wide = window.innerWidth > 900;
-      const w = Math.min(400, window.innerWidth - 20) + 20;
-      useStage.getState().setInset(wide && panel === 'library' ? w : 0, wide && (panel === 'customize' || panel === 'help') ? w : 0);
+      const phone = window.innerWidth <= 720;
+      const w = Math.min(392, window.innerWidth - 28) + 28;
+      // phones: the panel is a bottom sheet, so shrink the iPod into the space above it
+      const sheet = phone && panel ? Math.min(window.innerHeight * 0.74, 660) + 8 : 0;
+      useStage.getState().setInset(wide && panel === 'library' ? w : 0, wide && (panel === 'customize' || panel === 'help') ? w : 0, sheet);
     };
     update();
     window.addEventListener('resize', update);
@@ -85,7 +90,7 @@ export function App() {
   }, [panel]);
 
   return (
-    <div className="app">
+    <div className={`app ${darkScene ? 'scene-dark' : ''}`}>
       <header className="topbar">
         <div className="brand">
           <IconLogo className="brand-mark" />
@@ -94,17 +99,19 @@ export function App() {
         </div>
         <ModelPicker />
         <div className="topbar-spacer" />
-        <button className={`icon-btn ${panel === 'library' ? 'active' : ''}`} onClick={() => toggle('library')} title="Add music & sync">
-          <IconMusic />
-          <span className="lbl">Library</span>
-        </button>
-        <button className={`icon-btn ${panel === 'customize' ? 'active' : ''}`} onClick={() => toggle('customize')} title="Customize & presets">
-          <IconBrush />
-          <span className="lbl">Customize</span>
-        </button>
-        <button className={`icon-btn ${panel === 'help' ? 'active' : ''}`} onClick={() => toggle('help')} title="How to use (?)">
-          <IconHelp />
-        </button>
+        <nav className="tb-group" aria-label="Panels">
+          <button className={`icon-btn ${panel === 'library' ? 'active' : ''}`} onClick={() => toggle('library')} title="Add music & sync">
+            <IconMusic />
+            <span className="lbl">Library</span>
+          </button>
+          <button className={`icon-btn ${panel === 'customize' ? 'active' : ''}`} onClick={() => toggle('customize')} title="Customize & presets">
+            <IconBrush />
+            <span className="lbl">Customize</span>
+          </button>
+          <button className={`icon-btn round ${panel === 'help' ? 'active' : ''}`} onClick={() => toggle('help')} title="How to use (?)">
+            <IconHelp />
+          </button>
+        </nav>
       </header>
       <main className="main">
         <Stage />

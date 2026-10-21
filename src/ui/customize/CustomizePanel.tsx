@@ -209,6 +209,7 @@ function toHex(c: string): string {
 // ------------------------------------------------------------------ Scene
 
 const BACKDROPS: { id: Backdrop; name: string; preview: string; colors: 0 | 1 | 2 }[] = [
+  { id: 'white', name: 'White', preview: '#ffffff', colors: 0 },
   { id: 'studio', name: 'Studio', preview: 'radial-gradient(circle at 50% 35%, #2a2d34, #0d0e11)', colors: 2 },
   { id: 'light', name: 'Light', preview: 'radial-gradient(circle at 50% 30%, #fff, #cfd1d6)', colors: 0 },
   { id: 'desk', name: 'Desk', preview: 'linear-gradient(180deg, #6b4a32, #2b1d13)', colors: 0 },
@@ -512,10 +513,10 @@ function ShowcaseCard({ preset }: { preset: Omit<Preset, 'id' | 'createdAt'> }) 
   const m = getModel(preset.modelId);
   const bg = useMemo(() => {
     const s = preset.scene;
-    if (!s) return '#222';
+    if (!s) return '#f5f5f7';
     if (s.backdrop === 'gradient') return `linear-gradient(160deg, ${s.color1}, ${s.color2})`;
     if (s.backdrop === 'solid') return s.color1;
-    return BACKDROPS.find((b) => b.id === s.backdrop)?.preview ?? '#222';
+    return BACKDROPS.find((b) => b.id === s.backdrop)?.preview ?? '#f5f5f7';
   }, [preset.scene]);
   return (
     <button className="cz-show" onClick={() => (useCustomize.getState().applyPresetObject(preset), toast(`Applied “${preset.name}”`))}>

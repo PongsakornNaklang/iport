@@ -8,13 +8,13 @@ import { IconChevronDown } from './icons';
 export function ModelThumb({ model, color, size = 44 }: { model: DeviceModel; color?: string; size?: number }) {
   const c = color ?? model.finishes[0].swatch;
   const h = size;
-  const stroke = 'rgba(255,255,255,0.35)';
+  const stroke = 'rgba(0,0,0,0.18)';
   if (model.family === 'clickwheel')
     return (
       <svg width={h * 0.62} height={h} viewBox="0 0 31 50">
         <rect x="0.5" y="0.5" width="30" height="49" rx="4" fill={c} stroke={stroke} />
         <rect x="3.5" y="3.5" width="24" height="18" rx="1" fill="#1d2a38" />
-        <circle cx="15.5" cy="35" r="9.5" fill="rgba(255,255,255,0.85)" stroke="rgba(0,0,0,0.15)" />
+        <circle cx="15.5" cy="35" r="9.5" fill="rgba(255,255,255,0.92)" stroke="rgba(0,0,0,0.15)" />
         <circle cx="15.5" cy="35" r="3.6" fill={c} stroke="rgba(0,0,0,0.15)" />
       </svg>
     );
@@ -22,7 +22,7 @@ export function ModelThumb({ model, color, size = 44 }: { model: DeviceModel; co
     return (
       <svg width={h * 0.7} height={h * 0.76} viewBox="0 0 29 32">
         <rect x="0.5" y="0.5" width="28" height="31" rx="3" fill={c} stroke={stroke} />
-        <circle cx="14.5" cy="17" r="9" fill="rgba(255,255,255,0.85)" />
+        <circle cx="14.5" cy="17" r="9" fill="rgba(255,255,255,0.92)" stroke="rgba(0,0,0,0.12)" />
         <circle cx="14.5" cy="17" r="3.2" fill={c} />
       </svg>
     );

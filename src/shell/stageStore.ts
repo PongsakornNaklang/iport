@@ -7,8 +7,8 @@ import { create } from 'zustand';
 interface StageState {
   zoom: number;
   /** px of the stage covered by side panels (the device re-centres in the rest) */
-  inset: { left: number; right: number };
-  setInset(left: number, right: number): void;
+  inset: { left: number; right: number; bottom: number };
+  setInset(left: number, right: number, bottom?: number): void;
   /** requested orientation; the stage tweens to it */
   target: { rx: number; ry: number; serial: number } | null;
   spinning: boolean;
@@ -22,10 +22,10 @@ interface StageState {
 
 export const useStage = create<StageState>((set, get) => ({
   zoom: 1,
-  inset: { left: 0, right: 0 },
-  setInset(left, right) {
+  inset: { left: 0, right: 0, bottom: 0 },
+  setInset(left, right, bottom = 0) {
     const cur = get().inset;
-    if (cur.left !== left || cur.right !== right) set({ inset: { left, right } });
+    if (cur.left !== left || cur.right !== right || cur.bottom !== bottom) set({ inset: { left, right, bottom } });
   },
   target: null,
   spinning: false,

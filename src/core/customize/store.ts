@@ -8,7 +8,7 @@ import { DEFAULT_MODEL_ID, getModel, MODELS } from '../../devices/registry';
 import type { Appearance, DeviceModel } from '../../devices/types';
 import { uid } from '../util/id';
 
-export type Backdrop = 'studio' | 'light' | 'desk' | 'gradient' | 'aurora' | 'solid';
+export type Backdrop = 'white' | 'studio' | 'light' | 'desk' | 'gradient' | 'aurora' | 'solid';
 
 export interface Scene {
   backdrop: Backdrop;
@@ -55,7 +55,7 @@ interface CustomizeState {
 }
 
 export const DEFAULT_SCENE: Scene = {
-  backdrop: 'studio',
+  backdrop: 'white',
   color1: '#2a2d34',
   color2: '#0d0e11',
   shadow: true,
@@ -200,7 +200,13 @@ export const useCustomize = create<CustomizeState>()(
     }),
     {
       name: 'iport-customize-v1',
-      version: 1,
+      version: 2,
+      // v2: the site moved to a white, Apple-style look — reset the old dark default backdrop.
+      migrate: (persisted, version) => {
+        const p = (persisted ?? {}) as Partial<CustomizeState>;
+        if (version < 2 && p.scene && p.scene.backdrop === 'studio') p.scene = { ...p.scene, backdrop: 'white' };
+        return p as CustomizeState;
+      },
       merge: (persisted, current) => {
         const p = (persisted ?? {}) as Partial<CustomizeState>;
         return {

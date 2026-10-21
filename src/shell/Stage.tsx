@@ -16,6 +16,11 @@ function deviceComponent(model: DeviceModel) {
 
 const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
 
+/** Space taken by the floating top bar and the view controls (px). */
+const TOP_BAR = 64;
+const BOTTOM_BAR = 76;
+
+
 /**
  * The 3D stage: fits the device to the viewport and lets the user spin it.
  *
@@ -60,8 +65,8 @@ export function Stage() {
     const measure = () => {
       const r = el.getBoundingClientRect();
       const fh = model.fitHeight ?? 0.86;
-      // leave room for the view controls at the bottom
-      const usableH = Math.max(200, r.height - 70);
+      // leave room for the floating top bar and the view controls
+      const usableH = Math.max(160, r.height - TOP_BAR - (inset.bottom || BOTTOM_BAR));
       const usableW = Math.max(200, r.width - inset.left - inset.right);
       const f = Math.min((usableH * fh) / model.size.height, (usableW * 0.86) / model.size.width);
       setFit(clamp(f, 0.2, 3));
@@ -211,6 +216,7 @@ export function Stage() {
   const Device = useMemo(() => deviceComponent(model), [model]);
   const scale = fit * zoom;
   const shiftX = (inset.left - inset.right) / 2;
+  const centerY = (TOP_BAR - (inset.bottom || BOTTOM_BAR)) / 2;
 
   return (
     <div
@@ -230,10 +236,10 @@ export function Stage() {
         <div
           className="stage-shadow"
           ref={shadowRef}
-          style={{ transform: `translate(calc(-50% + ${shiftX}px), ${(model.size.height / 2) * scale - 10}px) scale(${scale})` }}
+          style={{ transform: `translate(calc(-50% + ${shiftX}px), ${(model.size.height / 2) * scale + centerY + 14}px) scale(${scale})` }}
         />
       )}
-      <div className="stage-center" style={{ transform: `translate(${shiftX}px, -28px) scale(${scale})` }}>
+      <div className="stage-center" style={{ transform: `translate(${shiftX}px, ${centerY}px) scale(${scale})` }}>
         <div className="stage-rot" ref={rotRef}>
           <div className="device-enter" key={model.id} style={{ width: model.size.width, height: model.size.height }}>
             <Suspense fallback={<div className="device-loading" style={{ width: model.size.width, height: model.size.height }} />}>
