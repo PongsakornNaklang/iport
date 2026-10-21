@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { cleanChannelName, cleanVideoTitle, isAlbumList, isExpandableList, parseYouTubeUrl, splitArtistTitle, youtubeTrack } from './youtube';
+import { browserRegion, cleanChannelName, cleanVideoTitle, isAlbumList, isExpandableList, parseYouTubeUrl, splitArtistTitle, youtubeTrack } from './youtube';
 
 describe('parseYouTubeUrl', () => {
   const id = 'dQw4w9WgXcQ';
@@ -85,5 +85,14 @@ describe('titles', () => {
       playCount: 0,
     });
     expect(youtubeTrack({ id: 'dQw4w9WgXcQ', title: 'x' }, { musicVideo: true }).mediaType).toBe('musicvideo');
+  });
+});
+
+describe('browserRegion', () => {
+  it('reads the region of the first language that has one', () => {
+    expect(browserRegion(['th-TH', 'en-US'])).toBe('TH');
+    expect(browserRegion(['en', 'en_gb'])).toBe('GB');
+    expect(browserRegion(['th'])).toBeUndefined();
+    expect(browserRegion([])).toBeUndefined();
   });
 });

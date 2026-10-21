@@ -231,11 +231,11 @@ export function TrackEditor({ track, onClose }: { track: Track; onClose: () => v
         <dt>{track.source === 'local' ? 'Stored as' : track.source === 'youtube' ? 'Video ID' : 'Address'}</dt>
         <dd>
           {/^https?:\/\//.test(track.ref) ? (
-            <a href={track.ref} target="_blank" rel="noreferrer noopener" style={{ color: 'var(--ui-accent-2)' }}>
+            <a href={track.ref} target="_blank" rel="noreferrer noopener">
               {track.ref.length > 80 ? `${track.ref.slice(0, 80)}…` : track.ref}
             </a>
           ) : track.source === 'youtube' ? (
-            <a href={`https://www.youtube.com/watch?v=${track.ref}`} target="_blank" rel="noreferrer noopener" style={{ color: 'var(--ui-accent-2)' }}>
+            <a href={`https://www.youtube.com/watch?v=${track.ref}`} target="_blank" rel="noreferrer noopener">
               {track.ref}
             </a>
           ) : (

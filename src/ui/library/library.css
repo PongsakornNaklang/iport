@@ -253,7 +253,8 @@
 }
 .lib-root .select.compact,
 .lib-root .input.compact {
-  flex: none;
+  flex: 0 1 auto;
+  min-width: 0;
   max-width: 48%;
   height: 30px;
   font-size: 13px;
@@ -1631,6 +1632,13 @@
   }
   .lib-counts b {
     font-size: 17px;
+  }
+  .lib-select-btn {
+    width: 30px;
+    padding: 0;
+  }
+  .lib-select-btn .lbl {
+    display: none;
   }
 }
 @media (max-width: 380px) {

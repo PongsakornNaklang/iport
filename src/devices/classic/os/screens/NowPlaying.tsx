@@ -282,12 +282,14 @@ function LyricsPane({ plain, lines, scroll }: { plain: string | null; lines: { t
   const offset = lines ? Math.max(0, cur - 2) : scroll;
   return (
     <div className="cl-np-lyrics">
-      <div className="cl-np-lyrics-inner" style={{ transform: `translateY(${-offset * 17}px)` }}>
-        {text.map((l, i) => (
-          <div key={i} className={i === cur ? 'cur' : ''}>
-            {l || ' '}
-          </div>
-        ))}
+      <div className="cl-np-lyrics-mask">
+        <div className="cl-np-lyrics-inner" style={{ transform: `translateY(${-offset * 17}px)` }}>
+          {text.map((l, i) => (
+            <div key={i} className={i === cur ? 'cur' : ''}>
+              {l || ' '}
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

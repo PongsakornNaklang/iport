@@ -242,7 +242,7 @@ function Viewer({ photo, index, count, onNav, onClose }: { photo: Photo; index: 
         </div>
         <div className="lib-row-flex">
           <button className="btn" onClick={() => useLibrary.getState().togglePhotoFavorite(photo.id)}>
-            <IconStar filled={photo.favorite} style={{ color: photo.favorite ? '#ffcc00' : undefined }} /> {photo.favorite ? 'Favorite' : 'Add to Favorites'}
+            <IconStar filled={photo.favorite} style={{ color: photo.favorite ? '#ff9f0a' : undefined }} /> {photo.favorite ? 'Favorite' : 'Add to Favorites'}
           </button>
           <button
             className="btn danger"

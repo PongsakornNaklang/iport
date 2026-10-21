@@ -56,9 +56,10 @@ export function songMenu(os: OSApi, id: string, from: 'list' | 'nowplaying' = 'l
   };
   const genius: MenuOption[] = os.caps.genius ? [{ label: 'Start Genius', action: () => startGenius(os, id) }] : [];
   const album: MenuOption = { label: 'Browse Album', action: () => os.nav.push(R.album(albumKey(t), t.album || 'Unknown Album')) };
+  const artist: MenuOption = { label: 'Browse Artist', action: () => os.nav.push(R.artist(t.artist || 'Unknown Artist')) };
   const options: MenuOption[] =
     from === 'nowplaying'
-      ? [...genius, addOTG, album, { label: 'Browse Artist', action: () => os.nav.push(R.artist(t.artist || 'Unknown Artist')) }, { label: 'Cancel' }]
+      ? [...genius, addOTG, album, artist, { label: 'Cancel' }]
       : [
           {
             label: 'Play Next',
@@ -70,6 +71,7 @@ export function songMenu(os: OSApi, id: string, from: 'list' | 'nowplaying' = 'l
           addOTG,
           ...genius,
           album,
+          artist,
           { label: 'Cancel' },
         ];
   os.menu({ title: t.title, options });

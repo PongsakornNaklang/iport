@@ -200,7 +200,7 @@ function PasteBar({ open }: { open: (id: SourceId, it?: IntentInput) => void }) 
 
   return (
     <div className="lib-card lib-paste" style={{ marginTop: 4 }}>
-      <InlineForm value={url} onChange={setUrl} onSubmit={(v) => void go(v)} busy={busy} button="Add" icon={<IconLink />} placeholder="Paste a link — YouTube, SoundCloud, MP3…" />
+      <InlineForm value={url} onChange={setUrl} onSubmit={(v) => void go(v)} busy={busy} button="Add" icon={<IconLink />} placeholder="Paste any link — YouTube, SoundCloud, MP3…" />
       {res && (
         <div className="lib-paste-result">
           <span className={`msg ${res.tone === 'ok' ? 'ok' : res.tone === 'err' ? 'err' : ''}`}>{res.text}</span>

@@ -212,8 +212,8 @@ function TrackList({ onAddMusic }: { onAddMusic: () => void }) {
                 <path d="M16 4h4v4M4 20 20 4M20 16v4h-4M15 15l5 5M4 4l5 5" />
               </svg>
             </RowBtn>
-            <button className="btn small" onClick={() => setSelecting(true)} disabled={!ids.length}>
-              <IconSelect width={15} height={15} /> Select
+            <button className="btn small lib-select-btn" onClick={() => setSelecting(true)} disabled={!ids.length} title="Select items" aria-label="Select items">
+              <IconSelect width={15} height={15} /> <span className="lbl">Select</span>
             </button>
           </div>
         )}

@@ -172,9 +172,19 @@ export function youtubeTrack(item: YtItem, opts: YtTrackOpts = {}): Track {
   });
 }
 
+/** "th-TH" → "TH": the region YouTube should rank results for. */
+export function browserRegion(langs: readonly string[] = typeof navigator !== 'undefined' ? navigator.languages ?? [navigator.language] : []): string | undefined {
+  for (const l of langs) {
+    const m = /^[a-z]{2,3}[-_]([A-Za-z]{2})\b/.exec(l ?? '');
+    if (m) return m[1].toUpperCase();
+  }
+  return undefined;
+}
+
 /** Search YouTube videos (server-side scrape, no API key). */
 export async function youtubeSearch(q: string): Promise<YtItem[]> {
-  const items = await apiJson<YtItem[]>('youtube', { q });
+  const gl = browserRegion();
+  const items = await apiJson<YtItem[]>('youtube', gl ? { q, gl } : { q });
   if (!Array.isArray(items)) throw new SourceError('YouTube search is unavailable right now.');
   return items;
 }
