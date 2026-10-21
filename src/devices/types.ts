@@ -54,6 +54,12 @@ export interface DeviceModel {
   options?: OptionDef[];
   finishes: Finish[];
   engravable: boolean;
+  /**
+   * Headphone jack, for the EarPods animation: centre of the hole in device px
+   * relative to the device centre (+y down, +z towards the front), which edge
+   * it opens to (ny: -1 top, +1 bottom) and the model's px-per-mm scale.
+   */
+  jack?: { x: number; y: number; z: number; ny: 1 | -1; pxPerMm: number };
   /** Lazy-loaded device implementation. */
   load: () => Promise<{ default: ComponentType<DeviceProps> }>;
 }

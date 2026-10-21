@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { Box3D, Device3D, type EdgeSlice } from '../../shell/Device3D';
 import { isTypingTarget } from '../../shell/keyboard';
 import { usePlaylists } from '../../core/library/selectors';
@@ -64,6 +65,7 @@ export default function IpodShuffle({ model, appearance }: DeviceProps) {
   const playlistsRef = useRef(playlists);
   playlistsRef.current = playlists;
 
+  const rootRef = useRef<HTMLDivElement>(null);
   const brainRef = useRef<ShuffleBrain | null>(null);
   useEffect(() => {
     const b = new ShuffleBrain({
@@ -162,8 +164,17 @@ export default function IpodShuffle({ model, appearance }: DeviceProps) {
   } as CSSProperties;
 
   return (
-    <div className={`s4 ${power ? 's4-on' : 's4-off'}`} style={{ width: W, height: H, ...vars }}>
+    <div ref={rootRef} className={`s4 ${power ? 's4-on' : 's4-off'}`} style={{ width: W, height: H, ...vars }}>
       <div className="s4-asm" style={{ transform: `translateZ(${BODY_CZ}px)` }}>
+        {/*
+         * The flat parts on the top edge are painted BEFORE the body. Chrome
+         * depth-sorts a 3D scene with a BSP tree built in paint order: as the
+         * first planes, they split nothing (the body's slices lie entirely
+         * below them). Painted after the body, each of them would be cut
+         * along every slice plane, leaving hairline seams across the
+         * VoiceOver button and the switch.
+         */}
+        <TopEdge H={H} switchPos={switchPos} led={led} voDown={!!pressed.vo} zone={zone} brain={brainRef} />
         <Device3D
           width={W}
           height={H}
@@ -176,7 +187,8 @@ export default function IpodShuffle({ model, appearance }: DeviceProps) {
           front={<Front press={padPress} zone={zone} />}
           back={<UnderClip />}
         >
-          <TopEdge H={H} switchPos={switchPos} led={led} voDown={!!pressed.vo} zone={zone} brain={brainRef} />
+          <SwitchKnob H={H} switchPos={switchPos} />
+          <LedGlow H={H} color={led} />
           <Clip
             H={H}
             open={clipOpen}
@@ -187,7 +199,7 @@ export default function IpodShuffle({ model, appearance }: DeviceProps) {
           />
         </Device3D>
       </div>
-      <CaptionBubble H={H} />
+      <CaptionBubble device={rootRef} />
     </div>
   );
 }
@@ -201,12 +213,17 @@ function bodyEdge(t: number): EdgeSlice {
   const inset = d < r ? r - Math.sqrt(r * r - (r - d) * (r - d)) : 0;
   const shine = d < r ? Math.round((1 - d / r) * 30) : 0;
   const nearFront = t < 0.5;
+  // Where the rounded edge turns into the flat wall the surface faces away
+  // from the camera: a slightly darker line. Seen face-on this is the outer
+  // rim of the silhouette, which keeps light finishes defined on white.
+  const rim = d >= r - 0.5 && d < r + 2.6;
+  const top = rim ? `color-mix(in srgb, var(--s4-body) 84%, #000)` : `color-mix(in srgb, var(--s4-body) ${82 - shine}%, #fff)`;
   return {
     inset,
     color: [
       // the side turned towards the light is brighter
       `linear-gradient(90deg, rgba(0,0,0,calc(0.2 - var(--lx, 0) * 0.2)), rgba(0,0,0,0) 14%, rgba(0,0,0,0) 86%, rgba(0,0,0,calc(0.2 + var(--lx, 0) * 0.2)))`,
-      `linear-gradient(180deg, color-mix(in srgb, var(--s4-body) ${82 - shine}%, #fff) 0%, color-mix(in srgb, var(--s4-body) ${nearFront ? 94 : 90}%, #000) 46%, color-mix(in srgb, var(--s4-body) ${76 + shine / 2}%, #000) 100%)`,
+      `linear-gradient(180deg, ${top} 0%, color-mix(in srgb, var(--s4-body) ${nearFront ? 94 : 90}%, #000) 46%, color-mix(in srgb, var(--s4-body) ${rim ? 70 : 76 + shine / 2}%, #000) 100%)`,
     ].join(', '),
   };
 }
@@ -344,7 +361,6 @@ function TopEdge({
   zone: (z: Zone) => ZoneProps;
   brain: React.RefObject<ShuffleBrain | null>;
 }) {
-  const knobX = SWITCH_X + KNOB_OFF[switchPos];
   return (
     <>
       {/* headphone port */}
@@ -352,7 +368,6 @@ function TopEdge({
       {/* status light */}
       <OnTop H={H} x={LED_X} w={30} d={30} lift={2.2} className={`s4-spill s4-spill-${led}`} />
       <OnTop H={H} x={LED_X} w={8} d={8} lift={2.6} className={`s4-led s4-led-${led}`} />
-      <LedGlow H={H} color={led} />
       {/* VoiceOver button: a nearly flush pill in a pill-shaped opening */}
       <OnTop H={H} x={VO_X} w={62} d={25} className={`s4-vo${voDown ? ' is-down' : ''}`}>
         <div className="s4-vo-cap" />
@@ -362,17 +377,6 @@ function TopEdge({
       <OnTop H={H} x={SWITCH_X} w={SWITCH_LEN} d={18} className={`s4-slot s4-slot-${switchPos}`}>
         <div className="s4-green" />
       </OnTop>
-      <Box3D
-        x={knobX}
-        y={-H / 2 + 0.8}
-        w={24}
-        h={10}
-        d={13}
-        radius={2.5}
-        color="color-mix(in srgb, var(--s4-body) 80%, #000)"
-        faces={{ top: 'var(--s4-knob-top)' }}
-        className="s4-knob s4-nohit"
-      />
       {[0, 1, 2].map((p) => (
         <OnTop
           key={p}
@@ -395,6 +399,23 @@ function TopEdge({
         />
       ))}
     </>
+  );
+}
+
+/** The knurled slider of the three-way switch, standing just proud of the top edge. */
+function SwitchKnob({ H, switchPos }: { H: number; switchPos: SwitchPos }) {
+  return (
+    <Box3D
+      x={SWITCH_X + KNOB_OFF[switchPos]}
+      y={-H / 2 + 0.8}
+      w={24}
+      h={10}
+      d={13}
+      radius={2.5}
+      color="color-mix(in srgb, var(--s4-body) 80%, #000)"
+      faces={{ top: 'var(--s4-knob-top)' }}
+      className="s4-knob s4-nohit"
+    />
   );
 }
 
@@ -484,31 +505,90 @@ function Clip({
 
 // ---------------------------------------------------------------- VoiceOver caption
 
-/** What VoiceOver is saying, in a small caption panel floating above the iPod. */
-function CaptionBubble({ H }: { H: number }) {
+/** Faces whose projected bounds approximate the iPod on screen. */
+const OUTLINE_FACES = '.s4-front, .s4-back, .s4-clip-out';
+/** Keep clear of the floating top bar. */
+const CAPTION_MIN_TOP = 76;
+
+/**
+ * What VoiceOver is saying, as a Liquid Glass capsule floating above the
+ * iPod. It lives in screen space (portalled into the stage, outside the 3D
+ * scene) so it never intersects or gets depth-sorted with the device, its
+ * backdrop blur works, and it stays readable from any angle. Each frame
+ * while it is visible it follows the device's projected top edge.
+ */
+function CaptionBubble({ device }: { device: React.RefObject<HTMLDivElement | null> }) {
   const caption = useS4((s) => s.caption);
   const menu = useS4((s) => s.menu);
   const [shown, setShown] = useState(caption);
+  const [host, setHost] = useState<HTMLElement | null>(null);
+  const boxRef = useRef<HTMLDivElement>(null);
+  const on = !!caption;
+
   useEffect(() => {
     if (caption) setShown(caption);
   }, [caption]);
-  return (
-    <div className="s4-billboard" style={{ ['--bx' as string]: '0px', ['--by' as string]: `${-H / 2 - 34}px`, ['--bz' as string]: '0px' }}>
-      <div className={`s4-caption${caption ? ' is-on' : ''}`} aria-live="polite">
-        {shown && (
-          <>
-            <div className="s4-cap-main">
-              <svg viewBox="0 0 20 20" width="13" height="13" aria-hidden>
-                <path d="M3 7.5h3l4-3.5v12l-4-3.5H3z" />
-                <path d="M13 6.5a5 5 0 0 1 0 7M15.4 4.2a8.2 8.2 0 0 1 0 11.6" fill="none" strokeWidth="1.6" strokeLinecap="round" />
+
+  useLayoutEffect(() => {
+    setHost(device.current?.closest<HTMLElement>('.stage') ?? document.body);
+  }, [device]);
+
+  useLayoutEffect(() => {
+    if (!host || !shown) return;
+    // follow the iPod while visible, and through the fade-out
+    const until = on ? Infinity : performance.now() + 450;
+    let raf = 0;
+    const place = () => {
+      const box = boxRef.current;
+      const root = device.current;
+      if (box && root) {
+        let top = Infinity;
+        let left = Infinity;
+        let right = -Infinity;
+        root.querySelectorAll(OUTLINE_FACES).forEach((el) => {
+          const r = el.getBoundingClientRect();
+          if (!r.width && !r.height) return;
+          top = Math.min(top, r.top);
+          left = Math.min(left, r.left);
+          right = Math.max(right, r.right);
+        });
+        if (top !== Infinity) {
+          const hr = host.getBoundingClientRect();
+          const w = box.offsetWidth;
+          const h = box.offsetHeight;
+          const cx = Math.max(w / 2 + 12, Math.min(hr.width - w / 2 - 12, (left + right) / 2 - hr.left));
+          const y = Math.max(CAPTION_MIN_TOP + h, top - hr.top - 14);
+          box.style.transform = `translate3d(${(cx - w / 2).toFixed(1)}px, ${(y - h).toFixed(1)}px, 0)`;
+        }
+      }
+      if (performance.now() < until) raf = requestAnimationFrame(place);
+    };
+    place();
+    return () => cancelAnimationFrame(raf);
+  }, [host, shown, on, device]);
+
+  if (!host) return null;
+  return createPortal(
+    <div ref={boxRef} className={`s4-cap${on ? ' is-on' : ''}`} role="status" aria-live="polite">
+      {shown && (
+        <>
+          <div className="s4-cap-pill">
+            <span className="s4-cap-icon" aria-hidden>
+              <svg viewBox="0 0 20 20" width="16" height="16">
+                <path className="s4-cap-spk" d="M2.8 7.4h2.9l4-3.4v12l-4-3.4H2.8a.8.8 0 0 1-.8-.8V8.2c0-.4.4-.8.8-.8z" />
+                <path className="s4-cap-w1" d="M12.6 7.2a4 4 0 0 1 0 5.6" />
+                <path className="s4-cap-w2" d="M15 4.9a7.3 7.3 0 0 1 0 10.2" />
               </svg>
-              <span>{shown.text}</span>
-            </div>
-            {shown.hint && <div className="s4-cap-hint">{shown.hint}</div>}
-            {menu && <div className="s4-cap-keys">Next / Previous to browse · Play to choose</div>}
-          </>
-        )}
-      </div>
-    </div>
+            </span>
+            <span className="s4-cap-text">
+              <span className="s4-cap-main">{shown.text}</span>
+              {shown.hint && <span className="s4-cap-hint">{shown.hint}</span>}
+            </span>
+          </div>
+          {menu && <div className="s4-cap-keys">Next / Previous to browse · Play or VoiceOver to choose</div>}
+        </>
+      )}
+    </div>,
+    host,
   );
 }

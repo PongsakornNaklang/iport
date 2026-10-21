@@ -20,6 +20,8 @@ export interface Scene {
   autoRotate: boolean;
   /** tilt a few degrees towards the pointer */
   parallax: boolean;
+  /** EarPods cable plugs in when music starts */
+  earpods: boolean;
 }
 
 export interface Preset {
@@ -62,6 +64,7 @@ export const DEFAULT_SCENE: Scene = {
   reflection: true,
   autoRotate: false,
   parallax: false,
+  earpods: true,
 };
 
 export function defaultAppearance(model: DeviceModel, finishId?: string): Appearance {

@@ -9,9 +9,12 @@ import { isTypingTarget } from './shell/keyboard';
 import { useStage } from './shell/stageStore';
 import { useLibrary } from './core/library/store';
 import { seedDemoLibrary } from './core/library/demo';
-import { usePlayer } from './core/player/player';
+import { player, usePlayer } from './core/player/player';
 import './core/alarms';
 import { GlobalDropOverlay, useGlobalFileDrop } from './ui/library/globalDrop';
+
+// Dev-only handle for debugging and automated checks.
+if (import.meta.env.DEV) Object.assign(window, { iport: { player, usePlayer, useLibrary, useCustomize } });
 
 const LibraryPanel = lazy(() => import('./ui/library/LibraryPanel'));
 const CustomizePanel = lazy(() => import('./ui/customize/CustomizePanel'));

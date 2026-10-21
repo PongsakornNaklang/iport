@@ -2,7 +2,8 @@ import { lazy, Suspense, useEffect, useMemo, useRef, useState, type ComponentTyp
 import { useAppearance, useCustomize } from '../core/customize/store';
 import { getModel } from '../devices/registry';
 import type { DeviceModel, DeviceProps } from '../devices/types';
-import { useStage } from './stageStore';
+import { liveOrientation, useStage } from './stageStore';
+import { JackMarkers, useEarPods } from './earpods/EarPods';
 
 const lazyCache = new Map<string, LazyExoticComponent<ComponentType<DeviceProps>>>();
 function deviceComponent(model: DeviceModel) {
@@ -40,6 +41,9 @@ export function Stage() {
   const wrapRef = useRef<HTMLDivElement>(null);
   const rotRef = useRef<HTMLDivElement>(null);
   const shadowRef = useRef<HTMLDivElement>(null);
+  const backCanvas = useRef<HTMLCanvasElement>(null);
+  const frontCanvas = useRef<HTMLCanvasElement>(null);
+  const jackRef = useRef<HTMLDivElement>(null);
   const [fit, setFit] = useState(0.8);
 
   // Orientation lives in a ref and is applied directly to the DOM each frame.
@@ -135,6 +139,8 @@ export function Stage() {
     const el = rotRef.current;
     if (!el) return;
     el.style.transform = `rotateX(${rx.toFixed(2)}deg) rotateY(${ry.toFixed(2)}deg)`;
+    liveOrientation.rx = rx;
+    liveOrientation.ry = ry;
     const ryRad = (ry * Math.PI) / 180;
     const rxRad = (rx * Math.PI) / 180;
     el.style.setProperty('--rx', rx.toFixed(1));
@@ -213,6 +219,8 @@ export function Stage() {
     useStage.getState().setZoom(z * (e.deltaY > 0 ? 0.94 : 1.06));
   };
 
+  useEarPods({ wrap: wrapRef, back: backCanvas, front: frontCanvas, markers: jackRef, model, enabled: scene.earpods !== false });
+
   const Device = useMemo(() => deviceComponent(model), [model]);
   const scale = fit * zoom;
   const shiftX = (inset.left - inset.right) / 2;
@@ -239,15 +247,19 @@ export function Stage() {
           style={{ transform: `translate(calc(-50% + ${shiftX}px), ${(model.size.height / 2) * scale + centerY + 14}px) scale(${scale})` }}
         />
       )}
+      {/* EarPods cable behind the iPod (and on top when the jack faces the camera) */}
+      <canvas ref={backCanvas} className="ep-canvas" aria-hidden="true" />
       <div className="stage-center" style={{ transform: `translate(${shiftX}px, ${centerY}px) scale(${scale})` }}>
         <div className="stage-rot" ref={rotRef}>
           <div className="device-enter" key={model.id} style={{ width: model.size.width, height: model.size.height }}>
             <Suspense fallback={<div className="device-loading" style={{ width: model.size.width, height: model.size.height }} />}>
               <Device model={model} appearance={appearance} />
             </Suspense>
+            <JackMarkers model={model} markerRef={jackRef} />
           </div>
         </div>
       </div>
+      <canvas ref={frontCanvas} className="ep-canvas" aria-hidden="true" />
     </div>
   );
 }

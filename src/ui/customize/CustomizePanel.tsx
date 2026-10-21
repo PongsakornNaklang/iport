@@ -264,6 +264,7 @@ function SceneTab() {
         <Toggle label="Floor shadow" value={scene.shadow} onChange={(v) => setScene({ shadow: v })} />
         <Toggle label="Spin slowly when idle" value={scene.autoRotate} onChange={(v) => setScene({ autoRotate: v })} />
         <Toggle label="Tilt towards the pointer" value={scene.parallax} onChange={(v) => setScene({ parallax: v })} />
+        <Toggle label="EarPods plug in when music plays" value={scene.earpods !== false} onChange={(v) => setScene({ earpods: v })} />
       </div>
       <div className="section">
         <div className="section-title">View</div>

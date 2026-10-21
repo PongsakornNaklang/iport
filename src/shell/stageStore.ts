@@ -48,3 +48,6 @@ export const useStage = create<StageState>((set, get) => ({
     set({ spinning: !get().spinning });
   },
 }));
+
+/** Current device orientation in degrees, updated every frame by the stage (not reactive). */
+export const liveOrientation = { rx: 0, ry: 0 };

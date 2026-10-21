@@ -57,6 +57,17 @@ async function renderSong(s: SongSpec): Promise<AudioBuffer> {
   const noise = noiseBuffer(ctx, 1);
   const scale = s.minor ? MINOR : MAJOR;
 
+  // one echo for the whole song (a feedback loop per note is very slow to render)
+  const leadBus = ctx.createGain();
+  const delay = ctx.createDelay();
+  delay.delayTime.value = (60 / s.bpm) * 0.75;
+  const fb = ctx.createGain();
+  fb.gain.value = 0.3;
+  leadBus.connect(master);
+  leadBus.connect(delay);
+  delay.connect(fb).connect(delay);
+  delay.connect(master);
+
   // fade in/out
   master.gain.setValueAtTime(0, 0);
   master.gain.linearRampToValueAtTime(0.8, 1.5);
@@ -111,7 +122,7 @@ async function renderSong(s: SongSpec): Promise<AudioBuffer> {
       o.stop(t + beat * 0.5);
     }
 
-    // lead melody (not in the intro)
+    // lead melody (not in the intro), through the shared echo bus
     if (section === 1) {
       for (let i = 0; i < 8; i++) {
         const deg = s.lead[(b * 8 + i) % s.lead.length];
@@ -125,15 +136,7 @@ async function renderSong(s: SongSpec): Promise<AudioBuffer> {
         g.gain.setValueAtTime(0.0001, t);
         g.gain.exponentialRampToValueAtTime(v, t + 0.02);
         g.gain.exponentialRampToValueAtTime(0.0001, t + beat * 0.48);
-        const delay = ctx.createDelay();
-        delay.delayTime.value = beat * 0.75;
-        const fb = ctx.createGain();
-        fb.gain.value = 0.3;
-        o.connect(g);
-        g.connect(master);
-        g.connect(delay);
-        delay.connect(fb).connect(delay);
-        delay.connect(master);
+        o.connect(g).connect(leadBus);
         o.start(t);
         o.stop(t + beat * 0.5);
       }
@@ -304,7 +307,7 @@ export async function seedDemoLibrary(): Promise<void> {
           await putBlob(artKey, art);
         }
       }
-      tracks.push({
+      useLibrary.getState().addTracks([{
         id,
         source: 'local',
         ref: key,
@@ -320,9 +323,8 @@ export async function seedDemoLibrary(): Promise<void> {
         addedAt: now - i,
         playCount: 0,
         skipCount: 0,
-      });
+      }]);
     }
-    useLibrary.getState().addTracks(tracks);
   } catch (e) {
     console.warn('[demo] could not synthesize demo songs', e);
   }

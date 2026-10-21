@@ -35,6 +35,12 @@ export interface Device3DProps {
   backStyle?: CSSProperties;
   /** Extra 3D parts (use <Box3D>), positioned relative to the device centre. */
   children?: ReactNode;
+  /**
+   * Flat parts just outside the outline (ports, edge labels). Painted before
+   * the slices so Chrome's 3D depth sort doesn't cut them along every slice
+   * plane (which shows up as hairline stripes).
+   */
+  decals?: ReactNode;
   className?: string;
 }
 
@@ -56,6 +62,7 @@ export function Device3D({
   frontStyle,
   backStyle,
   children,
+  decals,
   className,
 }: Device3DProps) {
   const n = slices ?? Math.max(6, Math.min(28, Math.round(depth / 2.2)));
@@ -82,6 +89,7 @@ export function Device3D({
 
   return (
     <div className={`d3-root ${className ?? ''}`} style={{ width, height }}>
+      {decals}
       {sliceEls}
       <div
         className="d3-face d3-back"

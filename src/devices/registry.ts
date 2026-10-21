@@ -44,6 +44,7 @@ export const MODELS: DeviceModel[] = [
       { id: 'red', name: '(PRODUCT)RED', swatch: '#c41230', colors: { back: '#c3132f', front: '#f6f6f7' } },
     ],
     engravable: true,
+    jack: { x: -96, y: 395.5, z: 0, ny: 1, pxPerMm: 6.41 },
     load: () => import('./touch7'),
   },
   {
@@ -87,6 +88,7 @@ export const MODELS: DeviceModel[] = [
       { id: 'green', name: 'Green (2012)', swatch: '#8cc63e', colors: { body: '#8bc540', front: '#f7f7f8', home: '#ececee' } },
     ],
     engravable: true,
+    jack: { x: -86, y: 297.5, z: 0, ny: 1, pxPerMm: 7.78 },
     load: () => import('./nano7'),
   },
   {
@@ -98,7 +100,7 @@ export const MODELS: DeviceModel[] = [
     family: 'shuffle',
     // 29.0 × 31.6 × 8.7 mm (with clip) @ 10 px/mm
     size: { width: 290, height: 316, depth: 87 },
-    fitHeight: 0.52,
+    fitHeight: 0.46,
     colorSlots: [
       { key: 'body', label: 'Aluminium body' },
       { key: 'pad', label: 'Control pad' },
@@ -115,6 +117,7 @@ export const MODELS: DeviceModel[] = [
       { id: 'green', name: 'Green (2010)', swatch: '#9cc93b', colors: { body: '#9ac73d', pad: '#f3f3f4', symbols: '#8a8b8f' } },
     ],
     engravable: true,
+    jack: { x: -92, y: -160.4, z: 15.5, ny: -1, pxPerMm: 10 },
     load: () => import('./shuffle4'),
   },
   {
@@ -187,6 +190,7 @@ export const MODELS: DeviceModel[] = [
       },
     ],
     engravable: true,
+    jack: { x: -120.5, y: 326, z: 0, ny: 1, pxPerMm: 6.3 },
     load: () => import('./classic'),
   },
 ];
