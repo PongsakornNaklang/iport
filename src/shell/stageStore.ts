@@ -1,0 +1,42 @@
+import { create } from 'zustand';
+
+/**
+ * Camera state for the 3D stage. The stage component animates towards
+ * `target` each frame; toolbar buttons just set a new target.
+ */
+interface StageState {
+  zoom: number;
+  /** requested orientation; the stage tweens to it */
+  target: { rx: number; ry: number; serial: number } | null;
+  spinning: boolean;
+  setZoom(z: number): void;
+  view(rx: number, ry: number): void;
+  front(): void;
+  back(): void;
+  side(): void;
+  toggleSpin(): void;
+}
+
+export const useStage = create<StageState>((set, get) => ({
+  zoom: 1,
+  target: null,
+  spinning: false,
+  setZoom(z) {
+    set({ zoom: Math.max(0.4, Math.min(2.5, z)) });
+  },
+  view(rx, ry) {
+    set({ target: { rx, ry, serial: (get().target?.serial ?? 0) + 1 }, spinning: false });
+  },
+  front() {
+    get().view(0, 0);
+  },
+  back() {
+    get().view(0, 180);
+  },
+  side() {
+    get().view(-12, 62);
+  },
+  toggleSpin() {
+    set({ spinning: !get().spinning });
+  },
+}));
