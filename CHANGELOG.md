@@ -27,6 +27,8 @@ The running app shows its version and build in the Help panel (?).
   from every angle.
 - iPod nano: the side and top buttons are rounded pills without the stray
   dash above and below them.
+- EarPods: the plug and cable grow with the zoom, and the cable is stiffer
+  (especially at the plug) so it no longer droops and wobbles like string.
 
 ## [1.0.0] - 2026-10-21
 

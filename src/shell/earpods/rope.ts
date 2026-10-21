@@ -20,6 +20,10 @@ export interface RopeOptions {
   iterations: number;
   /** 0..1, how strongly folds are straightened */
   bend: number;
+  /** degrees a joint may turn before the bending stiffness kicks in (default 90) */
+  maxBend?: number;
+  /** the last this-many joints (the end held by a plug) are 3× stiffer: a strain relief */
+  stiffTail?: number;
   /** y of a floor the rope rests on (points from index `floorFrom` on) */
   floor?: number;
   floorFrom?: number;
@@ -86,8 +90,14 @@ export class Rope {
     }
     const n = this.pts.length;
     const r = this.rest;
-    // allow bends up to ~90° per joint before the stiffness kicks in
-    const fold = r * 1.45;
+    // Points i and i+2 are 2r·cos(turn/2) apart when the joint between them
+    // turns by `turn`: closer than that means it is bent more than allowed.
+    const span = (deg: number) => 2 * r * Math.cos((Math.min(170, deg) * Math.PI) / 360);
+    const maxBend = o.maxBend ?? 90;
+    const fold = span(maxBend);
+    const tailFold = span(maxBend / 3);
+    const tailFrom = n - 2 - (o.stiffTail ?? 0);
+    const tailBend = Math.min(1, o.bend * 3);
     for (let it = 0; it < o.iterations; it++) {
       for (let i = 0; i < n - 1; i++) this.solve(this.pts[i], this.pts[i + 1], r, 1);
       if (o.bend > 0) {
@@ -96,7 +106,9 @@ export class Rope {
           const a = this.pts[i];
           const b = this.pts[i + 2];
           const d = Math.hypot(b.x - a.x, b.y - a.y);
-          if (d < fold) this.solve(a, b, fold, o.bend);
+          const tail = i >= tailFrom;
+          const f = tail ? tailFold : fold;
+          if (d < f) this.solve(a, b, f, tail ? tailBend : o.bend);
         }
       }
       if (o.floor != null) this.collideFloor(o.floor, o.floorFrom ?? 0);

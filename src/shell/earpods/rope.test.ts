@@ -39,4 +39,30 @@ describe('rope', () => {
     for (let i = 1; i < 10; i++) expect(r.pts[i].y).toBeLessThanOrEqual(50.001);
     expect(r.pts[9].y).toBeCloseTo(50, 0);
   });
+
+  it('limits how sharply a joint can bend, and more so near a stiff end', () => {
+    const turnAt = (r: Rope, i: number) => {
+      const [a, b, c] = [r.pts[i - 1], r.pts[i], r.pts[i + 1]];
+      const u = Math.atan2(b.y - a.y, b.x - a.x);
+      const v = Math.atan2(c.y - b.y, c.x - b.x);
+      let d = Math.abs(((v - u) * 180) / Math.PI) % 360;
+      if (d > 180) d = 360 - d;
+      return d;
+    };
+    const folded = () => {
+      const r = new Rope(3, 0, 0, 10, 1, 0);
+      r.pts[0].pinned = true;
+      r.pts[1].pinned = true;
+      // fold the last segment back on itself by 150°
+      r.place(2, 10 + 10 * Math.cos((150 * Math.PI) / 180), 10 * Math.sin((150 * Math.PI) / 180));
+      return r;
+    };
+    const opts = { gravity: 0, damping: 0.9, iterations: 20, bend: 1 };
+    const loose = folded();
+    for (let i = 0; i < 60; i++) loose.step(1 / 120, { ...opts, maxBend: 40 });
+    expect(turnAt(loose, 1)).toBeLessThan(42);
+    const stiff = folded();
+    for (let i = 0; i < 60; i++) stiff.step(1 / 120, { ...opts, maxBend: 40, stiffTail: 1 });
+    expect(turnAt(stiff, 1)).toBeLessThan(15);
+  });
 });

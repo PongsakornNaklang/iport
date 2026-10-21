@@ -11,7 +11,7 @@ import { useEffect, useRef, type RefObject } from 'react';
 import { player, usePlayer } from '../../core/player/player';
 import { playTone } from '../../core/sound/click';
 import type { DeviceModel } from '../../devices/types';
-import { liveOrientation } from '../stageStore';
+import { liveOrientation, useStage } from '../stageStore';
 import { Rope } from './rope';
 
 // EarPods dimensions in millimetres
@@ -329,8 +329,9 @@ export function useEarPods({
       const f = Math.min(1, len(n) / (MARK * k));
       const toward = jack.ny * Math.sin((liveOrientation.rx * Math.PI) / 180);
       const dz = Math.sign(toward || 0) * Math.sqrt(Math.max(0, 1 - f * f));
-      // small iPods are shown enlarged; cap the plug so it doesn't fill the window
-      const cap = Math.min(1, MAX_PX_PER_MM / (jack.pxPerMm * k));
+      // Small iPods are shown enlarged; cap the plug so it doesn't fill the
+      // window. The cap grows with the zoom, so zooming in enlarges the plug too.
+      const cap = Math.min(1, (MAX_PX_PER_MM * useStage.getState().zoom) / (jack.pxPerMm * k));
       const mm = jack.pxPerMm * k * cap;
       const aMm = mul(n, (jack.pxPerMm / MARK) * cap);
       return { p, aMm, mm, dz };
@@ -371,9 +372,9 @@ export function useEarPods({
       s.anchor.y = H + 40;
       r.pinAt(0, s.anchor.x, s.anchor.y);
 
-      // keep a little slack so it can sway, but not so much that it loops
+      // a little slack so it can sway, not so much that it droops or loops
       const end = plugEnd()!;
-      let want = len(sub(end, s.anchor)) * 1.05 + 24 + 6 * mm;
+      let want = len(sub(end, s.anchor)) * 1.03 + 10 + 3 * mm;
       if (s.drag) {
         const dp = r.pts[s.drag.index];
         want = Math.max(want, (len(sub(dp, s.anchor)) + len(sub(dp, end))) * 1.05);
@@ -454,7 +455,7 @@ export function useEarPods({
       // (only once unplugged: while plugged in, spare cable hangs out of view)
       const floor = s.phase === 'free' ? H - Math.max(6, MM.cable * mm) : undefined;
       for (let i = 0; i < steps; i++)
-        r.step(dt / steps, { gravity: 2400, damping: 0.985, iterations: 24, bend: 0.12, floor, floorFrom: 4 });
+        r.step(dt / steps, { gravity: 2400, damping: 0.975, iterations: 24, bend: 0.3, maxBend: 40, stiffTail: 4, floor, floorFrom: 4 });
 
       if (s.phase === 'free' || s.phase === 'retracting') {
         axis = plugAxis();
