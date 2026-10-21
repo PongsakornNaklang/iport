@@ -635,6 +635,185 @@ const G: Record<string, ReactNode> = {
       <path d="M11.4 8.6c0-.6.5-1.1 1.1-1.1h5.3c2 0 3.6 1.6 3.6 3.6V12h-10z" />
     </g>
   ),
+  'folder.badge.plus': (
+    <g>
+      <path {...S} d="M3 7.5V18a2 2 0 0 0 2 2h9M3 7.5V6a2 2 0 0 1 2-2h4l2 2.5h8a2 2 0 0 1 2 2V12" />
+      <path {...S} d="M19 15v6M16 18h6" />
+    </g>
+  ),
+  'ellipsis.circle': (
+    <g>
+      <circle {...S} cx="12" cy="12" r="9.5" strokeWidth={1.7} />
+      <g {...F}>
+        <circle cx="7.6" cy="12" r="1.35" />
+        <circle cx="12" cy="12" r="1.35" />
+        <circle cx="16.4" cy="12" r="1.35" />
+      </g>
+    </g>
+  ),
+  checklist: (
+    <g>
+      <path {...S} strokeWidth={1.9} d="m3 6 1.8 1.8L8 4.5M3 13l1.8 1.8L8 11.5M11 6.5h10M11 13.5h10M11 20h10" />
+      <circle {...S} strokeWidth={1.7} cx="5" cy="20" r="1.6" />
+    </g>
+  ),
+  'pencil.tip.crop.circle': (
+    <g>
+      <circle {...S} strokeWidth={1.7} cx="12" cy="12" r="9.5" />
+      <path {...F} d="M12 5.5 15.2 14h-6.4z" />
+      <path {...S} strokeWidth={1.6} d="M8.8 14 8 18.5h8l-.8-4.5" />
+    </g>
+  ),
+  'person.fill': (
+    <g {...F}>
+      <circle cx="12" cy="7.5" r="4.5" />
+      <path d="M3.5 20.5c0-4.2 3.8-7 8.5-7s8.5 2.8 8.5 7c0 .6-.4 1-1 1h-15c-.6 0-1-.4-1-1Z" />
+    </g>
+  ),
+  'message.fill': <path {...F} d="M12 3C6.5 3 2 6.7 2 11.3c0 2.6 1.4 4.9 3.7 6.4-.1 1.5-.8 2.9-2 3.9 2.2 0 4.2-.8 5.6-2 .9.2 1.8.3 2.7.3 5.5 0 10-3.7 10-8.4S17.5 3 12 3Z" />,
+  'phone.fill': <path {...F} d="M6.6 2.6c.6-.3 1.3-.2 1.7.4l2.3 3.3c.4.6.3 1.3-.1 1.8l-1.4 1.5a13 13 0 0 0 5.3 5.3l1.5-1.4c.5-.4 1.2-.5 1.8-.1l3.3 2.3c.6.4.7 1.1.4 1.7-1 1.9-2.6 3.4-4.8 3-7.2-1.3-12-6.1-13.3-13.3-.4-2.2 1.1-3.8 3.3-4.5Z" />,
+  'video.fill': (
+    <g {...F}>
+      <rect x="1.5" y="5.5" width="14" height="13" rx="3" />
+      <path d="m17 10 4.2-2.8c.6-.4 1.3 0 1.3.7v8.2c0 .7-.7 1.1-1.3.7L17 14z" />
+    </g>
+  ),
+  'envelope.fill': (
+    <g>
+      <rect {...F} x="2" y="4.5" width="20" height="15" rx="3" />
+      <path fill="none" stroke="var(--t7-cell, #fff)" strokeWidth={1.5} strokeLinejoin="round" d="m3 6.5 9 7 9-7" />
+    </g>
+  ),
+  'slider.horizontal.3': (
+    <g>
+      <path {...S} strokeWidth={1.8} d="M3 6h18M3 12h18M3 18h18" />
+      <g {...F}>
+        <circle cx="15" cy="6" r="2.4" />
+        <circle cx="8" cy="12" r="2.4" />
+        <circle cx="17" cy="18" r="2.4" />
+      </g>
+    </g>
+  ),
+  'exclamationmark.triangle': (
+    <g>
+      <path {...S} strokeWidth={1.8} d="M10.3 3.8a2 2 0 0 1 3.4 0l8 13.8a2 2 0 0 1-1.7 3H4a2 2 0 0 1-1.7-3z" />
+      <path {...S} d="M12 9v5" />
+      <circle {...F} cx="12" cy="17.2" r="1.2" />
+    </g>
+  ),
+  humidity: (
+    <g>
+      <path {...S} strokeWidth={1.8} d="M12 3s-6.5 7-6.5 11.2a6.5 6.5 0 0 0 13 0C18.5 10 12 3 12 3Z" />
+      <path {...S} strokeWidth={1.6} d="M9 17c1.5-.8 4.5-.8 6 0" />
+    </g>
+  ),
+  gauge: (
+    <g>
+      <path {...S} strokeWidth={1.8} d="M4.2 18.5a9.5 9.5 0 1 1 15.6 0" />
+      <path {...S} d="m12 13.5 4-5" />
+      <circle {...F} cx="12" cy="13.5" r="1.8" />
+    </g>
+  ),
+  map: <path {...S} strokeWidth={1.8} d="M9 4 3 6.5v13.5l6-2.5 6 2.5 6-2.5V4l-6 2.5zM9 4v13.5M15 6.5V20" />,
+  'bell.badge.fill': (
+    <g {...F}>
+      <path d="M12 3a6 6 0 0 0-6 6v4.2L4.3 16c-.4.7.1 1.5.9 1.5h13.6c.8 0 1.3-.8.9-1.5L18 13.2V9a6 6 0 0 0-6-6Z" />
+      <path d="M9.5 19h5a2.5 2.5 0 0 1-5 0Z" />
+    </g>
+  ),
+  siri: (
+    <g>
+      <circle cx="12" cy="12" r="9" fill="url(#t7siri)" />
+      <defs>
+        <radialGradient id="t7siri" cx="0.35" cy="0.35" r="0.8">
+          <stop offset="0" stopColor="#ff5ed2" />
+          <stop offset="0.5" stopColor="#5d6bff" />
+          <stop offset="1" stopColor="#14d3ff" />
+        </radialGradient>
+      </defs>
+      <path fill="none" stroke="#fff" strokeWidth={1.3} strokeLinecap="round" d="M5.5 12c1.5-3 3-3 4.5 0s3 3 4.5 0 2.5-2.4 4 0" />
+    </g>
+  ),
+  'key.fill': <path {...F} d="M14.5 2.5a7 7 0 0 0-6.6 9.3L2.5 17.2V21h3.8v-2h2v-2h2l1.4-1.4A7 7 0 1 0 14.5 2.5Zm1.8 3.3a1.9 1.9 0 1 1 0 3.8 1.9 1.9 0 0 1 0-3.8Z" />,
+  iphone: (
+    <g>
+      <rect {...S} strokeWidth={1.8} x="6" y="2" width="12" height="20" rx="2.5" />
+      <circle {...F} cx="12" cy="18.5" r="1.1" />
+    </g>
+  ),
+  'sun.min.fill': (
+    <g>
+      <circle {...F} cx="12" cy="12" r="4" />
+      <g {...F}>
+        {[0, 45, 90, 135, 180, 225, 270, 315].map((a) => (
+          <circle key={a} cx="12" cy="4.5" r="1" transform={`rotate(${a} 12 12)`} />
+        ))}
+      </g>
+    </g>
+  ),
+  'delete.left': (
+    <g>
+      <path {...S} strokeWidth={1.8} d="M8.2 5H20a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H8.2a2 2 0 0 1-1.5-.7L2 12l4.7-6.3A2 2 0 0 1 8.2 5Z" />
+      <path {...S} strokeWidth={1.8} d="m11 9 6 6M17 9l-6 6" />
+    </g>
+  ),
+  icloud: <path {...S} strokeWidth={1.8} d="M7 19h10.5a4.5 4.5 0 0 0 .6-9A6 6 0 0 0 6.6 9.6 4.8 4.8 0 0 0 7 19Z" />,
+  'square.and.arrow.down': (
+    <g {...S} strokeWidth={1.8}>
+      <path d="M8 9H6.5A1.5 1.5 0 0 0 5 10.5v9A1.5 1.5 0 0 0 6.5 21h11a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 17.5 9H16" />
+      <path d="M12 3v12M8.5 11.5 12 15l3.5-3.5" />
+    </g>
+  ),
+  'play.rectangle.fill': (
+    <g>
+      <rect {...F} x="2" y="4.5" width="20" height="15" rx="3.5" />
+      <path fill="var(--t7-bg, #fff)" d="M10 8.6v6.8c0 .5.5.8.9.5l5.3-3.4a.6.6 0 0 0 0-1L10.9 8.1c-.4-.3-.9 0-.9.5Z" />
+    </g>
+  ),
+  film: (
+    <g>
+      <rect {...S} strokeWidth={1.8} x="3" y="3" width="18" height="18" rx="2.5" />
+      <path {...S} strokeWidth={1.6} d="M7 3v18M17 3v18M3 8h4M3 12h18M3 16h4M17 8h4M17 16h4" />
+    </g>
+  ),
+  'tv.fill': (
+    <g {...F}>
+      <rect x="2" y="4" width="20" height="13.5" rx="2.5" />
+      <rect x="7" y="19" width="10" height="1.8" rx=".9" />
+    </g>
+  ),
+  'arrow.down.circle.fill': (
+    <g>
+      <circle {...F} cx="12" cy="12" r="10" />
+      <path fill="none" stroke="var(--t7-bg, #fff)" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" d="M12 7v9M8 12.5l4 4 4-4" />
+    </g>
+  ),
+  'bolt.fill': <path {...F} d="M13.5 2 4.5 13.5H11L9.8 22l9.2-12H12.8z" />,
+  'bolt.slash.fill': (
+    <g>
+      <path {...F} d="M13.5 2 8.4 8.5l7.4 7.4L19 10h-6.2zM4.5 13.5H11L9.8 22l3.8-5L6.8 10.2z" />
+      <path {...S} strokeWidth={1.8} d="m3 3 18 18" />
+    </g>
+  ),
+  'square.stack.3d.up': <path {...S} strokeWidth={1.7} d="M12 3 3 7.5l9 4.5 9-4.5zM3 12l9 4.5 9-4.5M3 16.5 12 21l9-4.5" />,
+  safari: (
+    <g>
+      <circle {...S} strokeWidth={1.8} cx="12" cy="12" r="9.5" />
+      <path {...F} d="m15.8 8.2-2.5 5.1-5.1 2.5 2.5-5.1z" />
+    </g>
+  ),
+  'book.closed': <path {...S} strokeWidth={1.8} d="M6 3h12a1 1 0 0 1 1 1v14H7a2 2 0 0 0 0 4h12M5 20V5a2 2 0 0 1 2-2" />,
+  'tray.full': (
+    <g {...S} strokeWidth={1.8}>
+      <path d="M3 13v5a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5l-3-8H6zM3 13h5l1.5 2.5h5L16 13h5" />
+      <path d="M8 8h8M7 10.5h10" />
+    </g>
+  ),
+  'square.grid.3x3': (
+    <g {...F}>
+      {[0, 1, 2].flatMap((r) => [0, 1, 2].map((c) => <rect key={`${r}${c}`} x={3 + c * 6.5} y={3 + r * 6.5} width="5" height="5" rx="1.2" />))}
+    </g>
+  ),
   'lightbulb': <path {...S} d="M9 18h6M10 21.5h4M12 2.5a6.5 6.5 0 0 0-4 11.6c.8.6 1 1.4 1 2.4h6c0-1 .2-1.8 1-2.4A6.5 6.5 0 0 0 12 2.5Z" />,
 };
 
