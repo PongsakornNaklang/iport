@@ -138,6 +138,7 @@ export interface Prefs {
   timer: { endAt: number | null; remaining: number; duration: number; sound: string };
   stopwatch: { startAt: number | null; acc: number; laps: number[] };
   weather: { at: number; data: unknown } | null;
+  weatherUnit: 'C' | 'F';
   deviceName: string;
   reminders: { id: string; text: string; done: boolean }[];
   safariFavs: boolean;
@@ -160,6 +161,7 @@ const DEFAULT_PREFS: Prefs = {
   timer: { endAt: null, remaining: 0, duration: 15 * 60, sound: 'Radar' },
   stopwatch: { startAt: null, acc: 0, laps: [] },
   weather: null,
+  weatherUnit: 'C',
   deviceName: 'iPod',
   reminders: [],
   safariFavs: true,
