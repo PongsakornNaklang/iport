@@ -39,7 +39,7 @@ function ShowsList() {
       {shows.map((s) => (
         <Row
           key={s.name}
-          art={s.artwork}
+          art={s.artwork ?? null}
           artSize={44}
           tall
           title={s.name}

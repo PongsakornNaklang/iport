@@ -287,16 +287,30 @@ export function Chevron({ dir = 'left', size = 12, color = 'currentColor', weigh
   );
 }
 
+/** rough text widths (px) for laying out the nav bar like UIKit does */
+const textW = (s: string, perChar: number) => [...s].length * perChar;
+
 export function NavBar({ title, back, onBack, right, dark }: { title: string; back?: string; onBack?: () => void; right?: ReactNode; dark?: boolean }) {
+  const titleText = t(title);
+  let label = back !== undefined ? t(back) : undefined;
+  let side = 62;
+  if (label !== undefined) {
+    // the back label gives way to "Back" when it would run into the title
+    const room = 120 - Math.min(150, textW(titleText, 7.8)) / 2;
+    if ([...label].length > 12 || textW(label, 7.2) + 30 > room) label = t('Back');
+    side = Math.max(62, Math.min(96, textW(label, 7.2) + 30));
+  }
   return (
     <div className={`n7-navbar ${dark ? 'n7-navbar-dark' : ''}`}>
-      {back !== undefined && (
+      {label !== undefined && (
         <button className="n7-back" onClick={onBack} data-tap>
           <Chevron size={15} />
-          <span>{back.length > 12 ? t('Back') : t(back)}</span>
+          <span>{label}</span>
         </button>
       )}
-      <div className="n7-navtitle">{t(title)}</div>
+      <div className="n7-navtitle" style={{ left: side, right: side }}>
+        {titleText}
+      </div>
       {right && <div className="n7-navright">{right}</div>}
     </div>
   );

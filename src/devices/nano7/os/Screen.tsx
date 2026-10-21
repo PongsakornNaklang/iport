@@ -28,6 +28,7 @@ export function Screen({ wallpaper }: { wallpaper: string }) {
   const artClaims = useNano((s) => s.artClaims);
   const hasVideo = usePlayer((s) => s.hasVideo);
   const kind = usePlayer((s) => s.kind);
+  const error = usePlayer((s) => s.error);
   const brightness = useSettings((s) => s.brightness);
   const language = useSettings((s) => s.language);
   const invert = useNanoData((s) => s.invert);
@@ -59,7 +60,8 @@ export function Screen({ wallpaper }: { wallpaper: string }) {
     if (!app) useNano.setState({ statusTheme: 'light', statusHidden: false });
   }, [app]);
 
-  const showArt = artClaims > 0 && (hasVideo || kind === 'youtube') && !locked && !video;
+  // the video picture replaces the artwork on Now Playing — unless it failed to load
+  const showArt = artClaims > 0 && (hasVideo || kind === 'youtube') && !error && !locked && !video;
   let mediaStyle: CSSProperties | undefined;
   if (video) {
     mediaStyle = { inset: 'auto', left: (W - H) / 2, top: (H - W) / 2, width: H, height: W, transform: 'rotate(90deg)', zIndex: 6 };

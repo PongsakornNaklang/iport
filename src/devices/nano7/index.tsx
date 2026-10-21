@@ -176,7 +176,7 @@ function HomeButton({ color, dark }: { color: string; dark: boolean }) {
   );
 }
 
-function Back({ body, engraving }: { body: string; engraving: [string, string] }) {
+function Back({ body, engraving, red }: { body: string; engraving: [string, string]; red?: boolean }) {
   const L = luminance(body);
   const ink = L > 0.55 ? 'rgba(0,0,0,0.42)' : 'rgba(255,255,255,0.45)';
   const logoFill = L > 0.55 ? `color-mix(in srgb, ${body} 72%, #000)` : `color-mix(in srgb, ${body} 55%, #fff)`;
@@ -198,6 +198,11 @@ function Back({ body, engraving }: { body: string; engraving: [string, string] }
         <div className="n7-rear-engraving">
           <div>{engraving[0]}</div>
           <div>{engraving[1]}</div>
+        </div>
+      )}
+      {red && (
+        <div className="n7-rear-red">
+          (PRODUCT)<sup>RED</sup>
         </div>
       )}
       <div className="n7-rear-print">
@@ -306,7 +311,7 @@ export default function IpodNano7({ appearance }: DeviceProps) {
           <div className={`n7-glare ${asleep ? 'n7-glare-strong' : ''}`} />
         </div>
       }
-      back={<Back body={body} engraving={appearance.engraving} />}
+      back={<Back body={body} engraving={appearance.engraving} red={appearance.finishId === 'red'} />}
       decals={
         <>
           {/* bottom: headphone jack (centre x = -86, matches registry `jack`) + Lightning */}

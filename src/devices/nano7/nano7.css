@@ -160,6 +160,19 @@
   font: 400 5.6px/8.5px 'Helvetica Neue', Helvetica, Arial, sans-serif;
   letter-spacing: 0.25px;
 }
+.n7-rear-red {
+  position: absolute;
+  bottom: 70px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font: 500 9px/1 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  letter-spacing: 0.3px;
+}
+.n7-rear-red sup {
+  font-size: 6px;
+  margin-left: 0.5px;
+}
 .n7-rear-marks {
   display: flex;
   justify-content: center;

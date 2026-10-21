@@ -45,7 +45,7 @@ function Collections() {
       {cols.map(([name, list]) => (
         <Row
           key={name}
-          art={list[0].artwork}
+          art={list[0].artwork ?? null}
           artSize={44}
           tall
           title={name}
