@@ -18,8 +18,27 @@ export function Segmented<T extends string>({
   onChange: (v: T) => void;
   className?: string;
 }) {
+  // the white thumb slides to the chosen option, like the panel tabs (SegTabs)
+  const bar = useRef<HTMLDivElement>(null);
+  const [thumb, setThumb] = useState<{ x: number; w: number; ready: boolean } | null>(null);
+  useLayoutEffect(() => {
+    const el = bar.current;
+    if (!el) return;
+    const place = () => {
+      const b = el.querySelector<HTMLElement>('[aria-selected="true"]');
+      if (!b) return setThumb(null);
+      setThumb((cur) => ({ x: b.offsetLeft, w: b.offsetWidth, ready: cur !== null }));
+    };
+    place();
+    const ro = new ResizeObserver(place);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [value]);
   return (
-    <div className={`lib-seg ${className}`} role="tablist">
+    <div ref={bar} className={`lib-seg ${className}`} role="tablist">
+      {thumb && (
+        <span className={`lib-seg-thumb ${thumb.ready ? 'ready' : ''}`} style={{ width: thumb.w, transform: `translateX(${thumb.x}px)` }} aria-hidden="true" />
+      )}
       {options.map((o) => (
         <button key={o.value} role="tab" aria-selected={o.value === value} className={o.value === value ? 'on' : ''} onClick={() => onChange(o.value)}>
           {o.label}

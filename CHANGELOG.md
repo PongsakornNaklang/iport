@@ -30,6 +30,9 @@ The running app shows its version and build in the Help panel (?).
   back, side, spin, save image), giving the iPod the bottom of the screen.
   Zoom with two fingers; double-tap empty space to face front at 100%.
 
+- The Library's small tab switches (Songs & Videos / Playlists and the
+  others) slide their white thumb like the panel tabs.
+
 ### Fixed
 - Smoother on phones: the EarPods no longer measure the iPod and redraw
   their canvases every frame when nothing moves, and a still iPod costs the
