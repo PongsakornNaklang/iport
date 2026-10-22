@@ -8,6 +8,7 @@
 import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { Box3D, Device3D, type EdgeSlice } from '../../shell/Device3D';
 import { BodyExtras } from '../../shell/bodySlot';
+import { Decals } from '../../shell/decals/Decals';
 import { isTypingTarget } from '../../shell/keyboard';
 import { useSettings } from '../../core/settings/store';
 import { ClickWheel } from '../shared/clickwheel/ClickWheel';
@@ -183,6 +184,7 @@ export default function IpodClassic({ model, appearance }: DeviceProps) {
               style={{ position: 'absolute', left: 2, top: 2 }}
             />
           </div>
+          <Decals decals={appearance.decals} side="front" />
         </div>
       }
       back={<ClassicBack material={material} color={backColor} engraving={appearance.engraving} decals={appearance.decals} capacity={info.capacity} model={info.model} />}

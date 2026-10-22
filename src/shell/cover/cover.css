@@ -19,20 +19,7 @@
   border-radius: inherit;
 }
 
-/* the lip: a border with the opening masked out (the inner edge follows the corner) */
-.cv-ring {
-  border-style: solid;
-  border-color: transparent;
-  background-origin: border-box;
-  background-clip: border-box;
-  mask:
-    linear-gradient(#000 0 0) padding-box exclude,
-    linear-gradient(#000 0 0);
-  -webkit-mask:
-    linear-gradient(#000 0 0) padding-box,
-    linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-}
+
 
 /* ---------------------------------------------------------------- silicone */
 .cv-silicone .cv-tex {

@@ -11,11 +11,12 @@ import {
 } from '../../core/customize/store';
 import { getModel } from '../../devices/registry';
 import type { CoverKind, Decal, DecalFont, DeviceModel, OptionDef } from '../../devices/types';
-import { DECAL_FONTS, useDecalSelection } from '../../shell/decals/BackDecals';
+import { DECAL_FONTS, useDecalSelection } from '../../shell/decals/Decals';
 import { useStage } from '../../shell/stageStore';
 import { ModelThumb } from '../ModelPicker';
 import { Panel } from '../Panel';
-import { IconDownload, IconSave, IconShare, IconTrash, IconUpload } from '../icons';
+import { IconDownload, IconRedo, IconSave, IconShare, IconTrash, IconUndo, IconUpload } from '../icons';
+import { redo, undo, useHistory } from '../../core/customize/history';
 import { toast } from '../toast';
 import { SHOWCASE_PRESETS } from './showcase';
 import './customize.css';
@@ -73,6 +74,7 @@ function DesignTab({ model }: { model: DeviceModel }) {
             {model.generation} · {model.year}
           </div>
         </div>
+        <UndoRedo />
       </div>
 
       <div className="section">
@@ -150,6 +152,22 @@ function DesignTab({ model }: { model: DeviceModel }) {
   );
 }
 
+function UndoRedo() {
+  const canUndo = useHistory((s) => s.canUndo);
+  const canRedo = useHistory((s) => s.canRedo);
+  const mac = typeof navigator !== 'undefined' && /Mac|iP(hone|ad|od)/.test(navigator.platform);
+  return (
+    <div className="cz-undo">
+      <button className="icon-btn" onClick={undo} disabled={!canUndo} title={`Undo (${mac ? '⌘Z' : 'Ctrl+Z'})`} aria-label="Undo">
+        <IconUndo />
+      </button>
+      <button className="icon-btn" onClick={redo} disabled={!canRedo} title={`Redo (${mac ? '⇧⌘Z' : 'Ctrl+Y'})`} aria-label="Redo">
+        <IconRedo />
+      </button>
+    </div>
+  );
+}
+
 // ------------------------------------------------------------------ back decals
 
 const STICKERS = ['🍎', '🌈', '⭐', '❤️', '😎', '🎧', '🎵', '⚡', '🌸', '🔥', '👾', '🐱', '🍕', '✌️', '🦄', '💿', '🌙', '🍀'];
@@ -173,8 +191,13 @@ function DecalSection() {
   const fileRef = useRef<HTMLInputElement>(null);
   const { addDecal, updateDecal, removeDecal } = useCustomize.getState();
   const select = useDecalSelection.getState().select;
-  // stop outlining a decal once the panel closes
-  useEffect(() => () => select(null), [select]);
+  const [side, setSide] = useState<'back' | 'front'>('back');
+  const turnTo = (s: 'back' | 'front') => (s === 'front' ? useStage.getState().front() : useStage.getState().back());
+  // decals can be moved while this is on screen; locked again once it goes
+  useEffect(() => {
+    useDecalSelection.getState().setEditing(true);
+    return () => useDecalSelection.getState().setEditing(false);
+  }, []);
 
   const add = (d: Omit<Decal, 'id'>) => {
     const id = addDecal(d);
@@ -183,18 +206,31 @@ function DecalSection() {
       return;
     }
     select(id);
-    useStage.getState().back();
+    turnTo(d.side ?? 'back');
   };
   const jitter = () => (Math.random() - 0.5) * 0.16;
   const addSticker = (emoji?: string, image?: string) =>
-    add({ kind: 'sticker', emoji, image, x: 0.5 + jitter(), y: 0.42 + jitter(), size: 0.28, rotate: Math.round((Math.random() - 0.5) * 24) });
+    add({ kind: 'sticker', side, emoji, image, x: 0.5 + jitter(), y: 0.42 + jitter(), size: 0.28, rotate: Math.round((Math.random() - 0.5) * 24) });
 
   return (
     <div className="section">
-      <div className="section-title">Stickers &amp; engraving on the back</div>
+      <div className="section-title">Stickers &amp; engraving</div>
       <p className="tiny" style={{ marginTop: -2 }}>
-        Put them anywhere: drag them on the back of the iPod, scroll over one to resize it, Shift-scroll to turn it.
+        Put them anywhere: drag them on the iPod. To resize and turn one, pinch it, drag its corner handle, or scroll over it (Shift
+        to turn). They stay put once you close Customize.
       </p>
+      <SegTabs
+        className="cz-seg"
+        items={[
+          { id: 'back', label: 'Stick on the back' },
+          { id: 'front', label: 'On the front' },
+        ]}
+        value={side}
+        onChange={(s) => {
+          setSide(s);
+          turnTo(s);
+        }}
+      />
       <div className="cz-stickers">
         {STICKERS.map((e) => (
           <button key={e} className="cz-sticker" onClick={() => addSticker(e)} aria-label={`Add ${e} sticker`}>
@@ -221,8 +257,12 @@ function DecalSection() {
           }}
         />
       </div>
-      <button className="btn small" style={{ marginTop: 10 }} onClick={() => add({ kind: 'text', text: 'Hello', font: 'helvetica', x: 0.5, y: 0.62, size: 0.07, rotate: 0 })}>
-        Add engraved text
+      <button
+        className="btn small"
+        style={{ marginTop: 10 }}
+        onClick={() => add({ kind: 'text', side: 'back', text: 'Hello', font: 'helvetica', x: 0.5, y: 0.62, size: 0.07, rotate: 0 })}
+      >
+        Add engraved text (back)
       </button>
       {decals.length > 0 && (
         <div className="cz-decals">
@@ -240,7 +280,20 @@ function DecalSection() {
                     aria-label="Engraved text"
                   />
                 ) : (
-                  <span className="cz-decal-name">{d.image ? 'Your picture' : 'Sticker'}</span>
+                  <>
+                    <span className="cz-decal-name">{d.image ? 'Your picture' : 'Sticker'}</span>
+                    <button
+                      className="btn small cz-decal-side"
+                      onClick={() => {
+                        const to = d.side === 'front' ? 'back' : 'front';
+                        updateDecal(d.id, { side: to });
+                        turnTo(to);
+                      }}
+                      title={d.side === 'front' ? 'Move it to the back' : 'Move it to the front'}
+                    >
+                      {d.side === 'front' ? 'Front' : 'Back'}
+                    </button>
+                  </>
                 )}
                 <button className="icon-btn" onClick={() => removeDecal(d.id)} title="Remove" aria-label="Remove">
                   <IconTrash />

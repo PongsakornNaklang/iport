@@ -102,12 +102,32 @@ function Case({ g, fit, kind, color, pxPerMm }: { g: CoverGeometry; fit: CoverFi
   );
 }
 
+/** A rounded rectangle as SVG path data. */
+const roundRect = (x: number, y: number, w: number, h: number, r: number) => {
+  const n = (v: number) => +v.toFixed(2);
+  r = Math.max(0, Math.min(r, w / 2, h / 2));
+  return (
+    `M${n(x + r)} ${n(y)}H${n(x + w - r)}A${n(r)} ${n(r)} 0 0 1 ${n(x + w)} ${n(y + r)}V${n(y + h - r)}` +
+    `A${n(r)} ${n(r)} 0 0 1 ${n(x + w - r)} ${n(y + h)}H${n(x + r)}A${n(r)} ${n(r)} 0 0 1 ${n(x)} ${n(y + h - r)}V${n(y + r)}A${n(r)} ${n(r)} 0 0 1 ${n(x + r)} ${n(y)}Z`
+  );
+};
+
+/**
+ * Openings are cut with clip-path paths (even-odd: an outline with a hole).
+ * Not masks: a mask doesn't survive saving the iPod as a picture.
+ */
+const cutOut = (outline: string, hole: string) => `path(evenodd, '${outline} ${hole}')`;
+
 /** The lip around the front opening (and stitching on leather). */
 function CaseFront({ g }: { g: CoverGeometry }) {
   const ring = g.t + g.lip - g.round;
+  const fw = g.w - 2 * g.round;
+  const fh = g.h - 2 * g.round;
+  const r = Math.max(0, g.radius - g.round);
+  const clip = cutOut(roundRect(0, 0, fw, fh, r), roundRect(ring, ring, fw - 2 * ring, fh - 2 * ring, r - ring));
   return (
     <>
-      <div className="cv-ring cv-tex" style={{ borderWidth: ring }} />
+      <div className="cv-ring cv-tex" style={{ clipPath: clip }} />
       <div className="cv-stitch" style={{ inset: ring * 0.45, borderRadius: Math.max(0, g.radius - g.round - ring * 0.45) }} />
     </>
   );
@@ -117,10 +137,18 @@ function CaseBack({ g, fit }: { g: CoverGeometry; fit: CoverFit }) {
   // the camera hole, from the body's back to the cover's back face
   const cam = fit.camera;
   const off = g.t - g.round;
-  const mask = cam ? `radial-gradient(circle ${cam.d / 2}px at ${cam.x + off}px ${cam.y + off}px, #0000 calc(100% - 0.6px), #000)` : undefined;
+  const fw = g.w - 2 * g.round;
+  const fh = g.h - 2 * g.round;
+  let clip: string | undefined;
+  if (cam) {
+    const cx = cam.x + off;
+    const cy = cam.y + off;
+    const r = cam.d / 2;
+    clip = cutOut(roundRect(0, 0, fw, fh, Math.max(0, g.radius - g.round)), `M${cx - r} ${cy}a${r} ${r} 0 1 0 ${2 * r} 0a${r} ${r} 0 1 0 ${-2 * r} 0Z`);
+  }
   return (
     <>
-      <div className="cv-fill cv-tex" style={{ maskImage: mask, WebkitMaskImage: mask }} />
+      <div className="cv-fill cv-tex" style={{ clipPath: clip }} />
       <div className="cv-stitch" style={{ inset: 4 * (g.t / 8), borderRadius: Math.max(0, g.radius - g.round - 4 * (g.t / 8)) }} />
     </>
   );
@@ -151,12 +179,20 @@ const RIB = (() => {
     `</svg>`;
   return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
 })();
-/** a little unevenness, as yarn has */
+/**
+ * A little unevenness, as yarn has: specks of light and shade, scattered
+ * the same way every time (no SVG filter: those come out black when the
+ * iPod is saved as a picture).
+ */
 const YARN = (() => {
-  const svg =
-    `<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.55' numOctaves='2' seed='3'/>` +
-    `<feColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -0.9 0.55'/></filter><rect width='80' height='80' filter='url(#n)'/></svg>`;
-  return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
+  let seed = 7;
+  const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  let dots = '';
+  for (let i = 0; i < 140; i++) {
+    const light = rnd() > 0.5;
+    dots += `<circle cx='${(rnd() * 40).toFixed(1)}' cy='${(rnd() * 40).toFixed(1)}' r='${(0.3 + rnd() * 0.7).toFixed(2)}' fill='${light ? '#fff' : '#000'}' fill-opacity='${(0.05 + rnd() * 0.1).toFixed(2)}'/>`;
+  }
+  return `url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40'>${dots}</svg>`)}")`;
 })();
 const RIB_MM = [5, 1.2];
 
@@ -200,7 +236,7 @@ function Sock({ s, color, pxPerMm, after }: { s: SockGeometry; color: string; px
           width: fa.w,
           height: fa.h,
           transform: fa.matrix,
-          background: `linear-gradient(${shade}, ${shade}), ${YARN} ${fa.bx.toFixed(1)}px ${fa.by.toFixed(1)}px / 80px 80px, ${RIB} ${fa.bx.toFixed(2)}px ${fa.by.toFixed(2)}px / ${size}, ${base}`,
+          background: `linear-gradient(${shade}, ${shade}), ${YARN} ${fa.bx.toFixed(1)}px ${fa.by.toFixed(1)}px / 40px 40px, ${RIB} ${fa.bx.toFixed(2)}px ${fa.by.toFixed(2)}px / ${size}, ${base}`,
         }}
       />
     );

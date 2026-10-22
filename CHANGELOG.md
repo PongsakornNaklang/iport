@@ -14,6 +14,23 @@ The running app shows its version and build in the Help panel (?).
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-10-22
+
+### Added
+- Stickers can go on the front too, over the screen and the Click Wheel,
+  like a real sticker; choose the side when you add one, or move it across
+  later. Engraved text stays on the back.
+- Save image: the camera button with the view controls downloads the iPod
+  as a PNG, as you see it (case, sock, stickers, EarPods), on a transparent
+  background and cropped to the iPod.
+- Undo and redo for the design: ⌘Z / Ctrl+Z and Shift+⌘Z / Ctrl+Y, or the
+  arrows in Customize. A drag, a pinch or a slider move is one step.
+- Stickers on phones and tablets: pinch to resize, twist to turn. A selected
+  sticker or engraving has a corner handle to resize and turn it and a ×
+  to remove it. Stickers only move while Customize is open; the rest of the
+  time a drag over one turns the iPod, and a tap goes through to the
+  screen or button under it.
+
 ## [1.1.0] - 2026-10-22
 
 ### Added
@@ -124,6 +141,7 @@ First release.
 - Apple-style minimal Liquid Glass interface on white; works on phones and
   installs as a web app.
 
-[Unreleased]: https://github.com/PongsakornNaklang/iport/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/PongsakornNaklang/iport/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/PongsakornNaklang/iport/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/PongsakornNaklang/iport/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/PongsakornNaklang/iport/releases/tag/v1.0.0

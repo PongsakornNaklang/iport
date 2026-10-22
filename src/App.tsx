@@ -1,4 +1,5 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
+import { redo, undo } from './core/customize/history';
 import { decodePreset, useCustomize } from './core/customize/store';
 import { Stage } from './shell/Stage';
 import { ModelPicker } from './ui/ModelPicker';
@@ -65,6 +66,20 @@ export function App() {
       }),
     [],
   );
+
+  // Undo / redo design changes (text fields keep their own undo).
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!(e.metaKey || e.ctrlKey) || e.altKey || isTypingTarget(e.target)) return;
+      const k = e.key.toLowerCase();
+      if (k === 'z' && !e.shiftKey) undo();
+      else if ((k === 'z' && e.shiftKey) || k === 'y') redo();
+      else return;
+      e.preventDefault();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
 
   // Stage shortcuts that don't clash with device keys.
   useEffect(() => {

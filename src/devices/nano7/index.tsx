@@ -7,7 +7,7 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { Box3D, Device3D, EdgeDecal, Slab3D, type EdgeSlice } from '../../shell/Device3D';
 import { BodyExtras } from '../../shell/bodySlot';
-import { BackDecals } from '../../shell/decals/BackDecals';
+import { Decals } from '../../shell/decals/Decals';
 import { isTypingTarget } from '../../shell/keyboard';
 import { player, usePlayer } from '../../core/player/player';
 import { useLibrary } from '../../core/library/store';
@@ -219,7 +219,7 @@ function Back({ body, engraving, red, decals }: { body: string; engraving: [stri
           <div>{engraving[1]}</div>
         </div>
       )}
-      <BackDecals decals={decals} ink={ink} shadow={L > 0.55 ? '0 0.5px 0 rgba(255,255,255,0.5)' : '0 -0.5px 0 rgba(0,0,0,0.3)'} />
+      <Decals decals={decals} ink={ink} shadow={L > 0.55 ? '0 0.5px 0 rgba(255,255,255,0.5)' : '0 -0.5px 0 rgba(0,0,0,0.3)'} />
       {red && (
         <div className="n7-rear-red">
           (PRODUCT)<sup>RED</sup>
@@ -331,6 +331,7 @@ export default function IpodNano7({ appearance }: DeviceProps) {
           </div>
           <HomeButton color={home} dark={darkGlass} />
           <div className={`n7-glare ${asleep ? 'n7-glare-strong' : ''}`} />
+          <Decals decals={appearance.decals} side="front" />
         </div>
       }
       back={<Back body={body} engraving={appearance.engraving} red={appearance.finishId === 'red'} decals={appearance.decals} />}
