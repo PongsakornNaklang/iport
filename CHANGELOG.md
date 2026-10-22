@@ -18,6 +18,14 @@ The running app shows its version and build in the Help panel (?).
 - Stickers can go on the front too, over the screen and the Click Wheel,
   like a real sticker; choose the side when you add one, or move it across
   later. Engraved text stays on the back.
+- Save image: the camera button with the view controls downloads the iPod
+  as a PNG, as you see it (case, sock, stickers, EarPods), on a transparent
+  background and cropped to the iPod.
+- Undo and redo for the design: ⌘Z / Ctrl+Z and Shift+⌘Z / Ctrl+Y, or the
+  arrows in Customize. A drag, a pinch or a slider move is one step.
+- Stickers on phones and tablets: pinch to resize, twist to turn. A selected
+  sticker or engraving has a corner handle to resize and turn it and a ×
+  to remove it.
 
 ## [1.1.0] - 2026-10-22
 

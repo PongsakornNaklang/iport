@@ -32,6 +32,50 @@
   outline-offset: 4px;
   border-radius: 4px;
 }
+/* on the selected decal: resize-and-turn at the bottom right, remove at the top left */
+.dc-handle {
+  position: absolute;
+  z-index: 1;
+  width: 22px;
+  height: 22px;
+  margin: -11px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow:
+    0 0 0 1.5px rgba(0, 122, 255, 0.9),
+    0 1px 3px rgba(0, 0, 0, 0.3);
+  touch-action: none;
+}
+.dc-handle-size {
+  right: -4px;
+  bottom: -4px;
+  cursor: nwse-resize;
+}
+.dc-handle-size::after {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  border-right: 2px solid rgba(0, 122, 255, 0.9);
+  border-bottom: 2px solid rgba(0, 122, 255, 0.9);
+  border-radius: 0 0 3px 0;
+}
+.dc-handle-remove {
+  left: -4px;
+  top: -4px;
+  display: grid;
+  place-items: center;
+  font: 600 16px/1 -apple-system, 'Helvetica Neue', Arial, sans-serif;
+  color: #ff3b30;
+  cursor: pointer;
+}
+/* on phones, bigger to hit with a finger */
+@media (pointer: coarse) {
+  .dc-handle {
+    width: 32px;
+    height: 32px;
+    margin: -16px;
+  }
+}
 /* a die-cut vinyl sticker: white border, a little lift, a soft sheen */
 .dc-sticker svg,
 .dc-sticker img {

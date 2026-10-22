@@ -39,6 +39,24 @@ export const IconRotate = (p: P) => (
     <path d="M21 3v6h-6" />
   </svg>
 );
+export const IconUndo = (p: P) => (
+  <svg {...base(p)}>
+    <path d="M9 14 4 9l5-5" />
+    <path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11" />
+  </svg>
+);
+export const IconRedo = (p: P) => (
+  <svg {...base(p)}>
+    <path d="m15 14 5-5-5-5" />
+    <path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13" />
+  </svg>
+);
+export const IconCamera = (p: P) => (
+  <svg {...base(p)}>
+    <path d="M3 8.5A2.5 2.5 0 0 1 5.5 6h2l1.5-2h6l1.5 2h2A2.5 2.5 0 0 1 21 8.5v9a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17.5z" />
+    <circle cx="12" cy="13" r="3.6" />
+  </svg>
+);
 export const IconFront = (p: P) => (
   <svg {...base(p)}>
     <rect x="6" y="2.5" width="12" height="19" rx="2.5" />

@@ -12,6 +12,7 @@ The full license texts ship with every build as `third-party-notices.txt`.
 | csstype | 3.2.3 | MIT |
 | debug | 4.4.3 | MIT |
 | file-type | 21.3.4 | MIT |
+| html-to-image | 1.11.13 | MIT |
 | idb-keyval | 6.3.0 | Apache-2.0 |
 | ieee754 | 1.2.1 | BSD-3-Clause |
 | media-typer | 2.0.0 | MIT |

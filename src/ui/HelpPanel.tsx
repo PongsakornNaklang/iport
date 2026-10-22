@@ -142,6 +142,12 @@ export default function HelpPanel({ onClose }: { onClose: () => void }) {
               </td>
               <td>Spin 360°</td>
             </tr>
+            <tr>
+              <td>
+                <K>⌘/Ctrl</K> <K>Z</K>
+              </td>
+              <td>Undo a design change (add <K>Shift</K> to redo)</td>
+            </tr>
           </tbody>
         </table>
 
@@ -150,6 +156,7 @@ export default function HelpPanel({ onClose }: { onClose: () => void }) {
           <li>Drag the background to rotate. It keeps spinning if you let go mid-swipe.</li>
           <li>Hold <K>Shift</K> or drag with the right mouse button to rotate while over the controls.</li>
           <li>Scroll on the background to zoom; double-click empty space to face front.</li>
+          <li>The camera button with the view controls saves the iPod as a picture, as you see it, on a transparent background.</li>
         </ul>
 
         <h3>Adding music</h3>

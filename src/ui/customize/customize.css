@@ -254,3 +254,14 @@
   flex: none;
   min-width: 52px;
 }
+
+/* undo / redo, at the right of the model heading */
+.cz-undo {
+  margin-left: auto;
+  display: flex;
+  gap: 2px;
+}
+.cz-undo .icon-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}

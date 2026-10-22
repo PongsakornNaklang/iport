@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useStage } from '../shell/stageStore';
-import { IconBack, IconFront, IconMinus, IconPlus, IconRotate, IconSide } from './icons';
+import { useCustomize } from '../core/customize/store';
+import { getModel } from '../devices/registry';
+import { IconBack, IconCamera, IconFront, IconMinus, IconPlus, IconRotate, IconSide } from './icons';
+import { toast } from './toast';
 
 /** How close to the right edge (px) the pointer brings the controls out. */
 const NEAR = 96;
@@ -60,6 +63,7 @@ export function ViewControls() {
           <IconRotate />
           <span className="lbl">360°</span>
         </button>
+        <SaveImageButton />
         <span className="sep" />
         {/* − % + in a row; stacked vertically it reads + % − (see app.css) */}
         <div className="vc-zoom">
@@ -75,5 +79,33 @@ export function ViewControls() {
         </div>
       </div>
     </>
+  );
+}
+
+/** Download the iPod as a PNG, as decorated, on a transparent background. */
+function SaveImageButton() {
+  const [busy, setBusy] = useState(false);
+  return (
+    <button
+      className={busy ? 'on' : ''}
+      disabled={busy}
+      title="Save image"
+      onClick={async () => {
+        setBusy(true);
+        toast('Saving image…');
+        try {
+          const { saveImage } = await import('../shell/snapshot');
+          await saveImage(`iPort ${getModel(useCustomize.getState().modelId).name}`);
+          toast('Image saved');
+        } catch {
+          toast('Couldn’t save the image');
+        } finally {
+          setBusy(false);
+        }
+      }}
+    >
+      <IconCamera />
+      <span className="lbl">Save</span>
+    </button>
   );
 }

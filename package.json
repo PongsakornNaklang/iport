@@ -23,6 +23,7 @@
     "release:major": "npm version major -m \"Release v%s\""
   },
   "dependencies": {
+    "html-to-image": "^1.11.13",
     "idb-keyval": "^6.3.0",
     "music-metadata": "^11.16.1",
     "react": "^19.3.1",

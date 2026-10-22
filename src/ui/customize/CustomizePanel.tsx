@@ -15,7 +15,8 @@ import { DECAL_FONTS, useDecalSelection } from '../../shell/decals/Decals';
 import { useStage } from '../../shell/stageStore';
 import { ModelThumb } from '../ModelPicker';
 import { Panel } from '../Panel';
-import { IconDownload, IconSave, IconShare, IconTrash, IconUpload } from '../icons';
+import { IconDownload, IconRedo, IconSave, IconShare, IconTrash, IconUndo, IconUpload } from '../icons';
+import { redo, undo, useHistory } from '../../core/customize/history';
 import { toast } from '../toast';
 import { SHOWCASE_PRESETS } from './showcase';
 import './customize.css';
@@ -73,6 +74,7 @@ function DesignTab({ model }: { model: DeviceModel }) {
             {model.generation} · {model.year}
           </div>
         </div>
+        <UndoRedo />
       </div>
 
       <div className="section">
@@ -150,6 +152,22 @@ function DesignTab({ model }: { model: DeviceModel }) {
   );
 }
 
+function UndoRedo() {
+  const canUndo = useHistory((s) => s.canUndo);
+  const canRedo = useHistory((s) => s.canRedo);
+  const mac = typeof navigator !== 'undefined' && /Mac|iP(hone|ad|od)/.test(navigator.platform);
+  return (
+    <div className="cz-undo">
+      <button className="icon-btn" onClick={undo} disabled={!canUndo} title={`Undo (${mac ? '⌘Z' : 'Ctrl+Z'})`} aria-label="Undo">
+        <IconUndo />
+      </button>
+      <button className="icon-btn" onClick={redo} disabled={!canRedo} title={`Redo (${mac ? '⇧⌘Z' : 'Ctrl+Y'})`} aria-label="Redo">
+        <IconRedo />
+      </button>
+    </div>
+  );
+}
+
 // ------------------------------------------------------------------ back decals
 
 const STICKERS = ['🍎', '🌈', '⭐', '❤️', '😎', '🎧', '🎵', '⚡', '🌸', '🔥', '👾', '🐱', '🍕', '✌️', '🦄', '💿', '🌙', '🍀'];
@@ -195,7 +213,8 @@ function DecalSection() {
     <div className="section">
       <div className="section-title">Stickers &amp; engraving</div>
       <p className="tiny" style={{ marginTop: -2 }}>
-        Put them anywhere: drag them on the iPod, scroll over one to resize it, Shift-scroll to turn it.
+        Put them anywhere: drag them on the iPod. To resize and turn one, pinch it, drag its corner handle, or scroll over it (Shift
+        to turn).
       </p>
       <SegTabs
         className="cz-seg"
