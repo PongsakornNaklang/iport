@@ -34,6 +34,11 @@ The running app shows its version and build in the Help panel (?).
   others) slide their white thumb like the panel tabs.
 
 ### Fixed
+- An iPod Sock covers the headphone jack on the iPod touch, nano and
+  classic (it's on the bottom, inside the sock): the EarPods come out when
+  you put one on, can't be plugged in while it's on, and the music plays
+  on. They plug back in when the sock comes off. The shuffle's jack is on
+  top, outside the sock, and still works.
 - Smoother on phones: the EarPods no longer measure the iPod and redraw
   their canvases every frame when nothing moves, and a still iPod costs the
   stage nothing a frame. In the chooser the iPods' own screen animations pause.

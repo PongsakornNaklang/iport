@@ -184,13 +184,17 @@ export function useEarPods({
     const s = sim.current;
     if (s.phase === 'plugged' || s.phase === 'entering') {
       if (!model.jack) beginRetract();
-      else window.setTimeout(() => beginEnter(false), 350);
+      else window.setTimeout(() => enabledRef.current && beginEnter(false), 350);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [model.id]);
 
+  // off, or the jack covered (a sock over it): out they come; back on while music plays: back in
   useEffect(() => {
-    if (!enabled && sim.current.phase !== 'hidden') beginRetract();
+    const s = sim.current;
+    if (!enabled && s.phase !== 'hidden') beginRetract();
+    else if (enabled && modelRef.current.jack && usePlayer.getState().status === 'playing' && (s.phase === 'hidden' || s.phase === 'retracting'))
+      beginEnter(false); // the music is already playing: no need to wait for the click
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [enabled]);
 

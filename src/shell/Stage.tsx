@@ -445,7 +445,13 @@ export function Stage() {
     useStage.getState().setZoom(z * (e.deltaY > 0 ? 0.94 : 1.06));
   };
 
-  useEarPods({ wrap: wrapRef, back: backCanvas, front: frontCanvas, markers: jackRef, model, enabled: scene.earpods !== false });
+  // A sock covers everything below its opening: a jack down there can't be reached.
+  const jackCovered = useMemo(() => {
+    if (!cover || cover.choice.kind !== 'sock' || !model.jack) return false;
+    const sock = coverGeometry(cover.fit, 'sock', cover.pxPerMm, cover.size).sock;
+    return !!sock && model.jack.y > sock.mouth;
+  }, [cover, model]);
+  useEarPods({ wrap: wrapRef, back: backCanvas, front: frontCanvas, markers: jackRef, model, enabled: scene.earpods !== false && !jackCovered });
 
   const Device = useMemo(() => deviceComponent(model), [model]);
   // inside the device's own 3D root, so they turn with it (see bodySlot)
