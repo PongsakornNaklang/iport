@@ -14,6 +14,8 @@ The running app shows its version and build in the Help panel (?).
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-10-22
+
 ### Added
 - Stickers can go on the front too, over the screen and the Click Wheel,
   like a real sticker; choose the side when you add one, or move it across
@@ -139,6 +141,7 @@ First release.
 - Apple-style minimal Liquid Glass interface on white; works on phones and
   installs as a web app.
 
-[Unreleased]: https://github.com/PongsakornNaklang/iport/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/PongsakornNaklang/iport/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/PongsakornNaklang/iport/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/PongsakornNaklang/iport/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/PongsakornNaklang/iport/releases/tag/v1.0.0
