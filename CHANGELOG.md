@@ -58,9 +58,11 @@ The running app shows its version and build in the Help panel (?).
   back, side, spin, save image), giving the iPod the bottom of the screen.
   Zoom with two fingers; double-tap empty space to face front at 100%.
 
-- Pull an iPod Sock off: grab it and drag down. It follows your finger,
-  slides off when you let go far enough down (or flick it), and springs back
-  otherwise. Dragging it any other way still turns the iPod. Put it back on
+- Pull an iPod Sock off: grab it and drag down. It moves like fabric: the
+  opening slides down the iPod, the part still on it gathers towards the
+  bottom, and the fabric that comes off narrows right below the iPod and
+  makes the toe longer. Let go far enough down (or flick it) and it slides
+  off; otherwise it springs back. Dragging it any other way still turns the iPod. Put it back on
   in Customize, or undo.
 - The Library's small tab switches (Songs & Videos / Playlists and the
   others) slide their white thumb like the panel tabs.

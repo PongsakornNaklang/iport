@@ -476,15 +476,16 @@ export function Stage() {
 
   // A sock covers everything below its opening: a jack down there can't be reached,
   // and the controls in there work only as they would through fabric (see bodySlot).
-  const sockMouth = useMemo(() => {
+  const sock = useMemo(() => {
     if (!cover || cover.choice.kind !== 'sock') return null;
-    return coverGeometry(cover.fit, 'sock', cover.pxPerMm, cover.size).sock?.mouth ?? null;
+    return coverGeometry(cover.fit, 'sock', cover.pxPerMm, cover.size).sock ?? null;
   }, [cover]);
+  const sockMouth = sock?.mouth ?? null;
   const jackCovered = sockMouth != null && !!model.jack && model.jack.y > sockMouth;
   const sockMouthRef = useRef(sockMouth);
   sockMouthRef.current = sockMouth;
   const scaleRef = useRef(1);
-  const pullSock = useSockPull(rotRef, scaleRef, model.size.height);
+  const pullSock = useSockPull(rotRef, scaleRef, model.size.height, sock ? sock.rows[sock.sleeve].y - sock.mouth : 1);
   useEarPods({ wrap: wrapRef, back: backCanvas, front: frontCanvas, markers: jackRef, model, enabled: scene.earpods !== false && !jackCovered });
 
   const Device = useMemo(() => deviceComponent(model), [model]);

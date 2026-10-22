@@ -58,6 +58,25 @@
   top: 0;
   transform-style: preserve-3d;
 }
+/* pulling it off (sockPull.ts): the toe's extra length starts empty */
+.cv-pull-shift,
+.cv-group,
+.cv-pull-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-style: preserve-3d;
+}
+.cv-pull-fill {
+  transform: scaleY(0);
+}
+/* sliding off at the end: the pieces fade, each on its own (opacity on a group would flatten it) */
+.cv-sock.cv-leaving .d3-facet,
+.cv-sock.cv-leaving .cv-sock-tag,
+.cv-sock.cv-leaving .cv-sock-rim {
+  opacity: 0;
+  transition: opacity 280ms ease-in;
+}
 .cv-sock-rim {
   left: 0;
   top: 0;

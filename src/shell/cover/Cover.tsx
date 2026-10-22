@@ -17,6 +17,7 @@ import type { CoverChoice, CoverFit } from '../../devices/types';
 import { APPLE_LOGO } from '../../core/util/appleLogo';
 import { Device3D, type EdgeSlice } from '../Device3D';
 import type { Facet } from '../edgeShell';
+import { PULL_FILL } from './sockPull';
 import { coverGeometry, holeMask, holesOnFacet, roundedInset, type CoverGeometry, type SockGeometry } from './geometry';
 import { girth, sockMesh, type SockFacet } from './sockMesh';
 import { liveOrientation } from '../stageStore';
@@ -216,6 +217,14 @@ function Sock({ s, color, pxPerMm, after }: { s: SockGeometry; color: string; px
       return { y: s.rows[from].y, facets };
     });
   }, [s]);
+  // When it's pulled down (cover/sockPull), the fabric that leaves the iPod
+  // narrows at once below it and makes the toe longer: this straight piece,
+  // as narrow as the toe's top, is stretched to fill that length.
+  const filler = useMemo(() => {
+    const r = s.rows[s.hinges[0]];
+    const relaxed = girth(s.rows[s.hinges[s.hinges.length - 1]]);
+    return { y: r.y, facets: sockMesh([r, { ...r, y: r.y + PULL_FILL }], relaxed, 4, 200) };
+  }, [s]);
   const hinges = useRef<(HTMLDivElement | null)[]>([]);
   useSway(after, hinges);
   const vars = {
@@ -243,8 +252,9 @@ function Sock({ s, color, pxPerMm, after }: { s: SockGeometry; color: string; px
   };
   if (!after) {
     // beside the iPod: painted before it (see the top of this file)
+    // pulled down, it gathers towards the iPod's bottom (scaled about it)
     return (
-      <div className="cv cv-sock" style={vars} aria-hidden="true">
+      <div className="cv cv-sock cv-sock-sleeve" style={{ ...vars, transformOrigin: `0 ${s.rows[s.sleeve].y}px 0` }} aria-hidden="true">
         {sections[0].facets.filter((fa) => fa.row < s.sleeve).map(facet)}
       </div>
     );
@@ -259,8 +269,15 @@ function Sock({ s, color, pxPerMm, after }: { s: SockGeometry; color: string; px
         }}
         style={{ transformOrigin: `0 ${sections[k].y}px 0` }}
       >
-        {sections[k].facets.map(facet)}
-        {nest(k + 1)}
+        {k === 1 && (
+          <div className="cv-pull-fill" style={{ transformOrigin: `0 ${filler.y}px 0` }}>
+            {filler.facets.map(facet)}
+          </div>
+        )}
+        <div className={k === 1 ? 'cv-pull-shift' : 'cv-group'}>
+          {sections[k].facets.map(facet)}
+          {nest(k + 1)}
+        </div>
       </div>
     );
   const top = s.rows[0];
@@ -268,21 +285,23 @@ function Sock({ s, color, pxPerMm, after }: { s: SockGeometry; color: string; px
     <div className="cv cv-sock" style={vars} aria-hidden="true">
       {sections[0].facets.filter((fa) => fa.row >= s.sleeve).map(facet)}
       {nest(1)}
-      {/* the folded edge of the opening, seen from above */}
-      <div
-        className="cv-ring cv-sock-rim"
-        style={{
-          width: top.w,
-          height: top.d,
-          borderRadius: top.r,
-          borderWidth: 1.4 * pxPerMm,
-          transform: `translate3d(${-top.w / 2}px, ${s.mouth - top.d / 2}px, 0) rotateX(90deg)`,
-        }}
-      />
-      <div className="cv-sock-tag" style={{ left: s.tag.x, top: s.tag.y, width: s.tag.w, height: s.tag.h }}>
-        <svg viewBox="0 0 170 170" aria-hidden="true">
-          <path d={APPLE_LOGO} />
-        </svg>
+      <div className="cv-pull-shift">
+        {/* the folded edge of the opening, seen from above */}
+        <div
+          className="cv-ring cv-sock-rim"
+          style={{
+            width: top.w,
+            height: top.d,
+            borderRadius: top.r,
+            borderWidth: 1.4 * pxPerMm,
+            transform: `translate3d(${-top.w / 2}px, ${s.mouth - top.d / 2}px, 0) rotateX(90deg)`,
+          }}
+        />
+        <div className="cv-sock-tag" style={{ left: s.tag.x, top: s.tag.y, width: s.tag.w, height: s.tag.h }}>
+          <svg viewBox="0 0 170 170" aria-hidden="true">
+            <path d={APPLE_LOGO} />
+          </svg>
+        </div>
       </div>
     </div>
   );
