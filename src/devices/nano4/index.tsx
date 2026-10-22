@@ -23,11 +23,13 @@ const SPEC: ClickWheelSpec = {
   }),
   finish: 'aluminium',
   frontT: 0,
-  body: { kind: 'aluminium', round: 22 },
+  body: { kind: 'aluminium', round: 13 },
   jack: { side: 'bottom', x: -96 },
   holdX: 80,
   modelNo: 'A1285',
-  wordmark: 'iPod nano',
+  wordmark: 'iPod',
+  frontCurve: true,
+  capacityBadge: true,
   caps: { splitMenu: false },
 };
 

@@ -256,7 +256,7 @@ export const MODELS: DeviceModel[] = [
       },
     ],
     finishes: [
-      { id: 'silver', name: 'Silver', swatch: '#d6d8db', colors: { front: '#d6d8db', wheel: '#f7f7f7', labels: '#a9abb0', center: '#f2f2f2' } },
+      { id: 'silver', name: 'Silver', swatch: '#d6d8db', colors: { front: '#d6d8db', wheel: '#2b2b2d', labels: '#f4f4f4', center: '#d6d8db' } },
       { id: 'black', name: 'Black', swatch: '#2a2a2c', colors: { front: '#2a2a2c', wheel: '#1d1d1f', labels: '#8e9095', center: '#1d1d1f' } },
       { id: 'purple', name: 'Purple', swatch: '#8b5db8', colors: { front: '#8b5db8', wheel: '#f7f7f7', labels: '#a9abb0', center: '#f2f2f2' } },
       { id: 'blue', name: 'Blue', swatch: '#2f7fd0', colors: { front: '#2f7fd0', wheel: '#f7f7f7', labels: '#a9abb0', center: '#f2f2f2' } },
@@ -267,16 +267,17 @@ export const MODELS: DeviceModel[] = [
       { id: 'red', name: '(PRODUCT)RED', swatch: '#c3172e', colors: { front: '#c3172e', wheel: '#f7f7f7', labels: '#a9abb0', center: '#f2f2f2' } },
     ],
     engravable: true,
+    // the front is nearly square-cornered, the screen almost as wide as the body
     clickWheel: {
-      radius: 46,
-      window: { w: 256, h: 336, top: 34 },
+      radius: 12,
+      window: { w: 268, h: 344, top: 20 },
       lcd: { w: 240, h: 320 },
-      wheel: { size: 230, center: 90, cy: 542 },
+      wheel: { size: 226, center: 106, cy: 532 },
       dockW: 150,
     },
     jack: { x: -96, y: 357, z: 0, ny: 1, pxPerMm: 7.87 },
     cover: {
-      radius: 46,
+      radius: 12,
       cases: true,
       holes: [
         { side: 'top', at: 80, len: 40, thick: 16 }, // Hold switch

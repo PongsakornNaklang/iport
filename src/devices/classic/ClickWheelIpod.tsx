@@ -47,6 +47,10 @@ export interface ClickWheelSpec {
   wordmark?: string;
   /** plastic caps over the top and bottom ends (the mini's) */
   endCaps?: boolean;
+  /** the front curves away at its sides (the nano's oval body): it darkens towards them */
+  frontCurve?: boolean;
+  /** aluminium back: the capacity in a small box, no small print (the nano's) */
+  capacityBadge?: boolean;
 }
 
 const SEAM_T = 0.03;
@@ -210,6 +214,7 @@ export function ClickWheelIpod({ model, appearance, spec }: DeviceProps & { spec
       front={
         <div className={`cl-front ${gloss ? 'cl-front-gloss' : ''} ${luminance(front) < 0.3 ? 'cl-front-dark' : ''}`}>
           <div className="cl-front-sheen" />
+          {spec.frontCurve && <div className="cl-front-curve" />}
           <div className="cl-window" style={{ left: winLeft, top: WINDOW.top, width: WINDOW.w, height: WINDOW.h }}>
             <div className="cl-lcd" style={{ left: (WINDOW.w - LCD.w) / 2, top: (WINDOW.h - LCD.h) / 2, width: LCD.w, height: LCD.h }}>
               <ClickWheelOS
@@ -251,6 +256,7 @@ export function ClickWheelIpod({ model, appearance, spec }: DeviceProps & { spec
             capacity={info.capacity}
             model={info.model}
             modelNo={spec.modelNo}
+            badge={spec.capacityBadge}
           />
         ) : (
           <ClassicBack

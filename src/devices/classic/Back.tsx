@@ -101,9 +101,12 @@ export function AluminiumBack({
   capacity,
   model,
   modelNo,
+  badge = false,
 }: {
   color: string;
   wordmark: string;
+  /** the capacity in a small outlined box instead of the small print */
+  badge?: boolean;
   engraving: [string, string];
   decals?: Decal[];
   capacity: string;
@@ -114,7 +117,7 @@ export function AluminiumBack({
   const lines = engraving.filter((l) => l && l.trim());
   const dark = luminanceOf(color) < 0.35;
   return (
-    <div className={`cl-alback ${dark ? 'cl-alback-dark' : ''}`} style={style}>
+    <div className={`cl-alback ${dark ? 'cl-alback-dark' : ''} ${badge ? 'cl-alback-badged' : ''}`} style={style}>
       <div className="cl-alback-sheen" />
       <svg className="cl-alback-logo" viewBox="10 0 150 170" aria-hidden>
         <path d={APPLE_PATH} />
@@ -132,7 +135,8 @@ export function AluminiumBack({
         ink={dark ? 'rgba(255,255,255,0.55)' : 'rgba(255,255,255,0.7)'}
         shadow={dark ? '0 1px 0 rgba(0,0,0,0.4)' : '0 -0.5px 0 rgba(0,0,0,0.18)'}
       />
-      <div className="cl-back-print cl-alback-print">
+      {badge && <div className="cl-alback-badge">{capacity}</div>}
+      <div className="cl-back-print cl-alback-print" hidden={badge}>
         <div>Designed by Apple in California. Assembled in China.</div>
         <div>
           Model No.: {modelNo} &nbsp;{capacity}

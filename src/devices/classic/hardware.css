@@ -430,3 +430,56 @@
     var(--cap);
   box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
 }
+
+/* the nano's oval body: the front turns away at its sides */
+.cl-front-curve {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.2) 0%,
+    rgba(0, 0, 0, 0.06) 7%,
+    rgba(255, 255, 255, 0.1) 22%,
+    rgba(255, 255, 255, 0) 45%,
+    rgba(0, 0, 0, 0) 70%,
+    rgba(0, 0, 0, 0.08) 90%,
+    rgba(0, 0, 0, 0.22) 100%
+  );
+}
+
+/* the nano's back: a big white Apple logo, a bold "iPod", the capacity in a box */
+.cl-alback-badged .cl-alback-logo {
+  top: 31%;
+  width: 27cqw;
+  fill: rgba(255, 255, 255, 0.92);
+  filter: drop-shadow(0 0 0.5px rgba(0, 0, 0, 0.15));
+}
+.cl-alback-badged .cl-alback-wordmark {
+  top: 46.5%;
+  font-size: 18cqw;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: rgba(255, 255, 255, 0.92);
+  text-shadow: 0 0 0.5px rgba(0, 0, 0, 0.15);
+}
+.cl-alback-badged .cl-alback-engraving {
+  top: 62%;
+}
+.cl-alback-badge {
+  position: absolute;
+  left: 50%;
+  top: 79%;
+  translate: -50% 0;
+  padding: 0.6cqw 2.4cqw;
+  border: 0.6cqw solid rgba(255, 255, 255, 0.85);
+  border-radius: 1.4cqw;
+  font-size: 6.4cqw;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+}
+.cl-alback-badged .cl-alback-sheen {
+  background:
+    linear-gradient(90deg, rgba(0, 0, 0, 0.16), rgba(0, 0, 0, 0) 12%, rgba(255, 255, 255, 0.12) 30%, rgba(255, 255, 255, 0) 55%, rgba(0, 0, 0, 0) 80%, rgba(0, 0, 0, 0.18)),
+    linear-gradient(calc(100deg + var(--lx, 0) * 30deg), transparent 30%, rgba(255, 255, 255, 0.12) 48%, transparent 66%);
+}
