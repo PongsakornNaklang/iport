@@ -127,14 +127,17 @@ export interface ClickWheelLayout {
   window: { w: number; h: number; top: number };
   lcd: { w: number; h: number };
   wheel: { size: number; center: number; cy: number };
-  /** dock connector width on the bottom edge */
+  /** dock connector width on the bottom edge, and its centre's x if not in the middle */
   dockW: number;
+  dockX?: number;
 }
 
 export const CLASSIC_LAYOUT: ClickWheelLayout = {
   radius: 42,
-  window: { w: 336, h: 256, top: 38 },
+  // Apple's dimensional drawing: screen 52.0 × 39.5 mm centred 24.7 mm from the top;
+  // wheel Ø38.0 (centre button Ø13.7) centred 30.4 mm from the bottom; dock 21.8 mm
+  window: { w: 328, h: 249, top: 31 },
   lcd: { w: 320, h: 240 },
-  wheel: { size: 236, center: 92, cy: 471 },
-  dockW: 136,
+  wheel: { size: 239, center: 86, cy: 461 },
+  dockW: 137,
 };

@@ -24,8 +24,10 @@ const SPEC: ClickWheelSpec = {
   finish: 'gloss',
   // the plastic front wraps further round the edge than the classic's plate
   frontT: 0.3,
-  jack: { side: 'top', x: 124 },
-  holdX: -130.5,
+  // Apple's drawing: jack Ø4.8 centred 8.1 mm from the right; Hold slot 10.7 mm long, 8.7–19.4 mm from the left
+  jack: { side: 'top', x: 144 },
+  holdX: -105,
+  holdLen: 67,
   modelNo: 'A1136',
   caps: { coverFlow: false, genius: false, splitMenu: false },
 };

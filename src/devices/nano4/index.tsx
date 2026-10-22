@@ -24,8 +24,10 @@ const SPEC: ClickWheelSpec = {
   finish: 'aluminium',
   frontT: 0,
   body: { kind: 'aluminium', round: 13 },
-  jack: { side: 'bottom', x: -96 },
-  holdX: 80,
+  // Apple's drawing: jack 6.6 mm from the right on the bottom; Hold 7.0 mm from the left on top
+  jack: { side: 'bottom', x: 100 },
+  holdX: -97,
+  holdLen: 35,
   modelNo: 'A1285',
   wordmark: 'iPod',
   frontCurve: true,

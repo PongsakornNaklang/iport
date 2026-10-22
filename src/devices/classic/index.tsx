@@ -22,7 +22,8 @@ const SPEC: ClickWheelSpec = {
   finish: 'aluminium',
   frontT: 0.17,
   jack: { side: 'bottom', x: -120.5 },
-  holdX: -130.5,
+  holdX: -103,
+  holdLen: 69,
   modelNo: 'A1238\u00a0\u00a0EMC No.: 2173',
 };
 

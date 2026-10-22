@@ -32,6 +32,8 @@ export interface ClickWheelSpec {
   jack: { side: 'top' | 'bottom'; x: number };
   /** Hold switch x from the centre (px), on the top edge */
   holdX: number;
+  /** Hold switch slot length (px, default 44) */
+  holdLen?: number;
   /** model number on the back ("A1238", and anything after it on that line) */
   modelNo: string;
   caps?: Partial<OSCaps>;
@@ -166,9 +168,10 @@ export function ClickWheelIpod({ model, appearance, spec }: DeviceProps & { spec
 
   const backInset = alu ? roundInset(1) : steelInset(1);
   const frontInset = alu ? roundInset(0) : 0;
-  const winLeft = (W - WINDOW.w) / 2;
-  const wheelTop = WHEEL.cy - WHEEL.size / 2;
-  const wheelLeft = (W - WHEEL.size) / 2;
+  // the front face is inset by the rounded sides: place things on it in body coordinates
+  const winLeft = (W - WINDOW.w) / 2 - frontInset;
+  const wheelTop = WHEEL.cy - WHEEL.size / 2 - frontInset;
+  const wheelLeft = (W - WHEEL.size) / 2 - frontInset;
 
   // vertical position helpers for edge parts (z: + towards the front)
   const zAt = (t: number) => D / 2 - t * D;
@@ -194,7 +197,8 @@ export function ClickWheelIpod({ model, appearance, spec }: DeviceProps & { spec
 
   const holdX = spec.holdX;
   const jackTop = spec.jack.side === 'top';
-  const knobX = holdX + (hold ? 11 : -11);
+  const holdLen = spec.holdLen ?? 44;
+  const knobX = holdX + (hold ? 1 : -1) * holdLen * 0.25;
   const steelKnob = alu ? '#c9cbcf' : material === 'painted' ? shade(backColor, 0.05) : '#b6b9be';
 
   return (
@@ -215,7 +219,7 @@ export function ClickWheelIpod({ model, appearance, spec }: DeviceProps & { spec
         <div className={`cl-front ${gloss ? 'cl-front-gloss' : ''} ${luminance(front) < 0.3 ? 'cl-front-dark' : ''}`}>
           <div className="cl-front-sheen" />
           {spec.frontCurve && <div className="cl-front-curve" />}
-          <div className="cl-window" style={{ left: winLeft, top: WINDOW.top, width: WINDOW.w, height: WINDOW.h }}>
+          <div className="cl-window" style={{ left: winLeft, top: WINDOW.top - frontInset, width: WINDOW.w, height: WINDOW.h }}>
             <div className="cl-lcd" style={{ left: (WINDOW.w - LCD.w) / 2, top: (WINDOW.h - LCD.h) / 2, width: LCD.w, height: LCD.h }}>
               <ClickWheelOS
                 bus={bus}
@@ -273,7 +277,7 @@ export function ClickWheelIpod({ model, appearance, spec }: DeviceProps & { spec
       decals={
         <>
           {/* ---- top edge: Hold switch slot ---- */}
-          <EdgePlane x={holdX} y={-H / 2 + holdSlot.inset} z={holdSlot.z} w={44} h={13} side="top" tilt={holdSlot.tilt}>
+          <EdgePlane x={holdX} y={-H / 2 + holdSlot.inset} z={holdSlot.z} w={holdLen} h={13} side="top" tilt={holdSlot.tilt}>
             <div className={`cl-hold-slot ${hold ? 'on' : ''}`}>
               <div className="cl-hold-orange" />
             </div>
@@ -298,7 +302,7 @@ export function ClickWheelIpod({ model, appearance, spec }: DeviceProps & { spec
               </EdgePlane>
             ))}
           {/* ---- bottom edge: dock connector ---- */}
-          <EdgePlane x={0} y={H / 2 - port.inset} z={port.z} w={L.dockW} h={20} side="bottom" tilt={port.tilt}>
+          <EdgePlane x={L.dockX ?? 0} y={H / 2 - port.inset} z={port.z} w={L.dockW} h={20} side="bottom" tilt={port.tilt}>
             <div className="cl-dock">
               <div className="cl-dock-pins" />
             </div>
@@ -310,7 +314,7 @@ export function ClickWheelIpod({ model, appearance, spec }: DeviceProps & { spec
         x={knobX}
         y={-H / 2 + insetAt(holdT) - 1.1}
         z={zAt(holdT)}
-        w={20}
+        w={Math.round(holdLen * 0.45)}
         h={3}
         d={9}
         rotate={`rotateX(${holdSlot.tilt.toFixed(2)}deg)`}

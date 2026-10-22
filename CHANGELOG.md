@@ -29,6 +29,13 @@ The running app shows its version and build in the Help panel (?).
   generation's gold), Click Wheel labels in the body's colour, the
   grey-blue monochrome screen and music-only menus; headphone jack and
   Hold switch on top.
+- The iPod nano (4th generation), iPod mini, iPod (5th generation) and the
+  front of the iPod classic follow Apple's dimensional drawings: screen and
+  Click Wheel sizes and positions, and which side each port is on (the
+  nano's jack is on the bottom right beside an off-centre dock connector,
+  its Hold switch top left; the mini's jack and remote connector are top
+  right, its Hold switch top left; the 5th generation's jack is 8.1 mm from
+  the right). Case holes moved to match.
 - The model chooser is a carousel on every screen: on a computer about five
   iPods across, with arrows, page dots, the wheel or a drag to move along.
   Only the iPod in the middle and its neighbours are live 3D; the rest are

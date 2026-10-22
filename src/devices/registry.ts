@@ -220,7 +220,7 @@ export const MODELS: DeviceModel[] = [
       radius: 42,
       cases: true,
       holes: [
-        { side: 'top', at: -130.5, len: 46, thick: 22, z: 2 }, // Hold switch
+        { side: 'top', at: -103, len: 76, thick: 22, z: 2 }, // Hold switch
         { side: 'bottom', at: -120.5, len: 38, thick: 34 }, // headphone jack
         { side: 'bottom', at: 0, len: 150, thick: 26 }, // dock connector
       ],
@@ -267,22 +267,25 @@ export const MODELS: DeviceModel[] = [
       { id: 'red', name: '(PRODUCT)RED', swatch: '#c3172e', colors: { front: '#c3172e', wheel: '#f7f7f7', labels: '#a9abb0', center: '#f2f2f2' } },
     ],
     engravable: true,
-    // the front is nearly square-cornered, the screen almost as wide as the body
+    // Apple's dimensional drawing: display 29.9 × 39.8 mm centred 24.3 mm from the top;
+    // wheel Ø28.5 (centre button Ø13.2) centred 23.3 mm from the bottom; on the bottom, the
+    // dock (22.1 mm) centred 15.6 mm from the left and the jack 6.6 mm from the right
     clickWheel: {
       radius: 12,
-      window: { w: 268, h: 344, top: 20 },
+      window: { w: 270, h: 345, top: 18 },
       lcd: { w: 240, h: 320 },
-      wheel: { size: 226, center: 106, cy: 532 },
-      dockW: 150,
+      wheel: { size: 224, center: 104, cy: 531 },
+      dockW: 174,
+      dockX: -30,
     },
-    jack: { x: -96, y: 357, z: 0, ny: 1, pxPerMm: 7.87 },
+    jack: { x: 100, y: 357, z: 0, ny: 1, pxPerMm: 7.87 },
     cover: {
       radius: 12,
       cases: true,
       holes: [
-        { side: 'top', at: 80, len: 40, thick: 16 }, // Hold switch
-        { side: 'bottom', at: -96, len: 34, thick: 30 }, // headphone jack
-        { side: 'bottom', at: 0, len: 160, thick: 22 }, // dock connector
+        { side: 'top', at: -97, len: 42, thick: 16 }, // Hold switch
+        { side: 'bottom', at: 100, len: 34, thick: 30 }, // headphone jack
+        { side: 'bottom', at: -30, len: 184, thick: 22 }, // dock connector
       ],
     },
     load: () => import('./nano4'),
@@ -350,13 +353,22 @@ export const MODELS: DeviceModel[] = [
       },
     ],
     engravable: true,
-    jack: { x: 124, y: -326, z: 0, ny: -1, pxPerMm: 6.3 },
+    // Apple's dimensional drawing: screen 52.42 × 39.94 mm centred 24.66 mm from the top;
+    // wheel Ø38.10 centred 30.44 mm from the bottom; dock 21.8 mm
+    clickWheel: {
+      radius: 30,
+      window: { w: 330, h: 252, top: 29 },
+      lcd: { w: 320, h: 240 },
+      wheel: { size: 240, center: 86, cy: 460 },
+      dockW: 137,
+    },
+    jack: { x: 144, y: -326, z: 0, ny: -1, pxPerMm: 6.3 },
     cover: {
-      radius: 42,
+      radius: 30,
       cases: true,
       holes: [
-        { side: 'top', at: -130.5, len: 46, thick: 22, z: 2 }, // Hold switch
-        { side: 'top', at: 124, len: 38, thick: 34 }, // headphone jack
+        { side: 'top', at: -105, len: 74, thick: 22, z: 2 }, // Hold switch
+        { side: 'top', at: 144, len: 38, thick: 34 }, // headphone jack
         { side: 'bottom', at: 0, len: 150, thick: 26 }, // dock connector
       ],
     },
@@ -369,8 +381,8 @@ export const MODELS: DeviceModel[] = [
     year: 2005,
     blurb: 'Anodized aluminium in bright colours, with the Click Wheel that started it all.',
     family: 'clickwheel',
-    // 50.8 × 91 × 13 mm @ 8.14 px/mm (its 138 × 110 screen, drawn at twice the size)
-    size: { width: 415, height: 741, depth: 106 },
+    // 51.45 × 91.66 × 13.80 mm (Apple's dimensional drawing) @ 8.14 px/mm (its 138 × 110 screen, drawn at about twice the size)
+    size: { width: 419, height: 746, depth: 112 },
     colorSlots: [
       { key: 'front', label: 'Aluminium' },
       { key: 'wheel', label: 'Click Wheel' },
@@ -387,21 +399,23 @@ export const MODELS: DeviceModel[] = [
       { id: 'gold', name: 'Gold (2004)', swatch: '#e3cf9a', colors: { front: '#e3cf9a', wheel: '#efede7', labels: '#cdb57a', center: '#e8e5dc', caps: '#d8c38e' } },
     ],
     engravable: true,
+    // Apple's drawing: screen 33.85 × 26.19 mm centred 72.29 mm from the bottom; wheel Ø37.95
+    // (centre button Ø12.50) centred 28.75 mm from the bottom; dock 21.40 mm, centred
     clickWheel: {
-      radius: 60,
-      window: { w: 300, h: 244, top: 66 },
-      lcd: { w: 276, h: 220 },
-      wheel: { size: 268, center: 104, cy: 532 },
-      dockW: 140,
+      radius: 20,
+      window: { w: 282, h: 222, top: 47 },
+      lcd: { w: 270, h: 215 },
+      wheel: { size: 309, center: 102, cy: 512 },
+      dockW: 174,
     },
-    jack: { x: -120, y: -370.5, z: 0, ny: -1, pxPerMm: 8.14 },
+    jack: { x: 153, y: -373, z: 0, ny: -1, pxPerMm: 8.14 },
     cover: {
-      radius: 60,
+      radius: 20,
       cases: true,
       holes: [
-        { side: 'top', at: -120, len: 40, thick: 40 }, // headphone jack and remote connector
-        { side: 'top', at: 118, len: 50, thick: 26 }, // Hold switch
-        { side: 'bottom', at: 0, len: 156, thick: 30 }, // dock connector
+        { side: 'top', at: 126, len: 110, thick: 40 }, // headphone jack and remote connector
+        { side: 'top', at: -117, len: 106, thick: 26 }, // Hold switch
+        { side: 'bottom', at: 0, len: 184, thick: 30 }, // dock connector
       ],
     },
     load: () => import('./mini2'),
