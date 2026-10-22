@@ -215,13 +215,13 @@ export const MODELS: DeviceModel[] = [
       },
     ],
     engravable: true,
-    jack: { x: -120.5, y: 326, z: 0, ny: 1, pxPerMm: 6.3 },
+    jack: { x: 144, y: -326, z: 0, ny: -1, pxPerMm: 6.3 },
     cover: {
       radius: 42,
       cases: true,
       holes: [
         { side: 'top', at: -103, len: 76, thick: 22, z: 2 }, // Hold switch
-        { side: 'bottom', at: -120.5, len: 38, thick: 34 }, // headphone jack
+        { side: 'top', at: 144, len: 38, thick: 34 }, // headphone jack
         { side: 'bottom', at: 0, len: 150, thick: 26 }, // dock connector
       ],
     },

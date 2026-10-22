@@ -35,7 +35,8 @@ The running app shows its version and build in the Help panel (?).
   nano's jack is on the bottom right beside an off-centre dock connector,
   its Hold switch top left; the mini's jack and remote connector are top
   right, its Hold switch top left; the 5th generation's jack is 8.1 mm from
-  the right). Case holes moved to match.
+  the right; the iPod classic's jack is on top too, 8.1 mm from the right,
+  as in Apple's 80GB and 160GB drawings). Case holes moved to match.
 - The model chooser is a carousel on every screen: on a computer about five
   iPods across, with arrows, page dots, the wheel or a drag to move along.
   Only the iPod in the middle and its neighbours are live 3D; the rest are

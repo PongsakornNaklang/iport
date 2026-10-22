@@ -2,8 +2,9 @@
  * iPod classic (160GB, late 2009) — the showpiece.
  *
  * 61.8 × 103.5 × 10.5 mm at 6.3 px/mm: anodized aluminium front, a
- * mirror-polished stainless steel back that curves into the sides, Hold
- * switch on top, headphone jack and 30-pin dock connector on the bottom.
+ * mirror-polished stainless steel back that curves into the sides, the Hold
+ * switch and the headphone jack on top (as in Apple's dimensional drawings
+ * of the 80GB and 160GB), the 30-pin dock connector on the bottom.
  */
 import type { DeviceProps } from '../types';
 import { ClickWheelIpod, type ClickWheelSpec } from './ClickWheelIpod';
@@ -21,7 +22,8 @@ const SPEC: ClickWheelSpec = {
   }),
   finish: 'aluminium',
   frontT: 0.17,
-  jack: { side: 'bottom', x: -120.5 },
+  // Apple's drawing: jack Ø~4.8 centred 8.1 mm from the right on the top edge
+  jack: { side: 'top', x: 144 },
   holdX: -103,
   holdLen: 69,
   modelNo: 'A1238\u00a0\u00a0EMC No.: 2173',
