@@ -129,10 +129,17 @@ To release:
 
 ## License and copyright
 
-Copyright © 2026 Pongsakorn Naklang. All rights reserved.
+Copyright © 2026 Pongsakorn Naklang.
 
-iPort is proprietary software: no license is granted to copy, modify,
-redistribute or host it without written permission. See [LICENSE](LICENSE).
+iPort is source-available under the
+[PolyForm Noncommercial License 1.0.0](https://polyformproject.org/licenses/noncommercial/1.0.0)
+(see [LICENSE](LICENSE)). You may use, study, change and share it for any
+noncommercial purpose (personal use, hobby projects, learning, schools and
+charities), as long as you pass on the license and the copyright notice.
+Commercial use (selling it, building it into a paid product or service,
+running it with ads) needs a separate written license: ask through
+[GitHub](https://github.com/PongsakornNaklang).
+
 Open-source components keep their own licenses; see
 [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
 

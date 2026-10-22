@@ -7,4 +7,4 @@ export const APP_VERSION: string = typeof __APP_VERSION__ !== 'undefined' ? __AP
 export const APP_COMMIT: string = typeof __APP_COMMIT__ !== 'undefined' ? __APP_COMMIT__ : 'dev';
 export const BUILD_DATE: string = typeof __BUILD_DATE__ !== 'undefined' ? __BUILD_DATE__ : '';
 
-export const COPYRIGHT = '© 2026 Pongsakorn Naklang. All rights reserved.';
+export const COPYRIGHT = '© 2026 Pongsakorn Naklang · PolyForm Noncommercial 1.0.0';
