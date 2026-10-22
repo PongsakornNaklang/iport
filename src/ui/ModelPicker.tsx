@@ -5,7 +5,6 @@ import type { DeviceModel } from '../devices/types';
 import { isTypingTarget } from '../shell/keyboard';
 import { switchModel, useModelSwitch } from '../shell/modelSwitch';
 import { toggleOverview, useOverview } from '../shell/overview';
-import { IconChevronDown } from './icons';
 import { ModelArt } from './ModelArt';
 
 /** Tiny line drawing of each model for the picker. */
@@ -83,17 +82,14 @@ export function ModelPicker() {
 
   return (
     <div className="model-picker">
-      <button className="model-picker-btn" onClick={toggleOverview} aria-expanded={open} title="Choose an iPod (Shift ← →)">
-        <span className="mp-art">
-          <ModelArt model={model} appearance={appearance} height={30} />
-        </span>
-        <div>
-          <div className="mp-name">{model.name}</div>
-          <div className="mp-gen">
-            {model.generation} · {model.year}
-          </div>
-        </div>
-        <IconChevronDown width={14} height={14} className={`mp-chev ${open ? 'open' : ''}`} />
+      <button
+        className="model-picker-btn"
+        onClick={toggleOverview}
+        aria-expanded={open}
+        aria-label={`${model.name}: choose an iPod`}
+        title={`${model.name} · ${model.generation} · ${model.year}\nChoose an iPod (Shift ← →)`}
+      >
+        <ModelArt model={model} appearance={appearance} height={28} />
       </button>
     </div>
   );

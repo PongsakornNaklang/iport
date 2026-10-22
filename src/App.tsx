@@ -1,3 +1,4 @@
+import { useOverview } from './shell/overview';
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { redo, undo } from './core/customize/history';
 import { decodePreset, useCustomize } from './core/customize/store';
@@ -33,6 +34,8 @@ export function App() {
   const hydrated = useLibrary((s) => s.hydrated);
   const seeded = useLibrary((s) => s.seeded);
   const backdrop = useCustomize((s) => s.scene.backdrop);
+  // while every iPod floats up to choose from, the controls for one iPod step aside
+  const choosing = useOverview((s) => s.open);
   const darkScene = backdrop === 'studio' || backdrop === 'aurora' || backdrop === 'desk';
 
   // ?model=classic opens a specific iPod (handy for links and testing).
@@ -112,14 +115,13 @@ export function App() {
   }, [panel]);
 
   return (
-    <div className={`app ${darkScene ? 'scene-dark' : ''}`}>
+    <div className={`app ${darkScene ? 'scene-dark' : ''} ${choosing ? 'choosing' : ''}`}>
       <header className="topbar">
         <div className="brand" title={`iPort ${APP_VERSION} (${APP_COMMIT}) · ${COPYRIGHT}`}>
           <IconLogo className="brand-mark" />
           <span>iPort</span>
           <small>iPod for the web</small>
         </div>
-        <ModelPicker />
         <div className="topbar-spacer" />
         <nav className="tb-group" aria-label="Panels">
           <button className={`icon-btn ${panel === 'library' ? 'active' : ''}`} onClick={() => toggle('library')} title="Add music & sync">
@@ -134,6 +136,7 @@ export function App() {
             <IconHelp />
           </button>
         </nav>
+        <ModelPicker />
       </header>
       <main className="main">
         <Stage />

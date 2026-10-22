@@ -227,41 +227,29 @@ button {
   position: relative;
 }
 .model-picker-btn {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  height: 44px;
-  padding: 0 14px 0 10px;
-  border-radius: 999px;
-  border: 0;
-  cursor: pointer;
-  text-align: left;
-  transition: transform 160ms var(--ease);
-}
-.model-picker-btn:active {
-  transform: scale(0.98);
-}
-.model-picker-btn .mp-name {
-  font-size: 14px;
-  font-weight: 600;
-  line-height: 1.15;
-}
-.model-picker-btn .mp-gen {
-  font-size: 11.5px;
-  color: var(--ui-text-2);
-}
-.model-picker-btn .mp-art {
   display: grid;
   place-items: center;
-  width: 24px;
-  height: 32px;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border-radius: 50%;
+  border: 0;
+  cursor: pointer;
+  transition: transform 160ms var(--ease);
 }
-.model-picker-btn .mp-chev {
-  opacity: 0.6;
-  transition: transform 240ms var(--ease);
+.model-picker-btn:hover .model-art {
+  transform: rotate(-6deg) scale(1.06);
 }
-.model-picker-btn .mp-chev.open {
-  transform: rotate(180deg);
+.model-picker-btn .model-art {
+  transition: transform 220ms var(--ease);
+}
+.model-picker-btn:active {
+  transform: scale(0.94);
+}
+.app.choosing .model-picker-btn {
+  box-shadow:
+    0 0 0 2px var(--ui-accent),
+    var(--glass-shadow);
 }
 .model-art {
   display: block;
@@ -1249,8 +1237,7 @@ textarea.input {
   }
   .brand span,
   .brand small,
-  .icon-btn .lbl,
-  .model-picker-btn .mp-gen {
+  .icon-btn .lbl {
     display: none;
   }
   .icon-btn {
@@ -1258,6 +1245,7 @@ textarea.input {
     width: 36px;
   }
   .model-picker-btn {
+    width: 40px;
     height: 40px;
   }
   .panel {
@@ -1430,4 +1418,19 @@ textarea.input {
   vertical-align: middle;
   border-radius: 50%;
   background: var(--ui-accent);
+}
+
+/* while choosing an iPod, the panels' buttons and the view controls step aside */
+.topbar .tb-group,
+.view-controls {
+  transition:
+    opacity 260ms var(--ease),
+    visibility 260ms;
+}
+.app.choosing .topbar .tb-group,
+.app.choosing .view-controls,
+.app.choosing .vc-grip {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
 }
