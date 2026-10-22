@@ -1,9 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useStage } from '../shell/stageStore';
-import { useCustomize } from '../core/customize/store';
-import { getModel } from '../devices/registry';
-import { IconBack, IconCamera, IconFront, IconMinus, IconPlus, IconRotate, IconSide, IconView } from './icons';
-import { toast } from './toast';
+import { IconBack, IconFront, IconLandscape, IconMinus, IconPlus, IconRotate, IconSide, IconView } from './icons';
 
 /** How close to the right edge (px) the pointer brings the controls out. */
 const NEAR = 96;
@@ -63,6 +60,7 @@ export function ViewControls() {
  */
 function ViewMenu() {
   const spinning = useStage((s) => s.spinning);
+  const roll = useStage((s) => s.roll);
   const [open, setOpen] = useState(false);
   const st = useStage.getState;
   useEffect(() => {
@@ -80,7 +78,9 @@ function ViewMenu() {
   return (
     <div className={`view-menu ${open ? 'open' : ''}`} data-no-stage="">
       <div className="vm-items" aria-hidden={!open}>
-        <SaveImageButton onDone={() => setOpen(false)} tabIndex={open ? 0 : -1} />
+        <button className={roll ? 'on' : ''} onClick={act(() => st().toggleRoll())} title={roll ? 'Stand upright' : 'Turn sideways'} aria-pressed={roll} tabIndex={open ? 0 : -1}>
+          <IconLandscape />
+        </button>
         <button className={spinning ? 'on' : ''} onClick={act(() => st().toggleSpin())} title="Spin 360°" tabIndex={open ? 0 : -1}>
           <IconRotate />
         </button>
@@ -103,6 +103,7 @@ function ViewMenu() {
 
 function ViewBar() {
   const spinning = useStage((s) => s.spinning);
+  const roll = useStage((s) => s.roll);
   const zoom = useStage((s) => s.zoom);
   const st = useStage.getState;
   const peek = usePeek();
@@ -126,7 +127,10 @@ function ViewBar() {
           <IconRotate />
           <span className="lbl">360°</span>
         </button>
-        <SaveImageButton />
+        <button className={roll ? 'on' : ''} onClick={() => st().toggleRoll()} title={roll ? 'Stand upright (T)' : 'Turn sideways (T)'} aria-pressed={roll}>
+          <IconLandscape />
+          <span className="lbl">Landscape</span>
+        </button>
         <span className="sep" />
         {/* − % + in a row; stacked vertically it reads + % − (see app.css) */}
         <div className="vc-zoom">
@@ -142,35 +146,5 @@ function ViewBar() {
         </div>
       </div>
     </>
-  );
-}
-
-/** Download the iPod as a PNG, as decorated, on a transparent background. */
-function SaveImageButton({ onDone, tabIndex }: { onDone?: () => void; tabIndex?: number }) {
-  const [busy, setBusy] = useState(false);
-  return (
-    <button
-      className={busy ? 'on' : ''}
-      disabled={busy}
-      title="Save image"
-      tabIndex={tabIndex}
-      onClick={async () => {
-        onDone?.();
-        setBusy(true);
-        toast('Saving image…');
-        try {
-          const { saveImage } = await import('../shell/snapshot');
-          await saveImage(`iPort ${getModel(useCustomize.getState().modelId).name}`);
-          toast('Image saved');
-        } catch {
-          toast('Couldn’t save the image');
-        } finally {
-          setBusy(false);
-        }
-      }}
-    >
-      <IconCamera />
-      <span className="lbl">Save</span>
-    </button>
   );
 }

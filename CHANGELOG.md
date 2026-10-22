@@ -55,7 +55,16 @@ The running app shows its version and build in the Help panel (?).
   Only the iPod in the middle and its neighbours are live 3D; the rest are
   pictures, so it stays light with seven iPods.
 
+- Landscape, with the view controls (or T): the iPod lies on its side and
+  stands back up. It all still works the way it would in your hand: the top
+  of a turned Click Wheel is Forward, swipes on a touch screen go along the
+  iPod, and the iPod touch turns a playing video with it.
+
 ### Changed
+- The nano 4G (Cover Flow, video, photos), the nano 7G (Rotate for Video)
+  and the iPod touch (video) now lie down on the stage the same way the
+  Landscape button does, fit the screen better on their side, and stand
+  back up as they were when they're done.
 - A new model chooser: click the iPod's name and every iPod floats up on
   the stage, live and 3D, in your colors and at their real sizes. Point at
   one to lift it, click to pick it, and it flies to the middle. ← → (and
@@ -80,6 +89,9 @@ The running app shows its version and build in the Help panel (?).
   iPod. Put it back on in Customize, or undo.
 - The Library's small tab switches (Songs & Videos / Playlists and the
   others) slide their white thumb like the panel tabs.
+
+### Removed
+- Save image (the camera button with the view controls).
 
 ### Fixed
 - The iPod mini's end caps no longer stick out past its rounded ends:

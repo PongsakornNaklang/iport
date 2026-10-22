@@ -9,6 +9,7 @@ import { Box3D, Device3D, EdgeDecal, Slab3D, type EdgeSlice } from '../../shell/
 import { BodyExtras, SockScreenGuard } from '../../shell/bodySlot';
 import { Decals } from '../../shell/decals/Decals';
 import { isTypingTarget } from '../../shell/keyboard';
+import { useStage } from '../../shell/stageStore';
 import { player, usePlayer } from '../../core/player/player';
 import { useLibrary } from '../../core/library/store';
 import { songs } from '../../core/library/selectors';
@@ -257,6 +258,12 @@ export default function IpodNano7({ appearance }: DeviceProps) {
   const asleep = useNano((s) => s.asleep);
   const video = useNano((s) => s.video);
   const turnForVideo = useNanoData((s) => s.turnForVideo);
+  // Settings ▸ Videos ▸ Rotate for Video: a video lays the iPod on its side on the stage
+  const turned = video && turnForVideo;
+  useEffect(() => {
+    useStage.getState().autoRoll(turned);
+  }, [turned]);
+  useEffect(() => () => useStage.getState().autoRoll(false), []);
   const playClick = useMultiClick();
 
   useServices();
@@ -338,7 +345,7 @@ export default function IpodNano7({ appearance }: DeviceProps) {
 
   return (
     <Device3D
-      className={`n7-device ${video && turnForVideo ? 'n7-landscape' : ''}`}
+      className="n7-device"
       width={W}
       height={H}
       depth={D}

@@ -2,7 +2,8 @@ import { lazy, Suspense, useEffect, useMemo, useRef, useState, type ComponentTyp
 import { useAppearance, useCustomize } from '../core/customize/store';
 import { getModel } from '../devices/registry';
 import type { DeviceModel, DeviceProps } from '../devices/types';
-import { liveOrientation, useStage } from './stageStore';
+import { liveOrientation, ROLL_ANGLE, useStage } from './stageStore';
+import { installRollInput, rawPoint } from './rollInput';
 import { JackMarkers, useEarPods } from './earpods/EarPods';
 import { BodySlotContext } from './bodySlot';
 import { Cover, type CoverInfo } from './cover/Cover';
@@ -29,6 +30,8 @@ const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
 
 /** Space taken by the floating top bar and the view controls (px). */
 const TOP_BAR = 64;
+/** how long the iPod takes to lie on its side, or stand back up (ms) */
+const ROLL_MS = 650;
 /** room at the bottom: on phones the view controls are one button in the corner, so just a margin (see app.css) */
 const BOTTOM_BAR = 28;
 const SIDE_BAR = 68;
@@ -171,6 +174,7 @@ export function Stage() {
   const target = useStage((s) => s.target);
   const spinning = useStage((s) => s.spinning);
   const inset = useStage((s) => s.inset);
+  const roll = useStage((s) => s.roll);
 
   const wrapRef = useRef<HTMLDivElement>(null);
   const rotRef = useRef<HTMLDivElement>(null);
@@ -215,7 +219,19 @@ export function Stage() {
     py: 0,
     /** a press on the sock that may yet become a pull (see onPointerMove) */
     maybePull: null as null | { id: number; x: number; y: number },
+    /** the turn in the screen plane (deg), easing to the store's `roll` */
+    roll: 0,
+    rollTween: null as null | { from: number; to: number; t0: number },
   });
+
+  // Lying on its side (the view controls, or a device turning for video).
+  useEffect(() => {
+    installRollInput();
+    const s = st.current;
+    const to = roll ? ROLL_ANGLE : 0;
+    // (a turn still under way is replaced, even by one back to where it started)
+    s.rollTween = s.roll === to ? null : { from: s.roll, to, t0: performance.now() };
+  }, [roll]);
 
   // Fit to the available area (minus any side panel).
   useEffect(() => {
@@ -230,14 +246,17 @@ export function Stage() {
       setBox((cur) => (cur.w === r.width && cur.h === r.height ? cur : { w: r.width, h: r.height }));
       const usableH = Math.max(160, r.height - TOP_BAR - (inset.bottom || b.bottom));
       const usableW = Math.max(200, r.width - inset.left - inset.right - b.right);
-      const f = Math.min((usableH * fh) / outer.height, (usableW * 0.86) / outer.width);
+      // lying on its side, the iPod is as wide as it is otherwise tall
+      const ow = roll ? outer.height : outer.width;
+      const oh = roll ? outer.width : outer.height;
+      const f = Math.min((usableH * fh) / oh, (usableW * 0.86) / ow);
       setFit(clamp(f, 0.2, 3));
     };
     measure();
     const ro = new ResizeObserver(measure);
     ro.observe(el);
     return () => ro.disconnect();
-  }, [model, inset, outer]);
+  }, [model, inset, outer, roll]);
 
   // Toolbar-requested views.
   useEffect(() => {
@@ -270,6 +289,12 @@ export function Stage() {
         s.rx = s.tween.fromX + (s.tween.toX - s.tween.fromX) * e;
         s.ry = s.tween.fromY + (s.tween.toY - s.tween.fromY) * e;
         if (k >= 1) s.tween = null;
+      }
+      if (s.rollTween) {
+        const k = clamp((now - s.rollTween.t0) / ROLL_MS, 0, 1);
+        const e = k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
+        s.roll = s.rollTween.from + (s.rollTween.to - s.rollTween.from) * e;
+        if (k >= 1) s.rollTween = null;
       } else if (!s.dragging) {
         // inertia
         if (Math.abs(s.vx) > 0.01 || Math.abs(s.vy) > 0.01) {
@@ -287,7 +312,7 @@ export function Stage() {
         px = s.px * 5;
         py = s.py * 4;
       }
-      apply(s.rx - py, s.ry + px);
+      apply(s.rx - py, s.ry + px, s.roll);
     };
     raf = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(raf);
@@ -295,36 +320,47 @@ export function Stage() {
 
   // what was last written, so a still iPod costs nothing a frame
   const applied = useRef({ el: null as HTMLElement | null, key: '' });
-  const apply = (rx: number, ry: number) => {
+  const apply = (rx: number, ry: number, roll: number) => {
     const el = rotRef.current;
     if (!el) return;
-    const key = `${rx.toFixed(2)} ${ry.toFixed(2)} ${sizeRef.current.width} ${sizeRef.current.depth} ${shadowRef.current ? 1 : 0}`;
+    const m = sizeRef.current;
+    const key = `${rx.toFixed(2)} ${ry.toFixed(2)} ${roll.toFixed(2)} ${m.width} ${m.height} ${m.depth} ${shadowRef.current ? 1 : 0}`;
     if (applied.current.el === el && applied.current.key === key) return;
     applied.current = { el, key };
-    el.style.transform = `rotateX(${rx.toFixed(2)}deg) rotateY(${ry.toFixed(2)}deg)`;
+    // the roll turns the iPod in its own plane first, then the view turns it in 3D
+    el.style.transform = `rotateX(${rx.toFixed(2)}deg) rotateY(${ry.toFixed(2)}deg)${roll ? ` rotateZ(${roll.toFixed(2)}deg)` : ''}`;
     liveOrientation.rx = rx;
     liveOrientation.ry = ry;
+    liveOrientation.roll = roll;
     const ryRad = (ry * Math.PI) / 180;
     const rxRad = (rx * Math.PI) / 180;
+    // Light and view directions are read in the iPod's own frame: on its
+    // side, the stage's left-right is the iPod's up-down.
+    const rr = (roll * Math.PI) / 180;
+    const rc = Math.cos(rr);
+    const rs = Math.sin(rr);
+    const own = (x: number, y: number) => [x * rc + y * rs, -x * rs + y * rc];
+    const [lx, nly] = own(Math.sin(ryRad), -Math.sin(rxRad));
     el.style.setProperty('--rx', rx.toFixed(1));
     el.style.setProperty('--ry', ((((ry % 360) + 540) % 360) - 180).toFixed(1));
-    el.style.setProperty('--lx', Math.sin(ryRad).toFixed(3));
-    el.style.setProperty('--ly', Math.sin(rxRad).toFixed(3));
+    el.style.setProperty('--lx', lx.toFixed(3));
+    el.style.setProperty('--ly', (-nly).toFixed(3));
     // A coarse copy for the device edges: their surface is hundreds of small
     // pieces, which only need repainting when the light has moved a step.
-    const elx = (Math.round(Math.sin(ryRad) * 20) / 20).toFixed(2);
-    const ely = (Math.round(Math.sin(rxRad) * 20) / 20).toFixed(2);
+    const elx = (Math.round(lx * 20) / 20).toFixed(2);
+    const ely = (Math.round(-nly * 20) / 20).toFixed(2);
     if (elx !== edgeLight.current.x) el.style.setProperty('--elx', (edgeLight.current.x = elx));
     if (ely !== edgeLight.current.y) el.style.setProperty('--ely', (edgeLight.current.y = ely));
     // Where the camera looks, in device coordinates (x right, y down, z out of
     // the front): lets holes and recesses show their inner walls (parallax).
-    el.style.setProperty('--vx', (Math.cos(rxRad) * Math.sin(ryRad)).toFixed(3));
-    el.style.setProperty('--vy', (-Math.sin(rxRad)).toFixed(3));
+    const [vx, vy] = own(Math.cos(rxRad) * Math.sin(ryRad), -Math.sin(rxRad));
+    el.style.setProperty('--vx', vx.toFixed(3));
+    el.style.setProperty('--vy', vy.toFixed(3));
     el.style.setProperty('--vz', (-Math.cos(rxRad) * Math.cos(ryRad)).toFixed(3));
     const sh = shadowRef.current;
     if (sh) {
-      const m = sizeRef.current;
-      const w = Math.abs(Math.cos(ryRad)) * m.width + Math.abs(Math.sin(ryRad)) * m.depth;
+      const across = Math.abs(rc) * m.width + Math.abs(rs) * m.height;
+      const w = Math.abs(Math.cos(ryRad)) * across + Math.abs(Math.sin(ryRad)) * m.depth;
       sh.style.width = `${w * 1.05}px`;
       sh.style.opacity = String(0.55 + 0.25 * Math.abs(Math.cos(rxRad)));
     }
@@ -353,8 +389,8 @@ export function Stage() {
         fingers.current.clear();
         pinch.current = null;
       }
-      fingers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
-      if (!(e.target as HTMLElement).closest('[data-control]')) Object.assign(tap.current, { x: e.clientX, y: e.clientY, t: performance.now() });
+      fingers.current.set(e.pointerId, { x: rawPoint(e).x, y: rawPoint(e).y });
+      if (!(e.target as HTMLElement).closest('[data-control]')) Object.assign(tap.current, { x: rawPoint(e).x, y: rawPoint(e).y, t: performance.now() });
       else tap.current.t = 0;
       if (fingers.current.size === 2) {
         // a second finger: stop turning, start zooming
@@ -374,12 +410,12 @@ export function Stage() {
     if (e.button !== 0 && e.button !== 2) return;
     const s = st.current;
     // on the sock: a drag up or down moves it along the iPod, a sideways one turns the iPod
-    s.maybePull = !force && sockMouthRef.current != null && onSock(rotRef.current, e.clientX, e.clientY) ? { id: e.pointerId, x: e.clientX, y: e.clientY } : null;
+    s.maybePull = !force && sockMouthRef.current != null && !useStage.getState().roll && onSock(rotRef.current, rawPoint(e).x, rawPoint(e).y) ? { id: e.pointerId, x: rawPoint(e).x, y: rawPoint(e).y } : null;
     s.dragging = true;
     s.tween = null;
     s.vx = s.vy = 0;
-    s.lastX = e.clientX;
-    s.lastY = e.clientY;
+    s.lastX = rawPoint(e).x;
+    s.lastY = rawPoint(e).y;
     s.lastT = performance.now();
     s.lastInteract = performance.now();
     useStage.setState({ spinning: false });
@@ -388,21 +424,21 @@ export function Stage() {
   };
   const onPointerMove = (e: React.PointerEvent) => {
     const s = st.current;
-    if (fingers.current.has(e.pointerId)) fingers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (fingers.current.has(e.pointerId)) fingers.current.set(e.pointerId, { x: rawPoint(e).x, y: rawPoint(e).y });
     if (pinch.current) {
       if (fingers.current.size >= 2) useStage.getState().setZoom((pinch.current.z0 * spread()) / pinch.current.d0);
       return;
     }
     const r = wrapRef.current?.getBoundingClientRect();
     if (r) {
-      s.px = clamp(((e.clientX - r.left) / r.width) * 2 - 1, -1, 1);
-      s.py = clamp(((e.clientY - r.top) / r.height) * 2 - 1, -1, 1);
+      s.px = clamp(((rawPoint(e).x - r.left) / r.width) * 2 - 1, -1, 1);
+      s.py = clamp(((rawPoint(e).y - r.top) / r.height) * 2 - 1, -1, 1);
     }
     if (!s.dragging) return;
     const mp = s.maybePull;
     if (mp && mp.id === e.pointerId) {
-      const mx = e.clientX - mp.x;
-      const my = e.clientY - mp.y;
+      const mx = rawPoint(e).x - mp.x;
+      const my = rawPoint(e).y - mp.y;
       if (Math.hypot(mx, my) < 8) return; // not sure yet
       s.maybePull = null;
       if (Math.abs(my) > 1.5 * Math.abs(mx)) {
@@ -418,16 +454,16 @@ export function Stage() {
       }
     }
     const now = performance.now();
-    const dx = e.clientX - s.lastX;
-    const dy = e.clientY - s.lastY;
+    const dx = rawPoint(e).x - s.lastX;
+    const dy = rawPoint(e).y - s.lastY;
     const dt = Math.max(1, now - s.lastT);
     const k = 0.45;
     s.ry += dx * k;
     s.rx = clamp(s.rx - dy * k, -88, 88);
     s.vy = ((dx * k) / dt) * 16;
     s.vx = ((-dy * k) / dt) * 16;
-    s.lastX = e.clientX;
-    s.lastY = e.clientY;
+    s.lastX = rawPoint(e).x;
+    s.lastY = rawPoint(e).y;
     s.lastT = now;
     s.lastInteract = now;
   };
@@ -436,13 +472,13 @@ export function Stage() {
     endFinger(e);
     const tp = tap.current;
     const now = performance.now();
-    if (e.pointerType === 'touch' && !wasPinch && tp.t && now - tp.t < 250 && Math.hypot(e.clientX - tp.x, e.clientY - tp.y) < 10) {
+    if (e.pointerType === 'touch' && !wasPinch && tp.t && now - tp.t < 250 && Math.hypot(rawPoint(e).x - tp.x, rawPoint(e).y - tp.y) < 10) {
       const l = tp.last;
-      if (l && now - l.t < 350 && Math.hypot(e.clientX - l.x, e.clientY - l.y) < 40) {
+      if (l && now - l.t < 350 && Math.hypot(rawPoint(e).x - l.x, rawPoint(e).y - l.y) < 40) {
         tp.last = null;
         useStage.getState().front();
         useStage.getState().setZoom(1);
-      } else tp.last = { x: e.clientX, y: e.clientY, t: now };
+      } else tp.last = { x: rawPoint(e).x, y: rawPoint(e).y, t: now };
     }
     const s = st.current;
     // lifting from a pinch doesn't fling the iPod round
@@ -508,9 +544,10 @@ export function Stage() {
       ),
       after: cover && <Cover info={cover} after />,
       sockMouth,
-      pullSock,
+      // on its side the sock can't be pulled along the iPod
+      pullSock: roll ? undefined : pullSock,
     }),
-    [cover, model, sockMouth, pullSock],
+    [cover, model, sockMouth, pullSock, roll],
   );
   const scale = fit * zoom;
   scaleRef.current = scale;
@@ -589,7 +626,7 @@ export function Stage() {
         <div
           className="stage-shadow"
           ref={shadowRef}
-          style={{ transform: `translate(calc(-50% + ${shiftX}px), ${(outer.height / 2) * scale + centerY + 14}px) scale(${scale})` }}
+          style={{ transform: `translate(calc(-50% + ${shiftX}px), ${((roll ? outer.width : outer.height) / 2) * scale + centerY + 14}px) scale(${scale})` }}
         />
       )}
       {/* EarPods cable behind the iPod (and on top when the jack faces the camera) */}

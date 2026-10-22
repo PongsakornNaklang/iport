@@ -401,7 +401,7 @@ export function useEarPods({
     const signature = () => {
       const host = wrap.current;
       const center = host?.querySelector<HTMLElement>('.stage-center:not(.ov-item)');
-      return `${liveOrientation.rx.toFixed(2)} ${liveOrientation.ry.toFixed(2)} ${useStage.getState().zoom} ${host?.clientWidth} ${host?.clientHeight} ${center?.style.transform} ${modelRef.current.id}`;
+      return `${liveOrientation.rx.toFixed(2)} ${liveOrientation.ry.toFixed(2)} ${liveOrientation.roll.toFixed(2)} ${useStage.getState().zoom} ${host?.clientWidth} ${host?.clientHeight} ${center?.style.transform} ${modelRef.current.id}`;
     };
     const moved = (a: Jack | null, b: Jack | null) =>
       !a || !b || Math.abs(a.p.x - b.p.x) > 0.3 || Math.abs(a.p.y - b.p.y) > 0.3 || Math.abs(a.dz - b.dz) > 0.01 || Math.abs(a.mm - b.mm) > 0.01;

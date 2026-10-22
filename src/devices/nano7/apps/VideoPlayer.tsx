@@ -88,7 +88,7 @@ export function VideoPlayer() {
   return (
     <>
       <div className="n7-video-bg" />
-      <div className="n7-video" data-noswipe onClick={() => (chrome ? setChrome(false) : poke())}>
+      <div className="n7-video" data-noswipe data-upright="" onClick={() => (chrome ? setChrome(false) : poke())}>
         {!showPicture && track && (
           <div className="n7-video-art">
             <Artwork src={track.artwork} size={150} />

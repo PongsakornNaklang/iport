@@ -7,6 +7,7 @@ import { Box3D, Device3D, EdgeDecal } from '../../shell/Device3D';
 import { BodyExtras, SockScreenGuard } from '../../shell/bodySlot';
 import { Decals } from '../../shell/decals/Decals';
 import { isTypingTarget } from '../../shell/keyboard';
+import { useStage } from '../../shell/stageStore';
 import { player } from '../../core/player/player';
 import type { DeviceProps } from '../types';
 import { APPLE_LOGO } from './os/icons';
@@ -95,18 +96,23 @@ export default function IpodTouch({ model, appearance }: DeviceProps) {
   const darkFront = luminance(front) < 0.35;
   const landscape = useOS((s) => s.landscape);
   const home = useHomeButton();
-  const rootRef = useRef<HTMLDivElement>(null);
-  const [lsScale, setLsScale] = useState(1);
   const [btn, setBtn] = useState<string | null>(null);
 
-  // fit the rotated body on narrow viewports
+  // A landscape video lays the iPod on its side on the stage, and turning it
+  // by hand (the view controls) turns the video too, as its motion sensor would.
   useEffect(() => {
-    if (!landscape || !rootRef.current) return;
-    const r = rootRef.current.getBoundingClientRect();
-    const projected = Math.max(r.width, r.height);
-    const avail = window.innerWidth * 0.94;
-    setLsScale(Math.min(1, avail / Math.max(1, projected)));
+    useStage.getState().autoRoll(landscape);
   }, [landscape]);
+  useEffect(() => {
+    const off = useStage.subscribe((s, prev) => {
+      if (s.roll === prev.roll) return;
+      if (useOS.getState().videoOpen && s.roll !== useOS.getState().landscape) os.setLandscape(s.roll);
+    });
+    return () => {
+      off();
+      useStage.getState().autoRoll(false);
+    };
+  }, []);
 
   // keyboard: H home, L sleep/wake, +/- volume, space play/pause
   useEffect(() => {
@@ -216,9 +222,8 @@ export default function IpodTouch({ model, appearance }: DeviceProps) {
 
   return (
     <div
-      ref={rootRef}
       className={`t7-root ${landscape ? 'is-landscape' : ''}`}
-      style={{ width, height, transform: landscape ? `rotate(-90deg) scale(${lsScale})` : undefined }}
+      style={{ width, height }}
     >
       <Device3D
         width={width}

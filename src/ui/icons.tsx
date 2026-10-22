@@ -61,10 +61,13 @@ export const IconRedo = (p: P) => (
     <path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13" />
   </svg>
 );
-export const IconCamera = (p: P) => (
+/** an iPod turning onto its side: landscape */
+export const IconLandscape = (p: P) => (
   <svg {...base(p)}>
-    <path d="M3 8.5A2.5 2.5 0 0 1 5.5 6h2l1.5-2h6l1.5 2h2A2.5 2.5 0 0 1 21 8.5v9a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17.5z" />
-    <circle cx="12" cy="13" r="3.6" />
+    <rect x="3" y="9.5" width="15" height="9.5" rx="2" />
+    <path d="M7.5 15.2h0.01" />
+    <path d="M9 4.5a8 8 0 0 1 10.2 2.3" />
+    <path d="M19.6 3.4v3.6H16" />
   </svg>
 );
 /** a box turning in 3D: the view menu on phones */

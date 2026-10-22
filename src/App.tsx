@@ -91,6 +91,7 @@ export function App() {
       if (e.key === 'f' || e.key === 'F') useStage.getState().front();
       else if (e.key === 'b' || e.key === 'B') useStage.getState().back();
       else if (e.key === 'r' || e.key === 'R') useStage.getState().toggleSpin();
+      else if (e.key === 't' || e.key === 'T') useStage.getState().toggleRoll();
       else if (e.key === '?') setPanel((p) => (p === 'help' ? null : 'help'));
     };
     window.addEventListener('keydown', onKey);

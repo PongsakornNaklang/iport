@@ -5,11 +5,12 @@
  * much of the edge the front covers, where the headphone jack is, what
  * the back says and what the software can do.
  */
-import { useContext, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
+import { useContext, useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { Box3D, Device3D, type EdgeSlice } from '../../shell/Device3D';
 import { BodyExtras, BodySlotContext, sockHint, useSockMouth } from '../../shell/bodySlot';
 import { Decals } from '../../shell/decals/Decals';
 import { isTypingTarget } from '../../shell/keyboard';
+import { useStage } from '../../shell/stageStore';
 import { useSettings } from '../../core/settings/store';
 import { ClickWheel } from '../shared/clickwheel/ClickWheel';
 import { WheelBus } from '../shared/clickwheel/bus';
@@ -135,16 +136,16 @@ export function ClickWheelIpod({ model, appearance, spec }: DeviceProps & { spec
   const wheelCovered = mouth != null && WHEEL.cy - H / 2 > mouth;
   const pullSock = useContext(BodySlotContext).pullSock;
   const [hold, setHold] = useState(false);
-  // nano 4G: turned sideways for Cover Flow, video and photos (the OS asks)
-  const [sideways, setSideways] = useState(false);
-  const rootRef = useRef<HTMLDivElement>(null);
-  const [fitSideways, setFitSideways] = useState(1);
+  // nano 4G: Cover Flow, video and photos ask for the iPod on its side, and
+  // the stage lays it down. The picture turns only while it really lies on
+  // its side: stood back up (the view controls), it shows them upright.
+  const [wantsSide, setWantsSide] = useState(false);
+  const rolled = useStage((s) => s.roll);
+  const sideways = wantsSide && rolled;
   useEffect(() => {
-    if (!sideways || !rootRef.current) return;
-    // on a narrow screen the iPod lying down must still fit
-    const r = rootRef.current.getBoundingClientRect();
-    setFitSideways(Math.min(1, (window.innerWidth * 0.94) / Math.max(1, r.height)));
-  }, [sideways]);
+    useStage.getState().autoRoll(wantsSide);
+  }, [wantsSide]);
+  useEffect(() => () => useStage.getState().autoRoll(false), []);
   const clicker = useSettings((s) => s.clicker) !== 'off';
   useWheelKeyboard(bus, true, clicker);
 
@@ -226,9 +227,8 @@ export function ClickWheelIpod({ model, appearance, spec }: DeviceProps & { spec
 
   return (
     <div
-      ref={rootRef}
       className="cl-root"
-      style={{ width: W, height: H, transform: sideways ? `rotate(-90deg) scale(${fitSideways})` : undefined }}
+      style={{ width: W, height: H }}
     >
       <Device3D
         width={W}
@@ -265,7 +265,7 @@ export function ClickWheelIpod({ model, appearance, spec }: DeviceProps & { spec
                     info={info}
                     caps={spec.caps}
                     bootStyle={spec.bootStyle}
-                    onLandscape={spec.caps?.motion ? setSideways : undefined}
+                    onLandscape={spec.caps?.motion ? setWantsSide : undefined}
                   />
                 </div>
               </div>

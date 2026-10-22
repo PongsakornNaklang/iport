@@ -329,10 +329,13 @@ function useSway(on: boolean, hinges: React.RefObject<(HTMLDivElement | null)[]>
       raf = requestAnimationFrame(loop);
       const dt = Math.min(0.05, (now - st.last) / 1000);
       st.last = now;
-      // which way is down, in the iPod's own axes (the stage turns it rotateX(rx) rotateY(ry))
+      // which way is down, in the iPod's own axes (the stage turns it rotateX(rx) rotateY(ry) rotateZ(roll))
       const rx = (liveOrientation.rx * Math.PI) / 180;
       const ry = (liveOrientation.ry * Math.PI) / 180;
-      const g = [Math.sin(ry) * Math.sin(rx), Math.cos(rx), -Math.cos(ry) * Math.sin(rx)];
+      const g0 = [Math.sin(ry) * Math.sin(rx), Math.cos(rx), -Math.cos(ry) * Math.sin(rx)];
+      // …then turned in its own plane when it lies on its side
+      const rr = (liveOrientation.roll * Math.PI) / 180;
+      const g = [g0[0] * Math.cos(rr) + g0[1] * Math.sin(rr), -g0[0] * Math.sin(rr) + g0[1] * Math.cos(rr), g0[2]];
       const deg = (a: number) => Math.max(-LIMIT, Math.min(LIMIT, (a * 180) / Math.PI));
       const tx = deg(Math.atan2(g[2], Math.max(0.05, g[1]))) * GIVE;
       if (reduce) st.x = tx;

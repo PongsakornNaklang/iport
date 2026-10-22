@@ -307,16 +307,6 @@ button {
   background-size: 300% 300%;
   animation: aurora 24s ease-in-out infinite;
 }
-.stage.snapshotting::before {
-  display: none;
-}
-/* while saving a picture, a case or sock shows only its outside (shell/snapshot.ts) */
-.stage.snapshotting .cv .d3-facet,
-.stage.snapshotting .cv .d3-facet i,
-.stage.snapshotting .cv .d3-face {
-  backface-visibility: hidden !important;
-  -webkit-backface-visibility: hidden !important;
-}
 .backdrop-aurora::before {
   content: '';
   position: absolute;

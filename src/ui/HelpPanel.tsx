@@ -144,6 +144,12 @@ export default function HelpPanel({ onClose }: { onClose: () => void }) {
             </tr>
             <tr>
               <td>
+                <K>T</K>
+              </td>
+              <td>Turn the iPod on its side (landscape) and back</td>
+            </tr>
+            <tr>
+              <td>
                 <K>⌘/Ctrl</K> <K>Z</K>
               </td>
               <td>Undo a design change (add <K>Shift</K> to redo)</td>
@@ -162,8 +168,11 @@ export default function HelpPanel({ onClose }: { onClose: () => void }) {
           <li>Drag the background to rotate. It keeps spinning if you let go mid-swipe.</li>
           <li>Hold <K>Shift</K> or drag with the right mouse button to rotate while over the controls.</li>
           <li>Scroll on the background to zoom (two fingers on a phone); double-click or double-tap empty space to face front at 100%.</li>
-          <li>On a phone, the round button in the bottom corner holds the views: front, back, side, spin and save as a picture.</li>
-          <li>The camera button with the view controls saves the iPod as a picture, as you see it, on a transparent background.</li>
+          <li>On a phone, the round button in the bottom corner holds the views: front, back, side, spin and landscape.</li>
+          <li>
+            Landscape lays the iPod on its side. Everything still works the way it would in your hand: the top of a turned click wheel is
+            Forward, and swipes on a touch screen go along the iPod. Videos and Cover Flow turn it for you, and stand it back up after.
+          </li>
         </ul>
 
         <h3>Adding music</h3>
