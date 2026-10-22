@@ -112,9 +112,16 @@ const G = useOS.getState;
 // ------------------------------------------------------------------ prefs
 
 export interface HomeLayout {
+  /** app ids, or "folder:<id>" for a folder (see Prefs.folders) */
   pages: string[][];
   dock: string[];
 }
+
+export interface Folder {
+  name: string;
+  apps: string[];
+}
+export const isFolder = (id: string) => id.startsWith('folder:');
 
 export const DEFAULT_LAYOUT: HomeLayout = {
   pages: [
@@ -132,6 +139,7 @@ export const DEFAULT_LAYOUT: HomeLayout = {
 
 export interface Prefs {
   layout: HomeLayout;
+  folders: Record<string, Folder>;
   wifi: boolean;
   bluetooth: boolean;
   airplane: boolean;
@@ -160,6 +168,7 @@ export interface Prefs {
 
 const DEFAULT_PREFS: Prefs = {
   layout: DEFAULT_LAYOUT,
+  folders: {},
   wifi: true,
   bluetooth: true,
   airplane: false,
@@ -198,15 +207,24 @@ export const usePrefs = create<Prefs & { set: <K extends keyof Prefs>(k: K, v: P
         // make sure every app is still somewhere on the Home Screen
         const all = new Set([...DEFAULT_LAYOUT.pages.flat(), ...DEFAULT_LAYOUT.dock]);
         const lay = merged.layout && Array.isArray(merged.layout.pages) ? merged.layout : DEFAULT_LAYOUT;
-        const seen = new Set([...lay.pages.flat(), ...lay.dock]);
+        // folders: only known apps, and only folders that are on the Home Screen
+        const placed = new Set([...lay.pages.flat(), ...lay.dock]);
+        const folders: Record<string, Folder> = {};
+        for (const [fid, f] of Object.entries(merged.folders ?? {})) {
+          const apps = (f?.apps ?? []).filter((x) => all.has(x));
+          if (placed.has(`folder:${fid}`) && apps.length) folders[fid] = { name: f.name || 'Folder', apps };
+        }
+        merged.folders = folders;
+        const known = (x: string) => all.has(x) || (isFolder(x) && !!folders[x.slice(7)]);
+        const seen = new Set([...lay.pages.flat(), ...lay.dock, ...Object.values(folders).flatMap((f) => f.apps)]);
         const missing = [...all].filter((x) => !seen.has(x));
-        const pages = lay.pages.map((p2) => p2.filter((x) => all.has(x))).filter((p2, i) => p2.length || i === 0);
+        const pages = lay.pages.map((p2) => p2.filter(known)).filter((p2, i) => p2.length || i === 0);
         if (missing.length) {
           const last = pages[pages.length - 1];
           if (last.length + missing.length <= 20) pages[pages.length - 1] = [...last, ...missing];
           else pages.push(missing);
         }
-        merged.layout = { pages, dock: lay.dock.filter((x) => all.has(x)) };
+        merged.layout = { pages, dock: lay.dock.filter(known) };
         return merged;
       },
     },

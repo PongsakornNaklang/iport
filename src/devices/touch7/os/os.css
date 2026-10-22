@@ -2187,3 +2187,112 @@
   gap: 4px;
   padding: 0 2px;
 }
+
+/* ------------------------------------------------------------------ folders (Folders.tsx) */
+.t7-folder-icon {
+  position: relative;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.32);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  backdrop-filter: blur(18px) saturate(1.4);
+}
+.t7-dark .t7-folder-icon {
+  background: rgba(40, 40, 46, 0.45);
+}
+.t7-folder-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  justify-items: center;
+}
+.t7-folder-grid .t7-appicon {
+  box-shadow: none;
+}
+/* an app held over another: the folder it will make */
+.t7-hicon-art.merging {
+  transform: scale(1.08);
+  transition: transform 200ms var(--t7-ease);
+}
+.t7-merge-ring {
+  position: absolute;
+  inset: -7px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.35);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  z-index: -1;
+}
+/* an open folder */
+.t7-folder-open {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+  background: rgba(0, 0, 0, 0.12);
+  -webkit-backdrop-filter: blur(0);
+  backdrop-filter: blur(0);
+  opacity: 0;
+  transition:
+    opacity 260ms ease,
+    backdrop-filter 260ms ease,
+    -webkit-backdrop-filter 260ms ease;
+}
+.t7-folder-open.on {
+  opacity: 1;
+  -webkit-backdrop-filter: blur(22px);
+  backdrop-filter: blur(22px);
+}
+.t7-folder-title {
+  color: #fff;
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: -0.4px;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.25);
+  max-width: 260px;
+  text-align: center;
+}
+.t7-folder-name {
+  width: 260px;
+  border: 0;
+  border-radius: 12px;
+  padding: 4px 10px;
+  background: rgba(255, 255, 255, 0.28);
+  color: #fff;
+  font: inherit;
+  text-align: center;
+  outline: none;
+}
+.t7-folder-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, 76px);
+  gap: 14px 0;
+  justify-items: center;
+  padding: 22px 14px;
+  min-height: 250px;
+  align-content: start;
+  border-radius: 36px;
+  background: rgba(255, 255, 255, 0.3);
+  -webkit-backdrop-filter: blur(24px) saturate(1.4);
+  backdrop-filter: blur(24px) saturate(1.4);
+  transform: scale(0.4);
+  transition: transform 340ms var(--t7-ease);
+}
+.t7-folder-open.on .t7-folder-card {
+  transform: none;
+}
+.t7-dark .t7-folder-card {
+  background: rgba(40, 40, 46, 0.5);
+}
+.t7-folder-app {
+  position: relative;
+  left: auto;
+  top: auto;
+}
+.t7-folder-app.jig .t7-hicon-art {
+  animation: t7-jiggle 0.26s ease-in-out infinite alternate;
+  animation-delay: var(--jd);
+}

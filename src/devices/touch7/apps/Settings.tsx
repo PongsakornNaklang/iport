@@ -597,7 +597,7 @@ function ResetPage() {
         <span>Make sure everything’s ready to transfer to a new iPod.</span>
       </div>
       <Section>
-        <Cell title="Reset Home Screen Layout" tint onPress={() => confirm('Reset Home Screen', 'This will reset your Home Screen to the factory default layout.', 'Reset Home Screen', () => usePrefs.getState().set('layout', DEFAULT_LAYOUT))} />
+        <Cell title="Reset Home Screen Layout" tint onPress={() => confirm('Reset Home Screen', 'This will reset your Home Screen to the factory default layout.', 'Reset Home Screen', () => (usePrefs.getState().set('layout', DEFAULT_LAYOUT), usePrefs.getState().set('folders', {})))} />
         <Cell
           title="Reset All Settings"
           tint
@@ -769,7 +769,7 @@ function HomeScreenPage() {
         <Fake title="Show in App Library" />
       </Section>
       <Section footer="Restores the default layout of your Home Screen.">
-        <Cell title="Reset Home Screen Layout" tint onPress={() => usePrefs.getState().set('layout', DEFAULT_LAYOUT)} />
+        <Cell title="Reset Home Screen Layout" tint onPress={() => (usePrefs.getState().set('layout', DEFAULT_LAYOUT), usePrefs.getState().set('folders', {}))} />
       </Section>
     </Page>
   );

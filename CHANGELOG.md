@@ -109,6 +109,12 @@ The running app shows its version and build in the Help panel (?).
     typing bubble, bubbles with tails, timestamps, unread dots, search and
     Edit to delete. An answer that comes while you're elsewhere arrives as
     a notification that opens the conversation. Kept on the iPod.
+  - Home Screen folders: while the icons jiggle, hold an app over another
+    to put them in a folder, named for their kind (Utilities,
+    Productivity…), or over a folder to add it. Tap a folder to open it;
+    rename it while editing; drag an app out of it to put it back. A
+    folder left with one app turns back into that app. While you drag, the
+    other icons make room once you pause, as on iOS.
 - Settings that did nothing now work:
   - Audio Crossfade (iPod classic, nano 4G): the end of a song fades out
     over four seconds and the next fades in.
