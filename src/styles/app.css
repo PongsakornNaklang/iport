@@ -1454,8 +1454,85 @@ textarea.input {
 .ov-hits.carousel .ov-label {
   transition: opacity 220ms var(--ease);
 }
+/* on a phone only the middle one is named; wider, the near ones are too, softly */
 .ov-hits.carousel .ov-hit:not(.on) .ov-label {
+  opacity: 0.5;
+}
+@media (max-width: 760px) {
+  .ov-hits.carousel .ov-hit:not(.on) .ov-label {
+    opacity: 0;
+  }
+}
+.ov-dots {
+  position: absolute;
+  translate: -50% 0;
+  display: flex;
+  gap: 2px;
+  z-index: 2;
+}
+.ov-dots button {
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+.ov-dots button::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.2);
+  transition:
+    background 200ms var(--ease),
+    width 260ms var(--ease);
+}
+.ov-dots button.on::before {
+  width: 18px;
+  border-radius: 4px;
+  background: var(--ui-text);
+}
+.scene-dark .ov-dots button::before {
+  background: rgba(255, 255, 255, 0.35);
+}
+.scene-dark .ov-dots button.on::before {
+  background: #fff;
+}
+.ov-arrow {
+  position: absolute;
+  top: 50%;
+  z-index: 2;
+  width: 40px;
+  height: 40px;
+  margin: -20px 0 0 -20px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--glass-strong);
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  font-size: 26px;
+  line-height: 1;
+  padding-bottom: 3px;
+  color: var(--ui-text);
+  cursor: pointer;
   opacity: 0;
+  transition: opacity 200ms var(--ease);
+}
+.ov-hits:hover .ov-arrow {
+  opacity: 0.9;
+}
+@media (hover: none) {
+  .ov-arrow {
+    display: none;
+  }
+}
+/* far iPods are pictures: no 3D to keep in order */
+.ov-pic .device-enter {
+  transform-style: flat;
 }
 .ov-hits.carousel .ov-hit {
   transition: none;

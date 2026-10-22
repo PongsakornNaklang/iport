@@ -354,3 +354,79 @@
   background: repeating-linear-gradient(90deg, #b9984a 0 2px, transparent 2px 3.6px);
   opacity: 0.8;
 }
+
+/* ------------------------------------------------------------------ anodized aluminium back (mini, nano) */
+.cl-alback {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  container-type: inline-size;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  background:
+    url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.14'/%3E%3C/svg%3E"),
+    linear-gradient(180deg, var(--anod-hi), var(--anod) 45%, var(--anod-lo));
+  background-blend-mode: overlay, normal;
+}
+.cl-alback-sheen {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(calc(100deg + var(--lx, 0) * 30deg), transparent 30%, rgba(255, 255, 255, 0.14) 48%, transparent 66%);
+}
+.cl-alback-logo {
+  position: absolute;
+  left: 50%;
+  top: 24%;
+  width: 26cqw;
+  translate: -50% 0;
+  /* the logo is polished, not anodized: brighter and glossy */
+  fill: color-mix(in srgb, var(--anod) 55%, #fff);
+  filter: drop-shadow(0 -0.5px 0 rgba(0, 0, 0, 0.15));
+}
+.cl-alback-dark .cl-alback-logo {
+  fill: color-mix(in srgb, var(--anod) 60%, #9a9ca2);
+}
+.cl-alback-wordmark {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 52%;
+  text-align: center;
+  font-size: 10cqw;
+  font-weight: 300;
+  letter-spacing: -0.02em;
+  color: color-mix(in srgb, var(--anod) 60%, #fff);
+}
+.cl-alback-dark .cl-alback-wordmark {
+  color: color-mix(in srgb, var(--anod) 55%, #a8aab0);
+}
+.cl-alback-engraving {
+  top: 64%;
+  left: 8%;
+  right: 8%;
+  font-size: 3.8cqw;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.72);
+  text-shadow: 0 -0.5px 0 rgba(0, 0, 0, 0.2);
+}
+.cl-alback-print {
+  bottom: 6%;
+  font-size: 2.1cqw;
+  line-height: 1.5;
+  color: color-mix(in srgb, var(--anod) 50%, #000);
+  text-shadow: none;
+}
+.cl-alback-dark .cl-alback-print {
+  color: color-mix(in srgb, var(--anod) 40%, #fff);
+}
+
+/* the mini's plastic end caps, over its top and bottom */
+.cl-endcap {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0) 45%, rgba(0, 0, 0, 0.12)),
+    var(--cap);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+}

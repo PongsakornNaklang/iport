@@ -14,10 +14,10 @@ import { useSettings } from '../../core/settings/store';
 import { ClickWheel } from '../shared/clickwheel/ClickWheel';
 import { WheelBus } from '../shared/clickwheel/bus';
 import { useWheelKeyboard } from '../shared/clickwheel/useWheelKeyboard';
-import type { DeviceProps } from '../types';
+import { CLASSIC_LAYOUT, type DeviceProps } from '../types';
 import { ClickWheelOS } from './os/ClickWheelOS';
 import type { DeviceInfo, OSCaps, ThemeName } from './os/core';
-import { ClassicBack } from './Back';
+import { AluminiumBack, ClassicBack } from './Back';
 import { luminance, shade } from './color';
 import './hardware.css';
 
@@ -35,12 +35,20 @@ export interface ClickWheelSpec {
   /** model number on the back ("A1238", and anything after it on that line) */
   modelNo: string;
   caps?: Partial<OSCaps>;
+  /**
+   * The body. 'steel': a front plate on a mirror steel back that curves in
+   * (classic, 5th generation). 'aluminium': one anodized piece whose sides
+   * round over into the front and back (mini, nano), `round` px deep.
+   */
+  body?: { kind: 'steel' } | { kind: 'aluminium'; round: number };
+  /** a monochrome LCD (the mini's grey-blue one) */
+  mono?: boolean;
+  /** the product name on the back under the Apple logo */
+  wordmark?: string;
+  /** plastic caps over the top and bottom ends (the mini's) */
+  endCaps?: boolean;
 }
 
-const RADIUS = 42;
-const WINDOW = { w: 336, h: 256, top: 38 };
-const LCD = { w: 320, h: 240 };
-const WHEEL = { size: 236, center: 92, cy: 471 };
 const SEAM_T = 0.03;
 /** how far the steel back curves in at the back face */
 const CURVE = 15;
@@ -86,6 +94,19 @@ function steelColor(u: number, material: string, back: string): string {
 
 export function ClickWheelIpod({ model, appearance, spec }: DeviceProps & { spec: ClickWheelSpec }) {
   const FRONT_T = spec.frontT;
+  const L = model.clickWheel ?? CLASSIC_LAYOUT;
+  const RADIUS = L.radius;
+  const WINDOW = L.window;
+  const LCD = L.lcd;
+  const WHEEL = L.wheel;
+  const body = spec.body ?? { kind: 'steel' };
+  const alu = body.kind === 'aluminium';
+  /** aluminium: how far the rounded side is pulled in at depth t (0 front … 1 back) */
+  const roundInset = (t: number) => {
+    if (!alu) return 0;
+    const s = Math.min(0.96, Math.abs(2 * t - 1));
+    return body.round * (1 - Math.sqrt(1 - s * s));
+  };
   const gloss = spec.finish === 'gloss';
   const { width: W, height: H, depth: D } = model.size;
   const colors = appearance.colors;
@@ -116,6 +137,17 @@ export function ClickWheelIpod({ model, appearance, spec }: DeviceProps & { spec
       ? `linear-gradient(90deg, ${shade(front, -0.2)} 0%, ${shade(front, 0)} 16%, ${shade(front, 0.16)} 42%, ${shade(front, 0.05)} 58%, ${shade(front, -0.04)} 84%, ${shade(front, -0.22)} 100%)`
       : `linear-gradient(90deg, ${shade(front, -0.16)} 0%, ${shade(front, -0.02)} 18%, ${shade(front, 0.04)} 50%, ${shade(front, -0.03)} 82%, ${shade(front, -0.18)} 100%)`;
     const chamfer = `linear-gradient(90deg, ${shade(front, 0.02)}, ${shade(front, 0.2)} 50%, ${shade(front, 0.02)})`;
+    // one anodized piece: the side faces out in the middle and turns towards front and back
+    if (alu)
+      return (t: number): EdgeSlice => {
+        const s = 2 * t - 1;
+        const lit = 0.07 - 0.1 * s - 0.16 * s * s; // light from the front, falling off round the curve
+        const c = shade(front, lit);
+        return {
+          color: `linear-gradient(90deg, ${shade(front, lit - 0.16)} 0%, ${c} 15%, ${shade(front, lit + 0.05)} 50%, ${c} 85%, ${shade(front, lit - 0.18)} 100%)`,
+          inset: roundInset(t),
+        };
+      };
     return (t: number): EdgeSlice => {
       if (t < FRONT_T) {
         const k = t / FRONT_T;
@@ -125,16 +157,18 @@ export function ClickWheelIpod({ model, appearance, spec }: DeviceProps & { spec
       const u = (t - FRONT_T - SEAM_T) / (1 - FRONT_T - SEAM_T);
       return { color: steelColor(u, material, backColor), inset: steelInset(u) };
     };
-  }, [front, material, backColor, gloss, FRONT_T]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [front, material, backColor, gloss, FRONT_T, alu, alu && body.round]);
 
-  const backInset = steelInset(1);
+  const backInset = alu ? roundInset(1) : steelInset(1);
+  const frontInset = alu ? roundInset(0) : 0;
   const winLeft = (W - WINDOW.w) / 2;
   const wheelTop = WHEEL.cy - WHEEL.size / 2;
   const wheelLeft = (W - WHEEL.size) / 2;
 
   // vertical position helpers for edge parts (z: + towards the front)
   const zAt = (t: number) => D / 2 - t * D;
-  const insetAt = (t: number) => (t < FRONT_T + SEAM_T ? 0 : steelInset((t - FRONT_T - SEAM_T) / (1 - FRONT_T - SEAM_T)));
+  const insetAt = (t: number) => (alu ? roundInset(t) : t < FRONT_T + SEAM_T ? 0 : steelInset((t - FRONT_T - SEAM_T) / (1 - FRONT_T - SEAM_T)));
   // How steeply the edge curves in towards the back at depth t (degrees);
   // parts on the edge are tilted to match.
   const slopeAt = (t: number) => (Math.atan((insetAt(t + 0.01) - insetAt(t - 0.01)) / (0.02 * D)) * 180) / Math.PI;
@@ -157,7 +191,7 @@ export function ClickWheelIpod({ model, appearance, spec }: DeviceProps & { spec
   const holdX = spec.holdX;
   const jackTop = spec.jack.side === 'top';
   const knobX = holdX + (hold ? 11 : -11);
-  const steelKnob = material === 'painted' ? shade(backColor, 0.05) : '#b6b9be';
+  const steelKnob = alu ? '#c9cbcf' : material === 'painted' ? shade(backColor, 0.05) : '#b6b9be';
 
   return (
     <Device3D
@@ -168,8 +202,9 @@ export function ClickWheelIpod({ model, appearance, spec }: DeviceProps & { spec
       under={<BodyExtras />}
       over={<BodyExtras after />}
       edge={edge}
-      breaks={[FRONT_T * 0.2, FRONT_T, FRONT_T + SEAM_T]}
+      breaks={alu ? undefined : [FRONT_T * 0.2, FRONT_T, FRONT_T + SEAM_T]}
       backInset={backInset}
+      frontInset={frontInset}
       frontStyle={frontStyle}
       className="cl-device"
       front={
@@ -177,7 +212,17 @@ export function ClickWheelIpod({ model, appearance, spec }: DeviceProps & { spec
           <div className="cl-front-sheen" />
           <div className="cl-window" style={{ left: winLeft, top: WINDOW.top, width: WINDOW.w, height: WINDOW.h }}>
             <div className="cl-lcd" style={{ left: (WINDOW.w - LCD.w) / 2, top: (WINDOW.h - LCD.h) / 2, width: LCD.w, height: LCD.h }}>
-              <ClickWheelOS bus={bus} width={LCD.w} height={LCD.h} theme={theme} hold={hold} modelId={model.id} info={info} caps={spec.caps} />
+              <ClickWheelOS
+                bus={bus}
+                width={LCD.w}
+                height={LCD.h}
+                color={!spec.mono}
+                theme={theme}
+                hold={hold}
+                modelId={model.id}
+                info={info}
+                caps={spec.caps}
+              />
             </div>
             <div className="cl-glass" />
           </div>
@@ -197,7 +242,18 @@ export function ClickWheelIpod({ model, appearance, spec }: DeviceProps & { spec
         </div>
       }
       back={
-        <ClassicBack
+        alu ? (
+          <AluminiumBack
+            color={colors.back ?? front}
+            wordmark={spec.wordmark ?? 'iPod'}
+            engraving={appearance.engraving}
+            decals={appearance.decals}
+            capacity={info.capacity}
+            model={info.model}
+            modelNo={spec.modelNo}
+          />
+        ) : (
+          <ClassicBack
           material={material}
           color={backColor}
           engraving={appearance.engraving}
@@ -205,7 +261,8 @@ export function ClickWheelIpod({ model, appearance, spec }: DeviceProps & { spec
           capacity={info.capacity}
           model={info.model}
           modelNo={spec.modelNo}
-        />
+          />
+        )
       }
       decals={
         <>
@@ -227,8 +284,15 @@ export function ClickWheelIpod({ model, appearance, spec }: DeviceProps & { spec
           >
             <div className="cl-jack" />
           </EdgePlane>
+          {/* ---- the mini's plastic end caps ---- */}
+          {spec.endCaps &&
+            (['top', 'bottom'] as const).map((side) => (
+              <EdgePlane key={side} x={0} y={side === 'top' ? -H / 2 - 0.2 : H / 2 + 0.2} z={0} w={W - 2 * RADIUS * 0.6} h={D * 0.72} side={side}>
+                <div className="cl-endcap" style={{ ['--cap' as string]: colors.caps ?? shade(front, -0.05) } as CSSProperties} />
+              </EdgePlane>
+            ))}
           {/* ---- bottom edge: dock connector ---- */}
-          <EdgePlane x={0} y={H / 2 - port.inset} z={port.z} w={136} h={20} side="bottom" tilt={port.tilt}>
+          <EdgePlane x={0} y={H / 2 - port.inset} z={port.z} w={L.dockW} h={20} side="bottom" tilt={port.tilt}>
             <div className="cl-dock">
               <div className="cl-dock-pins" />
             </div>

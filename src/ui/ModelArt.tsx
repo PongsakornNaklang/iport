@@ -4,7 +4,7 @@
  * their real sizes next to each other.
  */
 import { useId } from 'react';
-import type { Appearance, DeviceModel } from '../devices/types';
+import { CLASSIC_LAYOUT, type Appearance, type DeviceModel } from '../devices/types';
 
 const ICONS = ['#34c759', '#0a84ff', '#ff9f0a', '#ff375f', '#5e5ce6', '#ffd60a', '#30b0c7', '#bf5af2', '#ff453a', '#64d2ff', '#a2845e', '#8e8e93'];
 const THEMES: Record<string, string> = { classic: '#3d7fd6', graphite: '#6c7177', red: '#c4262e', green: '#3f9a49' };
@@ -87,41 +87,61 @@ export function ModelArt({ model, appearance, height }: { model: DeviceModel; ap
       </>
     );
   } else {
+    // a Click Wheel iPod: its own screen window and wheel (registry `clickWheel`)
+    const L = model.clickWheel ?? CLASSIC_LAYOUT;
     const cx = W / 2;
-    const wy = 474;
-    const theme = THEMES[String(o.theme)] ?? THEMES.classic;
-    const lx = (W - 320) / 2;
-    const ly = 44;
+    const wy = L.wheel.cy;
+    const r = L.wheel.size / 2;
+    const rc = L.wheel.center / 2;
+    const mono = model.id === 'mini2';
+    const theme = mono ? '#3b4650' : (THEMES[String(o.theme)] ?? THEMES.classic);
+    const lw = L.lcd.w;
+    const lh = L.lcd.h;
+    const lx = (W - lw) / 2;
+    const ly = L.window.top + (L.window.h - lh) / 2;
+    const rowH = lh / 9;
+    const portrait = lh > lw;
+    const k = r / 118; // label size, relative to the classic's wheel
     art = (
       <>
-        {body(42, c.front)}
-        <rect x={lx - 8} y={ly - 8} width={336} height={256} rx={6} fill="#0c0d10" />
-        <rect x={lx} y={ly} width={320} height={240} fill="#f4f6f9" />
-        <rect x={lx} y={ly} width={320} height={24} fill="#e4e7ec" />
-        <rect x={lx} y={ly + 24} width={160} height={30} fill={theme} />
+        {body(L.radius, c.front)}
+        <rect x={(W - L.window.w) / 2} y={L.window.top} width={L.window.w} height={L.window.h} rx={6} fill="#0c0d10" />
+        <rect x={lx} y={ly} width={lw} height={lh} fill={mono ? '#b9c6c9' : '#f4f6f9'} />
+        <rect x={lx} y={ly} width={lw} height={rowH} fill={mono ? '#a4b2b6' : '#e4e7ec'} />
+        <rect x={lx} y={ly + rowH} width={portrait || mono ? lw : lw / 2} height={rowH * 1.2} fill={theme} />
         {[0, 1, 2, 3, 4, 5].map((i) => (
-          <rect key={i} x={lx + 10} y={ly + 36 + (i + 1) * 30} width={90 - (i % 3) * 18} height={8} rx={4} fill="#b7bcc4" />
+          <rect
+            key={i}
+            x={lx + lw * 0.04}
+            y={ly + rowH * (2.6 + i * 1.05)}
+            width={(portrait || mono ? lw * 0.5 : lw * 0.28) * (1 - (i % 3) * 0.2)}
+            height={rowH * 0.32}
+            rx={rowH * 0.16}
+            fill={mono ? '#5d6a70' : '#b7bcc4'}
+          />
         ))}
-        <rect x={lx + 160} y={ly + 24} width={160} height={216} fill={`url(#${screen})`} />
-        <circle cx={cx} cy={wy} r={130} fill={c.wheel} stroke="rgba(0,0,0,0.14)" strokeWidth={2} />
-        <circle cx={cx} cy={wy} r={50} fill={c.center} stroke="rgba(0,0,0,0.16)" strokeWidth={2} />
-        <text
-          x={cx}
-          y={wy - 86}
-          textAnchor="middle"
-          fontSize={22}
-          fontWeight={700}
-          letterSpacing={2}
-          fill={c.labels}
-          fontFamily="Helvetica Neue, Helvetica, Arial, sans-serif"
-        >
-          MENU
-        </text>
-        <path
-          d={`M${cx + 84} ${wy - 10}l12 10-12 10zM${cx + 96} ${wy - 10}l12 10-12 10zM${cx + 108} ${wy - 10}h4v20h-4z M${cx - 84} ${wy - 10}l-12 10 12 10zM${cx - 96} ${wy - 10}l-12 10 12 10zM${cx - 108} ${wy - 10}h-4v20h4z M${cx - 14} ${wy + 80}l14 10-14 10zM${cx + 4} ${wy + 80}h4v20h-4zM${cx + 12} ${wy + 80}h4v20h-4z`}
-          fill={c.labels}
-        />
-        {gloss(42)}
+        {!portrait && !mono && <rect x={lx + lw / 2} y={ly + rowH} width={lw / 2} height={lh - rowH} fill={`url(#${screen})`} />}
+        <circle cx={cx} cy={wy} r={r} fill={c.wheel} stroke="rgba(0,0,0,0.14)" strokeWidth={2} />
+        <circle cx={cx} cy={wy} r={rc} fill={c.center} stroke="rgba(0,0,0,0.16)" strokeWidth={2} />
+        <g transform={`translate(${cx} ${wy}) scale(${k}) translate(${-cx} ${-wy})`}>
+          <text
+            x={cx}
+            y={wy - 86}
+            textAnchor="middle"
+            fontSize={22}
+            fontWeight={700}
+            letterSpacing={2}
+            fill={c.labels}
+            fontFamily="Helvetica Neue, Helvetica, Arial, sans-serif"
+          >
+            MENU
+          </text>
+          <path
+            d={`M${cx + 84} ${wy - 10}l12 10-12 10zM${cx + 96} ${wy - 10}l12 10-12 10zM${cx + 108} ${wy - 10}h4v20h-4z M${cx - 84} ${wy - 10}l-12 10 12 10zM${cx - 96} ${wy - 10}l-12 10 12 10zM${cx - 108} ${wy - 10}h-4v20h4z M${cx - 14} ${wy + 80}l14 10-14 10zM${cx + 4} ${wy + 80}h4v20h-4zM${cx + 12} ${wy + 80}h4v20h-4z`}
+            fill={c.labels}
+          />
+        </g>
+        {gloss(L.radius)}
       </>
     );
   }

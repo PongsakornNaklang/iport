@@ -21,6 +21,18 @@ The running app shows its version and build in the Help panel (?).
   top, so the EarPods plug in there (an iPod Sock leaves them free); the
   Click Wheel software from before Cover Flow and Genius, with the plain
   full-width main menu. Cases, socks, stickers and engraving all fit it.
+- iPod nano (4th generation, 2008), the "nano-chromatic": one piece of
+  curved anodized aluminium in nine colours, a tall 240 × 320 screen, the
+  Hold switch on top and the headphone jack beside the dock connector.
+- iPod mini (2nd generation, 2005): a tube of anodized aluminium with
+  rounded sides and end caps in silver, pink, blue, green (and the first
+  generation's gold), Click Wheel labels in the body's colour, the
+  grey-blue monochrome screen and music-only menus; headphone jack and
+  Hold switch on top.
+- The model chooser is a carousel on every screen: on a computer about five
+  iPods across, with arrows, page dots, the wheel or a drag to move along.
+  Only the iPod in the middle and its neighbours are live 3D; the rest are
+  pictures, so it stays light with seven iPods.
 
 ### Changed
 - A new model chooser: click the iPod's name and every iPod floats up on

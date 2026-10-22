@@ -228,6 +228,65 @@ export const MODELS: DeviceModel[] = [
     load: () => import('./classic'),
   },
   {
+    id: 'nano4',
+    name: 'iPod nano',
+    generation: '4th generation · 8GB',
+    year: 2008,
+    blurb: 'The "nano-chromatic": nine colours of curved aluminium, a tall screen that turns with you.',
+    family: 'clickwheel',
+    // 38.7 × 90.7 × 6.2 mm @ 7.87 px/mm (240 × 320 screen, held upright)
+    size: { width: 305, height: 714, depth: 49 },
+    colorSlots: [
+      { key: 'front', label: 'Aluminium' },
+      { key: 'wheel', label: 'Click Wheel' },
+      { key: 'labels', label: 'Wheel labels' },
+      { key: 'center', label: 'Center button' },
+    ],
+    options: [
+      {
+        key: 'theme',
+        label: 'Screen theme',
+        type: 'select',
+        choices: [
+          { value: 'classic', label: 'Classic blue' },
+          { value: 'graphite', label: 'Graphite' },
+          { value: 'red', label: 'Red' },
+          { value: 'green', label: 'Green' },
+        ],
+      },
+    ],
+    finishes: [
+      { id: 'silver', name: 'Silver', swatch: '#d6d8db', colors: { front: '#d6d8db', wheel: '#f7f7f7', labels: '#a9abb0', center: '#f2f2f2' } },
+      { id: 'black', name: 'Black', swatch: '#2a2a2c', colors: { front: '#2a2a2c', wheel: '#1d1d1f', labels: '#8e9095', center: '#1d1d1f' } },
+      { id: 'purple', name: 'Purple', swatch: '#8b5db8', colors: { front: '#8b5db8', wheel: '#f7f7f7', labels: '#a9abb0', center: '#f2f2f2' } },
+      { id: 'blue', name: 'Blue', swatch: '#2f7fd0', colors: { front: '#2f7fd0', wheel: '#f7f7f7', labels: '#a9abb0', center: '#f2f2f2' } },
+      { id: 'green', name: 'Green', swatch: '#79b83a', colors: { front: '#79b83a', wheel: '#f7f7f7', labels: '#a9abb0', center: '#f2f2f2' } },
+      { id: 'yellow', name: 'Yellow', swatch: '#f0cf3a', colors: { front: '#f0cf3a', wheel: '#f7f7f7', labels: '#a9abb0', center: '#f2f2f2' } },
+      { id: 'orange', name: 'Orange', swatch: '#ee8a2c', colors: { front: '#ee8a2c', wheel: '#f7f7f7', labels: '#a9abb0', center: '#f2f2f2' } },
+      { id: 'pink', name: 'Pink', swatch: '#ea7fae', colors: { front: '#ea7fae', wheel: '#f7f7f7', labels: '#a9abb0', center: '#f2f2f2' } },
+      { id: 'red', name: '(PRODUCT)RED', swatch: '#c3172e', colors: { front: '#c3172e', wheel: '#f7f7f7', labels: '#a9abb0', center: '#f2f2f2' } },
+    ],
+    engravable: true,
+    clickWheel: {
+      radius: 46,
+      window: { w: 256, h: 336, top: 34 },
+      lcd: { w: 240, h: 320 },
+      wheel: { size: 230, center: 90, cy: 542 },
+      dockW: 150,
+    },
+    jack: { x: -96, y: 357, z: 0, ny: 1, pxPerMm: 7.87 },
+    cover: {
+      radius: 46,
+      cases: true,
+      holes: [
+        { side: 'top', at: 80, len: 40, thick: 16 }, // Hold switch
+        { side: 'bottom', at: -96, len: 34, thick: 30 }, // headphone jack
+        { side: 'bottom', at: 0, len: 160, thick: 22 }, // dock connector
+      ],
+    },
+    load: () => import('./nano4'),
+  },
+  {
     id: 'video5',
     name: 'iPod video',
     generation: '5th generation · 30GB',
@@ -301,6 +360,50 @@ export const MODELS: DeviceModel[] = [
       ],
     },
     load: () => import('./video5'),
+  },
+  {
+    id: 'mini2',
+    name: 'iPod mini',
+    generation: '2nd generation · 6GB',
+    year: 2005,
+    blurb: 'Anodized aluminium in bright colours, with the Click Wheel that started it all.',
+    family: 'clickwheel',
+    // 50.8 × 91 × 13 mm @ 8.14 px/mm (its 138 × 110 screen, drawn at twice the size)
+    size: { width: 415, height: 741, depth: 106 },
+    colorSlots: [
+      { key: 'front', label: 'Aluminium' },
+      { key: 'wheel', label: 'Click Wheel' },
+      { key: 'labels', label: 'Wheel labels' },
+      { key: 'center', label: 'Center button' },
+      { key: 'caps', label: 'End caps' },
+    ],
+    options: [],
+    finishes: [
+      { id: 'silver', name: 'Silver', swatch: '#d2d4d7', colors: { front: '#d2d4d7', wheel: '#eeeff0', labels: '#a6a9ae', center: '#e4e5e7', caps: '#c4c6ca' } },
+      { id: 'pink', name: 'Pink', swatch: '#f0a6c2', colors: { front: '#f0a6c2', wheel: '#f1eff0', labels: '#e88db0', center: '#ece8ea', caps: '#e7a2bd' } },
+      { id: 'blue', name: 'Blue', swatch: '#74b7e4', colors: { front: '#74b7e4', wheel: '#eef1f3', labels: '#5ea8db', center: '#e6eaed', caps: '#6eaedb' } },
+      { id: 'green', name: 'Green', swatch: '#a6d168', colors: { front: '#a6d168', wheel: '#eff2eb', labels: '#8fc24f', center: '#e7ebe2', caps: '#9ec862' } },
+      { id: 'gold', name: 'Gold (2004)', swatch: '#e3cf9a', colors: { front: '#e3cf9a', wheel: '#efede7', labels: '#cdb57a', center: '#e8e5dc', caps: '#d8c38e' } },
+    ],
+    engravable: true,
+    clickWheel: {
+      radius: 60,
+      window: { w: 300, h: 244, top: 66 },
+      lcd: { w: 276, h: 220 },
+      wheel: { size: 268, center: 104, cy: 532 },
+      dockW: 140,
+    },
+    jack: { x: -120, y: -370.5, z: 0, ny: -1, pxPerMm: 8.14 },
+    cover: {
+      radius: 60,
+      cases: true,
+      holes: [
+        { side: 'top', at: -120, len: 40, thick: 40 }, // headphone jack and remote connector
+        { side: 'top', at: 118, len: 50, thick: 26 }, // Hold switch
+        { side: 'bottom', at: 0, len: 156, thick: 30 }, // dock connector
+      ],
+    },
+    load: () => import('./mini2'),
   },
 ];
 

@@ -114,6 +114,27 @@ export interface DeviceModel {
   jack?: { x: number; y: number; z: number; ny: 1 | -1; pxPerMm: number };
   /** How cases and iPod Socks fit (see shell/cover). */
   cover?: CoverFit;
+  /** Click Wheel iPods: where the screen and the wheel are on the front (default: the classic's) */
+  clickWheel?: ClickWheelLayout;
   /** Lazy-loaded device implementation. */
   load: () => Promise<{ default: ComponentType<DeviceProps> }>;
 }
+
+/** The front of a Click Wheel iPod, in device px. */
+export interface ClickWheelLayout {
+  radius: number;
+  /** the screen's window in the front, and the LCD inside it */
+  window: { w: number; h: number; top: number };
+  lcd: { w: number; h: number };
+  wheel: { size: number; center: number; cy: number };
+  /** dock connector width on the bottom edge */
+  dockW: number;
+}
+
+export const CLASSIC_LAYOUT: ClickWheelLayout = {
+  radius: 42,
+  window: { w: 336, h: 256, top: 38 },
+  lcd: { w: 320, h: 240 },
+  wheel: { size: 236, center: 92, cy: 471 },
+  dockW: 136,
+};
