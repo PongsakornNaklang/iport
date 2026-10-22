@@ -112,3 +112,30 @@
   backface-visibility: visible;
   -webkit-backface-visibility: visible;
 }
+
+/* ------------------------------------------------------------------ clear */
+/*
+ * See-through: only the outside surface shows (the far wall seen from inside
+ * would double the tint), and the faces are mostly glass with a sheen.
+ */
+.cv-clear .d3-facet,
+.cv-clear .d3-facet i,
+.cv-clear .d3-face {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+.cv-clear .cv-tex,
+.cv-clear .cv-ring {
+  background:
+    linear-gradient(118deg, rgba(255, 255, 255, 0.38) 0 18%, rgba(255, 255, 255, 0.04) 34%, transparent 60%, rgba(255, 255, 255, 0.12) 82%) border-box,
+    color-mix(in srgb, color-mix(in srgb, var(--cv) 55%, #66707c) 12%, transparent) border-box;
+}
+.cv-clear .cv-ring {
+  background-color: color-mix(in srgb, color-mix(in srgb, var(--cv) 55%, #66707c) 30%, transparent);
+}
+.cv-clear .cv-fill {
+  box-shadow: inset 0 0 0 calc(var(--mm) * 0.3) rgba(255, 255, 255, 0.45);
+}
+.cv-clear .cv-stitch {
+  display: none;
+}

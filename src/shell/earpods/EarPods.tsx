@@ -617,32 +617,44 @@ function tracePath(g: CanvasRenderingContext2D, r: Rope) {
   g.lineTo(l.x, l.y);
 }
 
+/**
+ * Matte white rubber, shaded as a round tube: a little greyer towards the
+ * sides and brightest along the middle, with no outline (a dark rim makes
+ * it look drawn rather than real). Width fraction → color, outside in.
+ */
+const CABLE_SHADES: [number, string][] = [
+  [1, '#d3d4d8'],
+  [0.9, '#dcdde1'],
+  [0.78, '#e5e6e9'],
+  [0.64, '#edeef0'],
+  [0.48, '#f4f4f6'],
+  [0.3, '#fafafb'],
+];
+
 function drawCable(g: CanvasRenderingContext2D, r: Rope, w: number) {
   const width = Math.max(1.6, w);
   g.save();
   g.lineCap = 'round';
   g.lineJoin = 'round';
-  // soft contact shadow so the white cable reads on a white backdrop
-  g.shadowColor = 'rgba(0,0,0,0.16)';
-  g.shadowBlur = Math.max(3, width * 1.4);
-  g.shadowOffsetY = Math.max(2, width * 0.7);
   tracePath(g, r);
-  g.strokeStyle = '#cfd0d5';
-  g.lineWidth = width + 1;
-  g.stroke();
-  g.restore();
-  g.save();
-  g.lineCap = 'round';
-  g.lineJoin = 'round';
+  CABLE_SHADES.forEach(([k, color], i) => {
+    if (i === 0) {
+      // soft contact shadow so the white cable reads on a white backdrop
+      g.shadowColor = 'rgba(0,0,0,0.14)';
+      g.shadowBlur = Math.max(3, width * 1.4);
+      g.shadowOffsetY = Math.max(2, width * 0.7);
+    } else if (i === 1) {
+      g.shadowColor = 'transparent';
+    }
+    g.strokeStyle = color;
+    g.lineWidth = width * k;
+    g.stroke();
+  });
+  // a faint sheen, lit from the top left
+  g.translate(-width * 0.08, -width * 0.08);
   tracePath(g, r);
-  g.strokeStyle = '#f7f7f8';
-  g.lineWidth = width * 0.82;
-  g.stroke();
-  // specular line
-  g.translate(-width * 0.12, -width * 0.12);
-  tracePath(g, r);
-  g.strokeStyle = 'rgba(255,255,255,0.95)';
-  g.lineWidth = Math.max(0.6, width * 0.26);
+  g.strokeStyle = 'rgba(255,255,255,0.7)';
+  g.lineWidth = Math.max(0.5, width * 0.16);
   g.stroke();
   g.restore();
 }

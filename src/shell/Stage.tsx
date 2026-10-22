@@ -26,7 +26,9 @@ const TOP_BAR = 64;
 const BOTTOM_BAR = 76;
 const SIDE_BAR = 68;
 const WIDE = 720;
-const barsFor = (width: number) => (width > WIDE ? { bottom: 28, right: SIDE_BAR } : { bottom: BOTTOM_BAR, right: 0 });
+/** with a mouse the side controls hide off the edge until wanted (ViewControls.tsx), so they need no room */
+const hoverable = () => typeof window !== 'undefined' && !!window.matchMedia?.('(hover: hover)').matches;
+const barsFor = (width: number) => (width > WIDE ? { bottom: 28, right: hoverable() ? 0 : SIDE_BAR } : { bottom: BOTTOM_BAR, right: 0 });
 
 
 /**

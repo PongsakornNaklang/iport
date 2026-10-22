@@ -33,7 +33,7 @@ export interface Appearance {
   cover?: CoverChoice;
 }
 
-export type CoverKind = 'none' | 'silicone' | 'leather' | 'sock';
+export type CoverKind = 'none' | 'silicone' | 'leather' | 'clear' | 'sock';
 
 export interface CoverChoice {
   kind: CoverKind;

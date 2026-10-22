@@ -39,21 +39,26 @@ export function Cover({ info }: { info: CoverInfo }) {
   const color = choice.color;
   const g = useMemo(() => coverGeometry(fit, kind, pxPerMm, size, jackNy), [fit, kind, pxPerMm, size, jackNy]);
   const sock = kind === 'sock';
+  const clear = kind === 'clear';
 
   // The sides: lit from the top left, a little darker towards the back.
-  // A sock's are knitted too.
+  // Plain shading only: an image here (the knit) is drawn stretched over
+  // each piece, and where a piece also has a hole masked out of it that
+  // costs seconds per frame.
   const edge = useMemo(() => {
-    const knit = `${KNIT} 0 0 / ${STITCH_MM[0] * pxPerMm}px ${STITCH_MM[1] * pxPerMm}px, `;
+    // Clear polycarbonate: mostly see-through, catching the light along its edges.
+    // A little grey, so even a colorless case shows its edges where they refract.
+    const glass = (pct: number) => `color-mix(in srgb, color-mix(in srgb, ${color} 55%, #66707c) ${pct}%, transparent)`;
     const tones = Array.from({ length: 5 }, (_, i) => {
+      if (clear) return `linear-gradient(150deg, rgba(255,255,255,0.55), ${glass(18 + i * 3)} 45%, ${glass(30 + i * 3)})`;
       const dark = 4 + i * 4;
-      const shade = `linear-gradient(150deg, ${mix(color, '#fff', sock ? 10 : 14)}, ${mix(color, '#000', dark)} 55%, ${mix(color, '#000', dark + 14)})`;
-      return sock ? knit + shade : shade;
+      return `linear-gradient(150deg, ${mix(color, '#fff', sock ? 10 : 14)}, ${mix(color, '#000', dark)} 55%, ${mix(color, '#000', dark + 14)})`;
     });
     return (u: number): EdgeSlice => ({
       inset: roundedInset(u, g.d, g.round),
       color: tones[Math.min(4, Math.floor(u * 5))],
     });
-  }, [color, sock, g, pxPerMm]);
+  }, [color, sock, clear, g]);
 
   const facetMask = useCallback(
     (fa: Facet) => {

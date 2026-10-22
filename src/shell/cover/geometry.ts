@@ -73,7 +73,7 @@ export function coverGeometry(fit: CoverFit, kind: Exclude<CoverKind, 'none'>, p
       t,
       radius: fit.radius + t + 0.5 * pxPerMm,
       // soft and plump: the edge rounds over most of the depth
-      round: Math.min(t * 3.2, d * 0.48),
+      round: Math.min(t * 3.2, d * 0.48, (fit.radius + t) * 0.6),
       lip: 0,
       mouth,
       holes: [],

@@ -47,7 +47,8 @@ just like a real iPod.
 ### Real 3D
 
 Drag the background to spin the iPod, scroll to zoom, or use Front, Back, Side
-and 360° on the right edge of the window (along the bottom on phones).
+and 360°: move the pointer to the right edge of the window and they slide in
+(along the bottom on phones).
 
 ![iPod classic seen at an angle, showing its thickness and edges](docs/screenshots/classic-side.png)
 

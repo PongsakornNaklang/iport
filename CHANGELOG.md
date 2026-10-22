@@ -21,8 +21,15 @@ The running app shows its version and build in the Help panel (?).
   of Apple's 2004 set or any color you pick; the iPod's end shows through the
   sock's opening. The buttons and screen still work through either. Presets
   and share links keep the case.
+- A clear case (clear, smoke, ice blue or rose) for the iPod touch, nano and
+  classic: the iPod shows through it.
 
 ### Changed
+- With a mouse, the view controls wait off the right edge of the window and
+  slide in when the pointer comes near it (a thin grip marks the spot), so
+  the iPod gets the whole window.
+- The EarPods cable is shaded as round matte rubber instead of a white line
+  with a grey outline.
 - Panel tabs (Customize, Library) have a white thumb that slides to the
   chosen tab, and clicking a tab no longer leaves a focus ring on it.
 - Scrollbars in panels and menus are thin and light instead of the system's

@@ -159,6 +159,12 @@ const COVER_COLORS: Record<Exclude<CoverKind, 'none'>, { name: string; color: st
     { name: 'Lavender', color: '#b7a5d6' },
     { name: 'Yellow', color: '#f1d24a' },
   ],
+  clear: [
+    { name: 'Clear', color: '#f4f6f8' },
+    { name: 'Smoke', color: '#3a3b3f' },
+    { name: 'Ice Blue', color: '#8fc8f2' },
+    { name: 'Rose', color: '#f2a7bd' },
+  ],
   leather: [
     { name: 'Saddle Brown', color: '#8a5a34' },
     { name: 'Tan', color: '#be8a57' },
@@ -185,8 +191,14 @@ function CoverSection({ model }: { model: DeviceModel }) {
   const current = kind === 'none' || (kind !== 'sock' && !cases) ? 'none' : kind;
   const items = [
     { id: 'none' as const, label: 'None' },
-    ...(cases ? [{ id: 'silicone' as const, label: 'Silicone' }, { id: 'leather' as const, label: 'Leather' }] : []),
-    { id: 'sock' as const, label: 'iPod Socks' },
+    ...(cases
+      ? [
+          { id: 'silicone' as const, label: 'Silicone' },
+          { id: 'leather' as const, label: 'Leather' },
+          { id: 'clear' as const, label: 'Clear' },
+        ]
+      : []),
+    { id: 'sock' as const, label: 'Socks' },
   ];
   const palette = current === 'none' ? [] : COVER_COLORS[current];
   const color = a.cover?.color ?? '#888888';

@@ -238,7 +238,7 @@ export const useCustomize = create<CustomizeState>()(
   ),
 );
 
-const COVER_KINDS = ['none', 'silicone', 'leather', 'sock'];
+const COVER_KINDS = ['none', 'silicone', 'leather', 'clear', 'sock'];
 
 /** A cover from a preset or a share link, if it is one we know. */
 function validCover(c: unknown): CoverChoice | undefined {
