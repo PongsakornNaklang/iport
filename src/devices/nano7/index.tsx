@@ -309,6 +309,7 @@ export default function IpodNano7({ appearance }: DeviceProps) {
       depth={D}
       radius={R}
       under={<BodyExtras />}
+      over={<BodyExtras after />}
       backInset={3.5}
       breaks={NANO_BREAKS}
       edge={(t) => {

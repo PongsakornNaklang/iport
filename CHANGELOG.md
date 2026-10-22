@@ -18,13 +18,16 @@ The running app shows its version and build in the Help panel (?).
 - Cases and iPod Socks, under Customize → Design. Silicone and leather cases
   fit the iPod touch, nano and classic, with cut-outs for the buttons, ports
   and the touch's camera. iPod Socks fit the same three, in the six colors
-  of Apple's 2004 set or any color you pick; the iPod's end shows through the
-  sock's opening. The buttons and screen still work through either. Presets
-  and share links keep the case.
+  of Apple's 2004 set or any color you pick, and look like Apple's: rib knit,
+  a lighter cuff, the woven Apple tag, and the iPod pulled a third of the
+  way out of the top with the empty toe hanging below. The buttons and
+  screen still work through either. Presets and share links keep the case.
 - A clear case (clear, smoke, ice blue or rose) for the iPod touch, nano and
   classic: the iPod shows through it.
 
 ### Changed
+- iPod touch: over the screen the pointer is a fingertip circle, as on the
+  nano.
 - With a mouse, the view controls wait off the right edge of the window and
   slide in when the pointer comes near it (a thin grip marks the spot), so
   the iPod gets the whole window.
@@ -39,6 +42,8 @@ The running app shows its version and build in the Help panel (?).
   for the iPod and its EarPods cable. Phones keep them along the bottom.
 
 ### Fixed
+- iPod touch: app cards in the app switcher have all four corners rounded
+  (the tab bar at the bottom of some apps showed square corners).
 - EarPods: in landscape (video on the iPod touch or nano) the plug stayed
   where the jack was before the iPod turned. It now follows the jack.
 - The sides of every iPod are now one continuous surface. Seen edge-on or

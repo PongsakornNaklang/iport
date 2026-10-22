@@ -6,11 +6,10 @@ import { coverGeometry, holeMask, holesOnFacet, roundedInset } from './geometry'
 const fitted = MODELS.filter((m) => m.cover && m.jack);
 
 describe('cover geometry', () => {
-  it('leaves room for the iPod inside every cover', () => {
-    for (const m of fitted) {
-      for (const kind of ['silicone', 'leather', 'sock'] as const) {
-        if (kind !== 'sock' && !m.cover!.cases) continue;
-        const g = coverGeometry(m.cover!, kind, m.jack!.pxPerMm, m.size, m.jack!.ny);
+  it('leaves room for the iPod inside every case', () => {
+    for (const m of fitted.filter((x) => x.cover!.cases)) {
+      for (const kind of ['silicone', 'leather', 'clear'] as const) {
+        const g = coverGeometry(m.cover!, kind, m.jack!.pxPerMm, m.size);
         expect(g.w).toBeGreaterThan(m.size.width);
         expect(g.h).toBeGreaterThan(m.size.height);
         expect(g.d).toBeGreaterThan(m.size.depth);
@@ -24,7 +23,7 @@ describe('cover geometry', () => {
 
   it('cuts every case hole into the facets of the wall it is on', () => {
     for (const m of fitted.filter((x) => x.cover!.cases)) {
-      const g = coverGeometry(m.cover!, 'silicone', m.jack!.pxPerMm, m.size, m.jack!.ny);
+      const g = coverGeometry(m.cover!, 'silicone', m.jack!.pxPerMm, m.size);
       const facets = buildShell(g.w, g.h, g.d, g.radius, (u) => ({ inset: roundedInset(u, g.d, g.round), color: '#000' }));
       for (const hole of g.holes) {
         const hit = facets.filter((fa) => holesOnFacet(fa, [hole]).length > 0);
@@ -35,14 +34,25 @@ describe('cover geometry', () => {
     }
   });
 
-  it('opens a sock at its headphone end', () => {
-    const touch = fitted.find((m) => m.id === 'touch7')!;
-    const g = coverGeometry(touch.cover!, 'sock', touch.jack!.pxPerMm, touch.size, 1);
-    expect(g.mouth).toBe('bottom');
-    expect(g.holes).toHaveLength(1);
-    expect(g.holes[0].n).toEqual([0, 1, 0]);
-    // the slack is at the closed end
-    expect(g.cy).toBeLessThan(0);
+  it('puts the iPod in a sock pulled a third of the way out, with the toe below', () => {
+    for (const m of fitted) {
+      const g = coverGeometry(m.cover!, 'sock', m.jack!.pxPerMm, m.size);
+      const s = g.sock!;
+      const H = m.size.height;
+      // opening a third of the way down, sleeve to just past the bottom
+      expect(s.mouth).toBeGreaterThan(-H / 2 + H * 0.25);
+      expect(s.mouth).toBeLessThan(0);
+      expect(s.sleeve.cy + s.sleeve.h / 2).toBeGreaterThan(H / 2);
+      // a narrower, flatter toe hanging below, tucked into the sleeve
+      expect(s.toe.w).toBeLessThan(s.sleeve.w);
+      expect(s.toe.d).toBeLessThan(s.sleeve.d);
+      expect(s.toe.cy - s.toe.h / 2).toBeLessThan(s.sleeve.cy + s.sleeve.h / 2);
+      // the sleeve holds the iPod: its rounded edge clears the body at the faces
+      const u = (s.sleeve.d / 2 - m.size.depth / 2) / s.sleeve.d;
+      expect(roundedInset(u, s.sleeve.d, s.sleeve.round)).toBeLessThan(g.t);
+      // the stage makes room for all of it
+      expect(g.bounds.height / 2).toBeGreaterThanOrEqual(s.toe.cy + s.toe.h / 2);
+    }
   });
 
   it('draws holes as cut-outs in an otherwise full mask', () => {

@@ -1,6 +1,12 @@
 /**
  * The shape of a case or an iPod Sock around a body, in device px.
  *
+ * Socks are three pieces, like Apple's: a sleeve around the iPod, open at
+ * the top with the iPod pulled a third of the way out; a ribbed cuff at the
+ * opening (part of the sleeve's faces); and below, an empty toe, narrower
+ * and flatter than the sleeve. A small woven Apple tag sticks out of the
+ * left seam.
+ *
  * A cover is a hollow rounded box around the device box (`DeviceModel.size`):
  * `w × h × d`, centred at (cx, cy, cz) relative to its centre (+z towards
  * the front). Its
@@ -8,11 +14,10 @@
  *
  *  - Cases leave the front open (all but a lip of `lip` px) and have holes
  *    for the buttons and ports.
- *  - Socks cover everything except their mouth, at the headphone end, and
- *    are a little longer than the iPod (the toe is slack).
+ *  - Socks are described by `sock` (the top-level box is their sleeve).
  */
 import type { CoverFit, CoverKind } from '../../devices/types';
-import type { Facet, V3 } from '../edgeShell';
+import type { CornerRadii, Facet, V3 } from '../edgeShell';
 
 export interface CoverHole {
   /** centre on the cover's outer box, shell coordinates (origin top-left, z = 0 mid-depth) */
@@ -39,9 +44,31 @@ export interface CoverGeometry {
   round: number;
   /** case: width of the lip over the front, from the outer edge of the body */
   lip: number;
-  /** sock: which end the mouth is at */
-  mouth: 'top' | 'bottom';
   holes: CoverHole[];
+  /** how much room it all takes, centred on the body (for fitting the stage) */
+  bounds: { width: number; height: number; depth: number };
+  sock?: SockGeometry;
+}
+
+/** A rounded box: size, centre y relative to the body, corners, edge rounding. */
+export interface SockPiece {
+  w: number;
+  h: number;
+  d: number;
+  cy: number;
+  radius: CornerRadii;
+  round: number;
+}
+
+export interface SockGeometry {
+  sleeve: SockPiece;
+  toe: SockPiece;
+  /** y of the opening, relative to the body centre */
+  mouth: number;
+  /** height of the ribbed cuff at the opening */
+  cuff: number;
+  /** the Apple tag: its rectangle in the body's x/y, at mid-depth */
+  tag: { x: number; y: number; w: number; h: number };
 }
 
 const MM = {
@@ -50,44 +77,63 @@ const MM = {
   caseBack: 1.1,
   caseLip: 1.1,
   sockWall: 1.4,
-  sockSlack: 3,
+  tagW: 11,
+  tagH: 10,
 };
 
-export function coverGeometry(fit: CoverFit, kind: Exclude<CoverKind, 'none'>, pxPerMm: number, size: { width: number; height: number; depth: number }, jackNy: 1 | -1 = -1): CoverGeometry {
+/** how much of the iPod is pulled out of its sock */
+const SOCK_EXPOSED = 0.36;
+
+const corners = (top: number, bottom: number): CornerRadii => ({ x: [top, top, bottom, bottom], y: [top, top, bottom, bottom] });
+
+export function coverGeometry(fit: CoverFit, kind: Exclude<CoverKind, 'none'>, pxPerMm: number, size: { width: number; height: number; depth: number }): CoverGeometry {
   const box = { w: size.width, h: size.height, d: size.depth };
-  const mouth = jackNy === 1 ? 'bottom' : 'top';
   if (kind === 'sock') {
     const t = MM.sockWall * pxPerMm;
-    const slack = MM.sockSlack * pxPerMm;
-    const w = box.w + 2 * t;
-    const h = box.h + 2 * t + slack;
-    const d = box.d + 2 * t;
-    const cy = mouth === 'top' ? slack / 2 : -slack / 2;
+    const mouth = -box.h / 2 + box.h * SOCK_EXPOSED;
+    const bottom = box.h / 2 + t;
+    const sr = fit.radius + t + 0.5 * pxPerMm;
+    const sw = box.w + 2 * t;
+    const sd = box.d + 2 * t;
+    const sleeve: SockPiece = {
+      w: sw,
+      h: bottom - mouth,
+      d: sd,
+      cy: (mouth + bottom) / 2,
+      radius: corners(0, sr),
+      // soft and plump: the edge rounds over most of the depth, but stays
+      // well inside the corner radius (the corners would pinch to points)
+      round: Math.min(t * 3.2, sd * 0.48, sr * 0.6),
+    };
+    // the empty toe hangs below, tucked 2 px into the sleeve
+    const tw = sw * 0.74;
+    const th = box.h * 0.3;
+    const td = sd * 0.5;
+    const tr = Math.min(tw * 0.42, th * 0.6);
+    const toe: SockPiece = { w: tw, h: th, d: td, cy: bottom - 2 + th / 2, radius: corners(2, tr), round: Math.min(td * 0.48, tr * 0.6, t * 3.2) };
+    const toeEnd = toe.cy + th / 2;
+    const tagW = MM.tagW * pxPerMm;
     const g: CoverGeometry = {
-      w,
-      h,
-      d,
+      w: sw,
+      h: sleeve.h,
+      d: sd,
       cx: 0,
-      cy,
+      cy: sleeve.cy,
       cz: 0,
       t,
-      radius: fit.radius + t + 0.5 * pxPerMm,
-      // soft and plump: the edge rounds over most of the depth
-      round: Math.min(t * 3.2, d * 0.48, (fit.radius + t) * 0.6),
+      radius: sr,
+      round: sleeve.round,
       lip: 0,
-      mouth,
       holes: [],
+      bounds: { width: sw + 2 * tagW, height: 2 * Math.max(box.h / 2, toeEnd), depth: sd },
+      sock: {
+        sleeve,
+        toe,
+        mouth,
+        cuff: 0.17 * (sleeve.h + th),
+        tag: { x: -sw / 2 - tagW, y: mouth + 1.5 * pxPerMm, w: tagW + 2, h: MM.tagH * pxPerMm },
+      },
     };
-    // the mouth: most of the end, so the iPod's end (and its jack) shows
-    g.holes.push(
-      toShell(g, {
-        side: mouth,
-        at: 0,
-        len: Math.max(box.w * 0.4, box.w - 1.2 * fit.radius),
-        thick: box.d * 0.62,
-        z: 0,
-      }),
-    );
     return g;
   }
   const t = MM.caseWall * pxPerMm;
@@ -105,8 +151,8 @@ export function coverGeometry(fit: CoverFit, kind: Exclude<CoverKind, 'none'>, p
     radius: fit.radius + t,
     round: Math.min(t, d * 0.3),
     lip: MM.caseLip * pxPerMm,
-    mouth,
     holes: [],
+    bounds: { width: box.w + 2 * t, height: box.h + 2 * t, depth: d + 2 * Math.abs((front - back) / 2) },
   };
   g.holes = fit.holes.map((hole) => toShell(g, hole));
   return g;

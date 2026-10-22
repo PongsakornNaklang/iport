@@ -72,23 +72,58 @@
   background-size:
     100% 100%,
     var(--cv-stitch);
-  /* the fabric bulges: darker where it rolls over the edge */
-  box-shadow: inset 0 0 calc(var(--mm) * 2.5) color-mix(in srgb, var(--cv) 70%, #000);
+  /* the fabric bulges: a little darker where it rolls over the edge */
+  box-shadow: inset 0 0 calc(var(--mm) * 2) color-mix(in srgb, var(--cv) 88%, #000);
 }
-/* the ribbed cuff at the mouth */
+/* the ribbed cuff at the opening, a lighter shade */
 .cv-cuff {
   position: absolute;
   left: 0;
   right: 0;
+  top: 0;
+  background-color: var(--cv-cuff);
+  background-image: var(--cv-knit);
+  background-size: var(--cv-stitch);
+  box-shadow: 0 calc(var(--mm) * 0.3) calc(var(--mm) * 0.6) rgba(0, 0, 0, 0.12);
+}
+/* a sock is a few pieces (see Cover.tsx) */
+.cv-piece {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-style: preserve-3d;
+}
+.cv-sock-rim {
+  left: 0;
+  top: 0;
+  inset: auto;
+  background: var(--cv-knit) 0 0 / var(--cv-stitch) border-box, var(--cv-cuff) border-box;
+  filter: brightness(0.92);
+}
+/* the woven Apple tag in the left seam */
+.cv-sock-tag {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: calc(var(--mm) * 0.4);
   background:
-    repeating-linear-gradient(
-      90deg,
-      rgba(0, 0, 0, 0.2) 0 calc(var(--mm) * 0.35),
-      rgba(255, 255, 255, 0.12) calc(var(--mm) * 0.55) calc(var(--mm) * 1.05),
-      rgba(0, 0, 0, 0.2) calc(var(--mm) * 1.3)
-    ),
-    color-mix(in srgb, var(--cv) 92%, #fff);
-  box-shadow: 0 0 calc(var(--mm) * 0.8) rgba(0, 0, 0, 0.28);
+    repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.04) 0 1px, transparent 1px 3px),
+    var(--cv-tag);
+  box-shadow: 0 calc(var(--mm) * 0.3) calc(var(--mm) * 0.8) rgba(0, 0, 0, 0.12);
+}
+.cv-sock-tag svg {
+  width: 52%;
+  height: 52%;
+  fill: color-mix(in srgb, var(--cv) 85%, #000);
+}
+.cv-sock .d3-facet,
+.cv-sock .d3-facet i,
+.cv-sock .d3-face,
+.cv-sock-tag,
+.cv-sock-rim {
+  backface-visibility: visible;
+  -webkit-backface-visibility: visible;
 }
 /* fabric is never quite flat: a soft crease */
 .cv-fold {

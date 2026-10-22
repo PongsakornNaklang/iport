@@ -219,6 +219,7 @@ export default function IpodTouch({ model, appearance }: DeviceProps) {
         depth={depth}
         radius={RADIUS}
         under={<BodyExtras />}
+        over={<BodyExtras after />}
         breaks={[0.085]}
         frontInset={FRONT_INSET}
         backInset={BACK_INSET}
