@@ -14,6 +14,13 @@ The running app shows its version and build in the Help panel (?).
 
 ## [Unreleased]
 
+### Changed
+- A new model picker: a shelf of cards, one per iPod, drawn in your colors
+  at their real sizes. Cards tilt toward the mouse, and arrow buttons step
+  through them.
+- Changing iPods turns the old one away and the new one in.
+- ← → step through the iPods while the shelf is open, and Shift ← → at any time.
+
 ## [1.2.0] - 2026-10-22
 
 ### Added

@@ -148,6 +148,12 @@ export default function HelpPanel({ onClose }: { onClose: () => void }) {
               </td>
               <td>Undo a design change (add <K>Shift</K> to redo)</td>
             </tr>
+            <tr>
+              <td>
+                <K>Shift</K> <K>←</K> <K>→</K>
+              </td>
+              <td>Previous / next iPod</td>
+            </tr>
           </tbody>
         </table>
 

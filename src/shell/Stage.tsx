@@ -7,6 +7,7 @@ import { JackMarkers, useEarPods } from './earpods/EarPods';
 import { BodySlotContext } from './bodySlot';
 import { Cover, type CoverInfo } from './cover/Cover';
 import { coverGeometry } from './cover/geometry';
+import { useModelSwitch } from './modelSwitch';
 
 const lazyCache = new Map<string, LazyExoticComponent<ComponentType<DeviceProps>>>();
 function deviceComponent(model: DeviceModel) {
@@ -30,7 +31,6 @@ const WIDE = 720;
 const hoverable = () => typeof window !== 'undefined' && !!window.matchMedia?.('(hover: hover)').matches;
 const barsFor = (width: number) => (width > WIDE ? { bottom: 28, right: hoverable() ? 0 : SIDE_BAR } : { bottom: BOTTOM_BAR, right: 0 });
 
-
 /**
  * The 3D stage: fits the device to the viewport and lets the user spin it.
  *
@@ -41,6 +41,8 @@ export function Stage() {
   const modelId = useCustomize((s) => s.modelId);
   const scene = useCustomize((s) => s.scene);
   const model = getModel(modelId);
+  const leaving = useModelSwitch((s) => s.leaving);
+  const turn = useModelSwitch((s) => s.turn);
   const appearance = useAppearance(modelId);
   const zoom = useStage((s) => s.zoom);
   const target = useStage((s) => s.target);
@@ -175,7 +177,7 @@ export function Stage() {
     const ryRad = (ry * Math.PI) / 180;
     const rxRad = (rx * Math.PI) / 180;
     el.style.setProperty('--rx', rx.toFixed(1));
-    el.style.setProperty('--ry', (((ry % 360) + 540) % 360 - 180).toFixed(1));
+    el.style.setProperty('--ry', ((((ry % 360) + 540) % 360) - 180).toFixed(1));
     el.style.setProperty('--lx', Math.sin(ryRad).toFixed(3));
     el.style.setProperty('--ly', Math.sin(rxRad).toFixed(3));
     // A coarse copy for the device edges: their surface is hundreds of small
@@ -306,7 +308,11 @@ export function Stage() {
       <canvas ref={backCanvas} className="ep-canvas" aria-hidden="true" />
       <div className="stage-center" style={{ transform: `translate(${shiftX}px, ${centerY}px) scale(${scale})` }}>
         <div className="stage-rot" ref={rotRef}>
-          <div className="device-enter" key={model.id} style={{ width: model.size.width, height: model.size.height }}>
+          <div
+            className={`device-enter ${leaving ? 'device-leave' : ''}`}
+            key={`${model.id}:${turn}`}
+            style={{ width: model.size.width, height: model.size.height }}
+          >
             <Suspense fallback={<div className="device-loading" style={{ width: model.size.width, height: model.size.height }} />}>
               <BodySlotContext.Provider value={bodyExtras}>
                 <Device model={model} appearance={appearance} />

@@ -84,7 +84,7 @@ button {
 .glass,
 .tb-group,
 .model-picker-btn,
-.model-menu,
+.model-shelf,
 .view-controls,
 .panel,
 .toast {
@@ -98,7 +98,7 @@ button {
 .glass::after,
 .tb-group::after,
 .model-picker-btn::after,
-.model-menu::after,
+.model-shelf::after,
 .view-controls::after,
 .panel::after,
 .toast::after {
@@ -252,66 +252,233 @@ button {
   font-size: 11.5px;
   color: var(--ui-text-2);
 }
-.model-menu {
-  position: absolute;
-  top: calc(100% + 10px);
+.model-picker-btn .mp-art {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 32px;
+}
+.model-picker-btn .mp-chev {
+  opacity: 0.6;
+  transition: transform 240ms var(--ease);
+}
+.model-picker-btn .mp-chev.open {
+  transform: rotate(180deg);
+}
+.model-art {
+  display: block;
+  overflow: visible;
+}
+
+/* the model shelf: a card per iPod */
+.model-shelf {
+  position: fixed;
+  top: calc(var(--topbar-h) + env(safe-area-inset-top) + 4px);
   left: 0;
-  width: min(400px, calc(100vw - 24px));
-  padding: 8px;
-  border-radius: 26px;
+  right: 0;
+  margin-inline: auto;
+  width: min(820px, calc(100vw - 24px));
+  padding: 14px 10px 12px;
+  border-radius: 30px;
   background: var(--glass-strong);
   box-shadow: var(--glass-shadow-lg);
   z-index: 50;
-  transform-origin: 30% 0;
-  animation: pop-in 280ms var(--ease);
+  transform-origin: 50% 0;
+  animation: pop-in 320ms var(--ease);
 }
-.model-item {
+.ms-head {
   display: flex;
-  gap: 12px;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 0 14px 8px;
+}
+.ms-head span {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.ms-head small {
+  font-size: 12px;
+  color: var(--ui-text-3);
+}
+.ms-head kbd {
+  display: inline-grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  margin-right: 3px;
+  padding: 0 4px;
+  border-radius: 6px;
+  font: inherit;
+  font-size: 11px;
+  background: rgba(0, 0, 0, 0.06);
+  box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+}
+.ms-row {
+  display: flex;
   align-items: center;
-  width: 100%;
-  padding: 10px 12px;
-  border-radius: 18px;
-  border: 0;
-  background: transparent;
-  cursor: pointer;
-  text-align: left;
-  transition: background 160ms var(--ease);
+  gap: 2px;
 }
-.model-item:hover {
-  background: rgba(0, 0, 0, 0.04);
-}
-.model-item.selected {
-  background: rgba(0, 113, 227, 0.08);
-}
-.model-item .mi-thumb {
+.ms-arrow {
   flex: none;
-  width: 40px;
-  height: 52px;
   display: grid;
   place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 0;
+  color: inherit;
+  background: rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+  transition:
+    background 160ms var(--ease),
+    transform 160ms var(--ease);
 }
-.model-item .mi-name {
+.ms-arrow:hover {
+  background: rgba(0, 0, 0, 0.09);
+}
+.ms-arrow:active {
+  transform: scale(0.9);
+}
+.ms-track {
+  flex: 1;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(150px, 1fr);
+  gap: 8px;
+  padding: 6px 4px 8px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+.ms-track::-webkit-scrollbar {
+  display: none;
+}
+.ms-card {
+  --rx: 0deg;
+  --ry: 0deg;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 12px 8px 12px;
+  border: 0;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.0);
+  color: inherit;
+  cursor: pointer;
+  text-align: center;
+  scroll-snap-align: center;
+  opacity: 0.7;
+  transition:
+    opacity 220ms var(--ease),
+    background 220ms var(--ease),
+    box-shadow 220ms var(--ease),
+    transform 220ms var(--ease);
+}
+.ms-card:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.35);
+}
+.ms-card:active {
+  transform: scale(0.97);
+}
+.ms-card.selected {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.6);
+  box-shadow:
+    0 0 0 2px var(--ui-accent),
+    0 10px 30px rgba(0, 0, 0, 0.1);
+}
+.ms-card:focus-visible {
+  outline: 2px solid var(--ui-accent);
+  outline-offset: 2px;
+}
+.ms-stage {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  height: 160px;
+  width: 100%;
+  perspective: 600px;
+}
+.ms-art {
+  position: relative;
+  z-index: 1;
+  display: block;
+  transform: rotateX(var(--rx)) rotateY(var(--ry));
+  transition: transform 420ms var(--ease);
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.18));
+}
+.ms-card:hover .ms-art {
+  transition-duration: 90ms;
+}
+.ms-card.selected .ms-art {
+  animation: ms-float 3.2s ease-in-out infinite;
+}
+@keyframes ms-float {
+  50% {
+    translate: 0 -4px;
+  }
+}
+/* glare that follows the pointer */
+.ms-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(160px circle at var(--gx, 50%) var(--gy, 30%), rgba(255, 255, 255, 0.5), transparent 70%);
+  opacity: 0;
+  transition: opacity 220ms var(--ease);
+  pointer-events: none;
+}
+.ms-card:hover::before {
+  opacity: 1;
+}
+.ms-floor {
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  width: 70%;
+  height: 12px;
+  translate: -50% 0;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(0, 0, 0, 0.18), transparent);
+}
+.ms-name {
+  margin-top: 14px;
+  font-size: 14px;
   font-weight: 600;
-  font-size: 14.5px;
+  letter-spacing: -0.01em;
 }
-.model-item .mi-meta {
+.ms-gen {
   font-size: 12px;
   color: var(--ui-text-2);
 }
-.model-item .mi-blurb {
-  font-size: 12px;
-  color: var(--ui-text-3);
-  margin-top: 2px;
-  line-height: 1.35;
+.ms-dots {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 8px;
+  height: 12px;
 }
-.model-item .mi-year {
-  margin-left: auto;
-  align-self: flex-start;
-  margin-top: 2px;
-  font-size: 12px;
+.ms-dots i {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.15);
+}
+.ms-dots i.on {
+  box-shadow:
+    0 0 0 1.5px var(--ui-bg, #fff),
+    0 0 0 3px var(--ui-text-3);
+}
+.ms-dots em {
+  font-style: normal;
+  font-size: 11px;
   color: var(--ui-text-3);
-  font-variant-numeric: tabular-nums;
 }
 
 @keyframes pop-in {
@@ -439,16 +606,34 @@ button {
   position: absolute;
   transform: translate(-50%, -50%);
   transform-style: preserve-3d;
-  animation: device-in 640ms var(--ease);
+  animation: device-in 620ms var(--ease);
 }
+/* a new iPod turns in from the side (see shell/modelSwitch.ts) */
 @keyframes device-in {
   from {
     opacity: 0;
-    transform: translate(-50%, -47%) scale(0.95);
+    transform: translate(-50%, -50%) rotateY(-75deg) scale(0.7);
+  }
+  30% {
+    opacity: 1;
   }
   to {
     opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
+    transform: translate(-50%, -50%);
+  }
+}
+/* …after the old one turns away */
+.device-leave {
+  animation: device-out 260ms cubic-bezier(0.55, 0, 0.9, 0.4) forwards;
+  pointer-events: none;
+}
+@keyframes device-out {
+  70% {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotateY(75deg) scale(0.7);
   }
 }
 .device-loading {
@@ -814,32 +999,27 @@ button {
  * standard properties; Safari uses the ::-webkit ones.
  */
 .panel,
-.panel *,
-.model-menu {
+.panel * {
   scrollbar-width: thin;
   scrollbar-color: rgba(0, 0, 0, 0.22) transparent;
 }
-.panel ::-webkit-scrollbar,
-.model-menu::-webkit-scrollbar {
+.panel ::-webkit-scrollbar {
   width: 12px;
   height: 12px;
   background: transparent;
 }
-.panel ::-webkit-scrollbar-track,
-.model-menu::-webkit-scrollbar-track {
+.panel ::-webkit-scrollbar-track {
   background: transparent;
   /* keep clear of the rounded corners */
   margin: 14px 0 22px;
 }
-.panel ::-webkit-scrollbar-thumb,
-.model-menu::-webkit-scrollbar-thumb {
+.panel ::-webkit-scrollbar-thumb {
   background: rgba(0, 0, 0, 0.2);
   background-clip: padding-box;
   border: 4px solid transparent;
   border-radius: 999px;
 }
-.panel ::-webkit-scrollbar-thumb:hover,
-.model-menu::-webkit-scrollbar-thumb:hover {
+.panel ::-webkit-scrollbar-thumb:hover {
   background-color: rgba(0, 0, 0, 0.36);
 }
 .panel ::-webkit-scrollbar-corner {
@@ -1310,5 +1490,12 @@ textarea.input {
   *::after {
     animation-duration: 1ms !important;
     transition-duration: 1ms !important;
+  }
+}
+
+/* no keyboard on a phone: no key hint on the model shelf */
+@media (hover: none) {
+  .ms-head small {
+    display: none;
   }
 }
