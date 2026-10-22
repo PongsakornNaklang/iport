@@ -14,6 +14,11 @@ The running app shows its version and build in the Help panel (?).
 
 ## [Unreleased]
 
+### Added
+- Stickers can go on the front too, over the screen and the Click Wheel,
+  like a real sticker; choose the side when you add one, or move it across
+  later. Engraved text stays on the back.
+
 ## [1.1.0] - 2026-10-22
 
 ### Added

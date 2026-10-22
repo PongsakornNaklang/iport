@@ -49,6 +49,8 @@ export interface Decal {
   size: number;
   /** degrees, clockwise */
   rotate: number;
+  /** which side it is on (engraving is always on the back) */
+  side?: 'front' | 'back';
   /** sticker: an emoji, or an image (data URL) */
   emoji?: string;
   image?: string;

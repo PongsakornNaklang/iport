@@ -5,6 +5,9 @@
   container-type: inline-size;
   pointer-events: none;
 }
+.dc-front {
+  z-index: 50;
+}
 .dc-mark {
   position: absolute;
   left: 0;

@@ -249,3 +249,8 @@
 .cz-decal-row input {
   flex: 1;
 }
+
+.cz-decal-side {
+  flex: none;
+  min-width: 52px;
+}

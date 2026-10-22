@@ -292,6 +292,7 @@ export function cleanDecal(v: unknown): Decal | null {
     y: clamp(d.y, -0.2, 1.2, 0.5),
     size: clamp(d.size, 0.02, 1.2, d.kind === 'text' ? 0.06 : 0.3),
     rotate: clamp(d.rotate, -180, 180, 0),
+    side: d.kind === 'sticker' && d.side === 'front' ? 'front' : 'back',
   };
   if (d.kind === 'sticker') {
     if (typeof d.image === 'string' && /^data:image\/(png|jpeg|webp|gif);base64,/.test(d.image) && d.image.length < 400_000) out.image = d.image;

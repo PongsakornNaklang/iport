@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import { BackDecals } from '../../shell/decals/BackDecals';
+import { Decals } from '../../shell/decals/Decals';
 import type { Decal } from '../types';
 import { APPLE_PATH } from './os/glyphs';
 import { shade } from './color';
@@ -51,7 +51,7 @@ export function ClassicBack({
           ))}
         </div>
       )}
-      <BackDecals
+      <Decals
         decals={decals}
         ink={material === 'painted' ? 'rgba(255,255,255,0.6)' : 'rgba(30,32,38,0.6)'}
         shadow={material === 'painted' ? '0 -1px 0 rgba(0,0,0,0.2)' : '0 1px 0 rgba(255,255,255,0.6), 0 -0.5px 0 rgba(0,0,0,0.25)'}

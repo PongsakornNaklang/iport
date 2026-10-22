@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type 
 import { createPortal } from 'react-dom';
 import { Box3D, Device3D, type CornerRadii, type EdgeSlice } from '../../shell/Device3D';
 import { BodyExtras } from '../../shell/bodySlot';
-import { BackDecals } from '../../shell/decals/BackDecals';
+import { Decals } from '../../shell/decals/Decals';
 import { isTypingTarget } from '../../shell/keyboard';
 import { usePlaylists } from '../../core/library/selectors';
 import { useSettings } from '../../core/settings/store';
@@ -190,7 +190,7 @@ export default function IpodShuffle({ model, appearance }: DeviceProps) {
           frontInset={BODY_FACE_INSET}
           backInset={BODY_FACE_INSET}
           edge={bodyEdge}
-          front={<Front press={padPress} zone={zone} />}
+          front={<Front press={padPress} zone={zone} decals={appearance.decals} />}
           back={<UnderClip />}
         >
           <SwitchKnob H={H} switchPos={switchPos} />
@@ -255,7 +255,7 @@ interface ZoneProps {
   onLostPointerCapture: () => void;
 }
 
-function Front({ press, zone }: { press: Zone | undefined; zone: (z: Zone) => ZoneProps }) {
+function Front({ press, zone, decals }: { press: Zone | undefined; zone: (z: Zone) => ZoneProps; decals?: Decal[] }) {
   return (
     <div className="s4-face s4-anod s4-front">
       <div className="s4-grain" />
@@ -271,6 +271,7 @@ function Front({ press, zone }: { press: Zone | undefined; zone: (z: Zone) => Zo
           <div className="s4-hit s4-hit-center" {...zone('center')} title="Play/Pause" />
         </div>
       </div>
+      <Decals decals={decals} side="front" />
     </div>
   );
 }
@@ -518,7 +519,7 @@ function Clip({
                     ))}
                   </div>
                 )}
-                <BackDecals
+                <Decals
                   decals={decals}
                   ink="color-mix(in srgb, var(--s4-body) 28%, #b9b9bb)"
                   shadow="0 -0.5px 0 rgba(0,0,0,0.18), 0 0.6px 0 rgba(255,255,255,0.3)"

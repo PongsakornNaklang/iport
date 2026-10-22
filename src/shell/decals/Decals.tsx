@@ -1,7 +1,7 @@
 /**
- * Stickers and engraved text on the back of an iPod.
+ * Stickers on either side of an iPod, and engraved text on its back.
  *
- * Each device puts a <BackDecals> layer over its back. You can drag a decal
+ * Each device puts a <Decals> layer over its back and one over its front. You can drag a decal
  * right there on the 3D iPod: three hidden markers in the layer give the
  * layer's axes on screen, and the inverse of that maps a pointer move back
  * into the layer (the same trick the EarPods use to find the jack). Scroll
@@ -27,19 +27,22 @@ export const DECAL_FONTS: Record<NonNullable<Decal['font']>, { label: string; fa
 };
 
 /**
- * `ink` and `shadow` style the engraved text the way the device engraves
- * (lighter on dark anodizing, darker on light, etched into steel…).
+ * The decals on one side. On the back, `ink` and `shadow` style engraved
+ * text the way the device engraves (lighter on dark anodizing, darker on
+ * light, etched into steel…). On the front, stickers sit on top of
+ * everything, the screen included, as a real one would.
  */
-export function BackDecals({ decals, ink, shadow }: { decals?: Decal[]; ink: string; shadow: string }) {
+export function Decals({ decals, side = 'back', ink, shadow }: { decals?: Decal[]; side?: 'front' | 'back'; ink?: string; shadow?: string }) {
   const layer = useRef<HTMLDivElement>(null);
   const selected = useDecalSelection((s) => s.selected);
-  if (!decals?.length) return null;
+  const mine = decals?.filter((d) => (d.side ?? 'back') === side);
+  if (!mine?.length) return null;
   return (
-    <div ref={layer} className="dc-layer" style={{ ['--dc-ink' as string]: ink, ['--dc-shadow' as string]: shadow } as CSSProperties}>
+    <div ref={layer} className={`dc-layer dc-${side}`} style={{ ['--dc-ink' as string]: ink, ['--dc-shadow' as string]: shadow } as CSSProperties}>
       <i className="dc-mark" />
       <i className="dc-mark" style={{ left: 100 }} />
       <i className="dc-mark" style={{ top: 100 }} />
-      {decals.map((d) => (
+      {mine.map((d) => (
         <DecalView key={d.id} d={d} layer={layer} on={d.id === selected} />
       ))}
     </div>
