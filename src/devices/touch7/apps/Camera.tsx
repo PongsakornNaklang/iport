@@ -1,6 +1,6 @@
 /**
  * Camera (iOS 15): live viewfinder from getUserMedia, PHOTO / SQUARE / VIDEO
- * modes, flash, front/back switch, shutter on screen or with the volume
+ * modes (no flash: the iPod touch has none), front/back switch, shutter on screen or with the volume
  * buttons. Photos go to the Photos library, videos to TV ▸ Home Videos and
  * Photos ▸ Videos.
  */
@@ -42,9 +42,7 @@ export default function Camera() {
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [mode, setMode] = useState<Mode>('PHOTO');
-  const [flash, setFlash] = useState<'auto' | 'on' | 'off'>('off');
   const [blink, setBlink] = useState(0);
-  const [white, setWhite] = useState(false);
   const [rec, setRec] = useState<{ t0: number; mr: MediaRecorder; chunks: Blob[] } | null>(null);
   const [now, setNow] = useState(Date.now());
   const [busy, setBusy] = useState(false);
@@ -104,11 +102,6 @@ export default function Camera() {
     const v = video.current;
     if (!v || !stream || busy) return;
     setBusy(true);
-    const doFlash = flash === 'on';
-    if (doFlash) {
-      setWhite(true);
-      await new Promise((r) => window.setTimeout(r, 120));
-    }
     shutterSound();
     setBlink((b) => b + 1);
     const vw = v.videoWidth || 640;
@@ -130,7 +123,6 @@ export default function Camera() {
       g.scale(-1, 1);
     }
     g.drawImage(v, (vw - cw) / 2, (vh - ch) / 2, cw, ch, 0, 0, c.width, c.height);
-    if (doFlash) window.setTimeout(() => setWhite(false), 80);
     const blob = await new Promise<Blob | null>((r) => c.toBlob(r, 'image/jpeg', 0.9));
     if (blob) {
       const id = uid('ph');
@@ -253,10 +245,8 @@ export default function Camera() {
           </span>
         ) : (
           <>
-            <button aria-label="Flash" className={flash === 'on' ? 'on' : ''} onClick={() => setFlash(flash === 'off' ? 'on' : flash === 'on' ? 'auto' : 'off')}>
-              <Glyph name={flash === 'off' ? 'bolt.slash.fill' : 'bolt.fill'} size={18} />
-              {flash === 'auto' && <small>A</small>}
-            </button>
+            {/* no flash on the iPod touch: a spacer keeps the controls where they were */}
+            <span className="t7cam-noflash" aria-hidden="true" />
             <button aria-label="Options" onClick={() => os.toast('Live Photos Off', 'circle.lefthalf.filled')}>
               <Glyph name="chevron.up" size={16} />
             </button>
@@ -305,7 +295,6 @@ export default function Camera() {
           <Glyph name="camera.rotate" size={24} />
         </button>
       </div>
-      {white && <div className="t7cam-white" />}
     </div>
   );
 }

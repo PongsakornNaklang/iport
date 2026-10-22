@@ -82,6 +82,14 @@ The running app shows its version and build in the Help panel (?).
   others) slide their white thumb like the panel tabs.
 
 ### Fixed
+- Settings that did nothing now work:
+  - Audio Crossfade (iPod classic, nano 4G): the end of a song fades out
+    over four seconds and the next fades in.
+  - Mono Audio (iPod nano 7th generation): both ears get the same sound.
+- The iPod nano (7th generation) screen goes dark by itself after 30 seconds
+  untouched, like the real one (not while a video plays).
+- The iPod touch's Camera has no flash button and Settings ▸ Control Center
+  no Flashlight: the 7th generation has no flash.
 - An iPod Sock covers the headphone jack on the iPod touch and the nanos
   (it's on the bottom, inside the sock): the EarPods come out when you put
   one on, can't be plugged in while it's on, and the music plays on. They

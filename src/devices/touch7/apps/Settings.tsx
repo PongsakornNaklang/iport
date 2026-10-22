@@ -776,7 +776,8 @@ function HomeScreenPage() {
 }
 
 function ControlCenterPage() {
-  const inc = ['Flashlight', 'Timer', 'Calculator', 'Camera', 'Alarm', 'Stopwatch', 'Notes', 'Voice Memos', 'Dark Mode'];
+  // no Flashlight: the iPod touch has no flash
+  const inc = ['Timer', 'Calculator', 'Camera', 'Alarm', 'Stopwatch', 'Notes', 'Voice Memos', 'Dark Mode'];
   const more = ['Accessibility Shortcuts', 'Code Scanner', 'Guided Access', 'Hearing', 'Low Power Mode', 'Magnifier', 'Quick Note', 'Screen Recording', 'Text Size'];
   return (
     <Page title="Control Center" large={false} bg="grouped">

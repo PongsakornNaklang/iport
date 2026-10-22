@@ -2103,6 +2103,9 @@
   justify-content: space-between;
   padding: 0 12px;
 }
+.t7cam-noflash {
+  width: 36px;
+}
 .t7cam-top button {
   width: 36px;
   height: 36px;
