@@ -64,28 +64,6 @@
 }
 
 /* ---------------------------------------------------------------- iPod Socks */
-.cv-knit {
-  background-color: var(--cv);
-  background-image:
-    radial-gradient(110% 80% at 50% 40%, rgba(255, 255, 255, 0.16), transparent 70%),
-    var(--cv-knit);
-  background-size:
-    100% 100%,
-    var(--cv-stitch);
-  /* the fabric bulges: a little darker where it rolls over the edge */
-  box-shadow: inset 0 0 calc(var(--mm) * 2) color-mix(in srgb, var(--cv) 88%, #000);
-}
-/* the ribbed cuff at the opening, a lighter shade */
-.cv-cuff {
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 0;
-  background-color: var(--cv-cuff);
-  background-image: var(--cv-knit);
-  background-size: var(--cv-stitch);
-  box-shadow: 0 calc(var(--mm) * 0.3) calc(var(--mm) * 0.6) rgba(0, 0, 0, 0.12);
-}
 /* the toe's sections bend at these (Cover.tsx) */
 .cv-hinge {
   position: absolute;
@@ -97,7 +75,7 @@
   left: 0;
   top: 0;
   inset: auto;
-  background: var(--cv-knit) 0 0 / var(--cv-stitch) border-box, var(--cv-cuff) border-box;
+  background: var(--cv-cuff) border-box;
   filter: brightness(0.92);
 }
 /* the woven Apple tag in the left seam */
@@ -109,7 +87,7 @@
   border-radius: calc(var(--mm) * 0.4);
   background:
     repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.04) 0 1px, transparent 1px 3px),
-    var(--cv-tag);
+    #f4f4f1;
   box-shadow: 0 calc(var(--mm) * 0.3) calc(var(--mm) * 0.8) rgba(0, 0, 0, 0.12);
 }
 .cv-sock-tag svg {
@@ -125,17 +103,6 @@
   backface-visibility: visible;
   -webkit-backface-visibility: visible;
 }
-/* fabric is never quite flat: a soft crease */
-.cv-fold {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(104deg, transparent 38%, rgba(0, 0, 0, 0.07) 46%, rgba(255, 255, 255, 0.06) 52%, transparent 60%);
-  pointer-events: none;
-}
-.cv-knit-back .cv-fold {
-  transform: scaleX(-1);
-}
-
 /*
  * A cover is hollow: through the hairlines between its pieces you look
  * inside, at the far wall from behind. Show the walls from both sides, or

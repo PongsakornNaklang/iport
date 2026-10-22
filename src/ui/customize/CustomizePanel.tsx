@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { SegTabs } from '../SegTabs';
 import {
   DEFAULT_SCENE,
@@ -10,7 +10,8 @@ import {
   type Preset,
 } from '../../core/customize/store';
 import { getModel } from '../../devices/registry';
-import type { CoverKind, DeviceModel, OptionDef } from '../../devices/types';
+import type { CoverKind, Decal, DecalFont, DeviceModel, OptionDef } from '../../devices/types';
+import { DECAL_FONTS, useDecalSelection } from '../../shell/decals/BackDecals';
 import { useStage } from '../../shell/stageStore';
 import { ModelThumb } from '../ModelPicker';
 import { Panel } from '../Panel';
@@ -138,12 +139,142 @@ function DesignTab({ model }: { model: DeviceModel }) {
         </div>
       )}
 
+      <DecalSection />
+
       <div className="section" style={{ marginTop: 22 }}>
         <button className="btn" onClick={resetAppearance}>
           Reset {model.name} to default
         </button>
       </div>
     </>
+  );
+}
+
+// ------------------------------------------------------------------ back decals
+
+const STICKERS = ['🍎', '🌈', '⭐', '❤️', '😎', '🎧', '🎵', '⚡', '🌸', '🔥', '👾', '🐱', '🍕', '✌️', '🦄', '💿', '🌙', '🍀'];
+
+/** A picture, shrunk to a sticker-sized image (data URL). */
+async function stickerImage(file: File): Promise<string> {
+  const bmp = await createImageBitmap(file);
+  const k = Math.min(1, 320 / Math.max(bmp.width, bmp.height));
+  const c = document.createElement('canvas');
+  c.width = Math.max(1, Math.round(bmp.width * k));
+  c.height = Math.max(1, Math.round(bmp.height * k));
+  c.getContext('2d')!.drawImage(bmp, 0, 0, c.width, c.height);
+  bmp.close();
+  const webp = c.toDataURL('image/webp', 0.85);
+  return webp.startsWith('data:image/webp') ? webp : c.toDataURL('image/png');
+}
+
+function DecalSection() {
+  const decals = useAppearance().decals ?? [];
+  const selected = useDecalSelection((s) => s.selected);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const { addDecal, updateDecal, removeDecal } = useCustomize.getState();
+  const select = useDecalSelection.getState().select;
+  // stop outlining a decal once the panel closes
+  useEffect(() => () => select(null), [select]);
+
+  const add = (d: Omit<Decal, 'id'>) => {
+    const id = addDecal(d);
+    if (!id) {
+      toast('That’s as many as fit');
+      return;
+    }
+    select(id);
+    useStage.getState().back();
+  };
+  const jitter = () => (Math.random() - 0.5) * 0.16;
+  const addSticker = (emoji?: string, image?: string) =>
+    add({ kind: 'sticker', emoji, image, x: 0.5 + jitter(), y: 0.42 + jitter(), size: 0.28, rotate: Math.round((Math.random() - 0.5) * 24) });
+
+  return (
+    <div className="section">
+      <div className="section-title">Stickers &amp; engraving on the back</div>
+      <p className="tiny" style={{ marginTop: -2 }}>
+        Put them anywhere: drag them on the back of the iPod, scroll over one to resize it, Shift-scroll to turn it.
+      </p>
+      <div className="cz-stickers">
+        {STICKERS.map((e) => (
+          <button key={e} className="cz-sticker" onClick={() => addSticker(e)} aria-label={`Add ${e} sticker`}>
+            {e}
+          </button>
+        ))}
+        <button className="cz-sticker cz-sticker-upload" onClick={() => fileRef.current?.click()} title="Your own picture" aria-label="Add your own picture">
+          <IconUpload />
+        </button>
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/*"
+          hidden
+          onChange={async (e) => {
+            const f = e.target.files?.[0];
+            e.target.value = '';
+            if (!f) return;
+            try {
+              addSticker(undefined, await stickerImage(f));
+            } catch {
+              toast('Couldn’t read that picture');
+            }
+          }}
+        />
+      </div>
+      <button className="btn small" style={{ marginTop: 10 }} onClick={() => add({ kind: 'text', text: 'Hello', font: 'helvetica', x: 0.5, y: 0.62, size: 0.07, rotate: 0 })}>
+        Add engraved text
+      </button>
+      {decals.length > 0 && (
+        <div className="cz-decals">
+          {decals.map((d) => (
+            <div key={d.id} className={`cz-decal ${d.id === selected ? 'on' : ''}`} onPointerDown={() => select(d.id)}>
+              <div className="cz-decal-head">
+                <span className="cz-decal-thumb">{d.kind === 'text' ? 'Aa' : d.image ? <img src={d.image} alt="" /> : d.emoji}</span>
+                {d.kind === 'text' ? (
+                  <input
+                    className="input cz-decal-text"
+                    value={d.text ?? ''}
+                    maxLength={40}
+                    placeholder="Text"
+                    onChange={(e) => updateDecal(d.id, { text: e.target.value })}
+                    aria-label="Engraved text"
+                  />
+                ) : (
+                  <span className="cz-decal-name">{d.image ? 'Your picture' : 'Sticker'}</span>
+                )}
+                <button className="icon-btn" onClick={() => removeDecal(d.id)} title="Remove" aria-label="Remove">
+                  <IconTrash />
+                </button>
+              </div>
+              {d.kind === 'text' && (
+                <select className="select" value={d.font ?? 'helvetica'} onChange={(e) => updateDecal(d.id, { font: e.target.value as DecalFont })} aria-label="Font">
+                  {Object.entries(DECAL_FONTS).map(([k, f]) => (
+                    <option key={k} value={k}>
+                      {f.label}
+                    </option>
+                  ))}
+                </select>
+              )}
+              <label className="cz-decal-row">
+                <span>Size</span>
+                <input
+                  type="range"
+                  min={d.kind === 'text' ? 0.03 : 0.08}
+                  max={d.kind === 'text' ? 0.2 : 0.8}
+                  step={0.005}
+                  value={d.size}
+                  onChange={(e) => updateDecal(d.id, { size: Number(e.target.value) })}
+                />
+              </label>
+              <label className="cz-decal-row">
+                <span>Turn</span>
+                <input type="range" min={-180} max={180} step={1} value={d.rotate} onChange={(e) => updateDecal(d.id, { rotate: Number(e.target.value) })} />
+              </label>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 

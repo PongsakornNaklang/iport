@@ -7,12 +7,13 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { Box3D, Device3D, EdgeDecal, Slab3D, type EdgeSlice } from '../../shell/Device3D';
 import { BodyExtras } from '../../shell/bodySlot';
+import { BackDecals } from '../../shell/decals/BackDecals';
 import { isTypingTarget } from '../../shell/keyboard';
 import { player, usePlayer } from '../../core/player/player';
 import { useLibrary } from '../../core/library/store';
 import { songs } from '../../core/library/selectors';
 import { useAlarmState } from '../../core/alarms';
-import type { DeviceProps } from '../types';
+import type { Decal, DeviceProps } from '../types';
 import { nano, useNano, useNanoData } from './state';
 import { Screen } from './os/Screen';
 import { APPLE_PATH } from './os/icons';
@@ -194,7 +195,7 @@ function HomeButton({ color, dark }: { color: string; dark: boolean }) {
   );
 }
 
-function Back({ body, engraving, red }: { body: string; engraving: [string, string]; red?: boolean }) {
+function Back({ body, engraving, red, decals }: { body: string; engraving: [string, string]; red?: boolean; decals?: Decal[] }) {
   const L = luminance(body);
   const ink = L > 0.55 ? 'rgba(0,0,0,0.42)' : 'rgba(255,255,255,0.45)';
   const logoFill = L > 0.55 ? `color-mix(in srgb, ${body} 72%, #000)` : `color-mix(in srgb, ${body} 55%, #fff)`;
@@ -218,6 +219,7 @@ function Back({ body, engraving, red }: { body: string; engraving: [string, stri
           <div>{engraving[1]}</div>
         </div>
       )}
+      <BackDecals decals={decals} ink={ink} shadow={L > 0.55 ? '0 0.5px 0 rgba(255,255,255,0.5)' : '0 -0.5px 0 rgba(0,0,0,0.3)'} />
       {red && (
         <div className="n7-rear-red">
           (PRODUCT)<sup>RED</sup>
@@ -331,7 +333,7 @@ export default function IpodNano7({ appearance }: DeviceProps) {
           <div className={`n7-glare ${asleep ? 'n7-glare-strong' : ''}`} />
         </div>
       }
-      back={<Back body={body} engraving={appearance.engraving} red={appearance.finishId === 'red'} />}
+      back={<Back body={body} engraving={appearance.engraving} red={appearance.finishId === 'red'} decals={appearance.decals} />}
       decals={
         <>
           {/* bottom: headphone jack (centre x = -86, matches registry `jack`) + Lightning */}

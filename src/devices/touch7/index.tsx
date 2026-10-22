@@ -5,6 +5,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Box3D, Device3D, EdgeDecal } from '../../shell/Device3D';
 import { BodyExtras } from '../../shell/bodySlot';
+import { BackDecals } from '../../shell/decals/BackDecals';
 import { isTypingTarget } from '../../shell/keyboard';
 import { player } from '../../core/player/player';
 import type { DeviceProps } from '../types';
@@ -303,6 +304,11 @@ export default function IpodTouch({ model, appearance }: DeviceProps) {
                 {appearance.engraving[1] && <div>{appearance.engraving[1]}</div>}
               </div>
             )}
+            <BackDecals
+              decals={appearance.decals}
+              ink={luminance(back) > 0.55 ? `color-mix(in srgb, ${back} 66%, #2a2a2e)` : `color-mix(in srgb, ${back} 62%, #fff)`}
+              shadow={luminance(back) > 0.55 ? '0 0.5px 0 rgba(255,255,255,0.55)' : '0 -0.5px 0 rgba(0,0,0,0.3)'}
+            />
             <div className="t7-reg">
               Designed by Apple in California&nbsp;&nbsp;Assembled in China&nbsp;&nbsp;Model A2178
               <br />

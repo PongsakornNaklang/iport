@@ -185,7 +185,7 @@ export default function IpodClassic({ model, appearance }: DeviceProps) {
           </div>
         </div>
       }
-      back={<ClassicBack material={material} color={backColor} engraving={appearance.engraving} capacity={info.capacity} model={info.model} />}
+      back={<ClassicBack material={material} color={backColor} engraving={appearance.engraving} decals={appearance.decals} capacity={info.capacity} model={info.model} />}
       decals={
         <>
           {/* ---- top edge: Hold switch slot ---- */}

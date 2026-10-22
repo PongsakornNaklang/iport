@@ -14,6 +14,8 @@ The running app shows its version and build in the Help panel (?).
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-10-22
+
 ### Added
 - Cases and iPod Socks, under Customize → Design. Silicone and leather cases
   fit the iPod touch, nano and classic, with cut-outs for the buttons, ports
@@ -24,6 +26,11 @@ The running app shows its version and build in the Help panel (?).
   of the top, and the empty toe narrowing to a flat seam. The toe is soft:
   it sags as you tilt the iPod and swings when you move it. The buttons and
   screen still work through either. Presets and share links keep the case.
+- Stickers and engraved text anywhere on the back, under Customize →
+  Design: a set of stickers or your own picture (die-cut, with a white
+  border), and lines of text in four fonts, engraved the way each iPod
+  engraves. Drag them around right on the iPod's back; scroll over one to
+  resize it, Shift-scroll to turn it. They show through a clear case.
 - A clear case (clear, smoke, ice blue or rose) for the iPod touch, nano and
   classic: the iPod shows through it.
 
@@ -117,5 +124,6 @@ First release.
 - Apple-style minimal Liquid Glass interface on white; works on phones and
   installs as a web app.
 
-[Unreleased]: https://github.com/PongsakornNaklang/iport/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/PongsakornNaklang/iport/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/PongsakornNaklang/iport/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/PongsakornNaklang/iport/releases/tag/v1.0.0

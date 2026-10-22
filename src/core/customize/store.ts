@@ -5,7 +5,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { DEFAULT_MODEL_ID, getModel, MODELS } from '../../devices/registry';
-import type { Appearance, CoverChoice, DeviceModel } from '../../devices/types';
+import type { Appearance, CoverChoice, Decal, DeviceModel } from '../../devices/types';
 import { uid } from '../util/id';
 
 export type Backdrop = 'white' | 'studio' | 'light' | 'desk' | 'gradient' | 'aurora' | 'solid';
@@ -45,6 +45,10 @@ interface CustomizeState {
   setEngraving(lines: [string, string]): void;
   /** put a case or an iPod Sock on the current model (kind 'none' takes it off) */
   setCover(cover: CoverChoice): void;
+  /** stickers and engraved text on the back of the current model */
+  addDecal(d: Omit<Decal, 'id'>): string;
+  updateDecal(id: string, patch: Partial<Decal>): void;
+  removeDecal(id: string): void;
   applyFinish(finishId: string): void;
   resetAppearance(): void;
   setScene(p: Partial<Scene>): void;
@@ -127,6 +131,30 @@ export const useCustomize = create<CustomizeState>()(
         set({ appearances: { ...appearances, [modelId]: { ...cur, cover: { ...cover } } } });
       },
 
+      addDecal(d) {
+        const { modelId, appearances } = get();
+        const cur = appearances[modelId] ?? defaultAppearance(getModel(modelId));
+        const decal = cleanDecal({ ...d, id: uid('decal') });
+        if (!decal || (cur.decals?.length ?? 0) >= MAX_DECALS) return '';
+        set({ appearances: { ...appearances, [modelId]: { ...cur, decals: [...(cur.decals ?? []), decal] } } });
+        return decal.id;
+      },
+
+      updateDecal(id, patch) {
+        const { modelId, appearances } = get();
+        const cur = appearances[modelId];
+        if (!cur?.decals) return;
+        const decals = cur.decals.map((d) => (d.id === id ? (cleanDecal({ ...d, ...patch, id }) ?? d) : d));
+        set({ appearances: { ...appearances, [modelId]: { ...cur, decals } } });
+      },
+
+      removeDecal(id) {
+        const { modelId, appearances } = get();
+        const cur = appearances[modelId];
+        if (!cur?.decals) return;
+        set({ appearances: { ...appearances, [modelId]: { ...cur, decals: cur.decals.filter((d) => d.id !== id) } } });
+      },
+
       applyFinish(finishId) {
         const { modelId, appearances } = get();
         const model = getModel(modelId);
@@ -141,6 +169,7 @@ export const useCustomize = create<CustomizeState>()(
               options: { ...cur.options, ...(model.finishes.find((f) => f.id === finishId)?.options ?? {}) },
               engraving: cur.engraving,
               cover: cur.cover,
+              decals: cur.decals,
             },
           },
         });
@@ -192,6 +221,7 @@ export const useCustomize = create<CustomizeState>()(
           engraving: [p.appearance?.engraving?.[0] ?? '', p.appearance?.engraving?.[1] ?? ''],
           finishId: p.appearance?.finishId,
           cover: validCover(p.appearance?.cover),
+          decals: validDecals(p.appearance?.decals),
         };
         set({
           modelId: model.id,
@@ -245,6 +275,38 @@ function validCover(c: unknown): CoverChoice | undefined {
   const v = c as Partial<CoverChoice> | undefined;
   if (!v || typeof v !== 'object' || !COVER_KINDS.includes(v.kind as string) || typeof v.color !== 'string') return undefined;
   return { kind: v.kind as CoverChoice['kind'], color: v.color };
+}
+
+export const MAX_DECALS = 30;
+const FONTS = ['helvetica', 'serif', 'script', 'mono'];
+const clamp = (v: unknown, a: number, b: number, d: number) => (typeof v === 'number' && Number.isFinite(v) ? Math.max(a, Math.min(b, v)) : d);
+
+/** A decal with every field in range, or null if it can't be shown. */
+export function cleanDecal(v: unknown): Decal | null {
+  const d = v as Partial<Decal> | undefined;
+  if (!d || typeof d !== 'object' || (d.kind !== 'sticker' && d.kind !== 'text')) return null;
+  const out: Decal = {
+    id: typeof d.id === 'string' && d.id ? d.id.slice(0, 40) : uid('decal'),
+    kind: d.kind,
+    x: clamp(d.x, -0.2, 1.2, 0.5),
+    y: clamp(d.y, -0.2, 1.2, 0.5),
+    size: clamp(d.size, 0.02, 1.2, d.kind === 'text' ? 0.06 : 0.3),
+    rotate: clamp(d.rotate, -180, 180, 0),
+  };
+  if (d.kind === 'sticker') {
+    if (typeof d.image === 'string' && /^data:image\/(png|jpeg|webp|gif);base64,/.test(d.image) && d.image.length < 400_000) out.image = d.image;
+    else if (typeof d.emoji === 'string' && d.emoji) out.emoji = [...d.emoji].slice(0, 8).join('');
+    else return null;
+  } else {
+    out.text = typeof d.text === 'string' ? d.text.slice(0, 40) : '';
+    out.font = FONTS.includes(d.font as string) ? d.font : 'helvetica';
+  }
+  return out;
+}
+
+function validDecals(v: unknown): Decal[] | undefined {
+  if (!Array.isArray(v)) return undefined;
+  return v.map(cleanDecal).filter((d): d is Decal => !!d).slice(0, MAX_DECALS);
 }
 
 export function useAppearance(modelId?: string): Appearance {
