@@ -80,6 +80,45 @@ const wantsSound = () => {
   return s === 'playing' || s === 'loading';
 };
 
+// ---------------------------------------------------------------- Audio Crossfade
+// (Settings ▸ Audio Crossfade on the iPod classic) The end of a song fades out
+// and the next one fades in. One media element plays at a time, so the two
+// fades follow each other rather than overlap.
+
+const FADE_S = 4;
+/** the crossfade's share of the volume, 0..1 */
+let fade = 1;
+/** the song ended in a fade: the next one starts silent and fades in */
+let fadeInNext = false;
+let fadeTimer: number | undefined;
+const outVolume = () => effectiveVolume() * fade;
+
+function crossfades(t: Track | undefined): boolean {
+  return useSettings.getState().crossfade && !!t && (t.mediaType === 'music' || t.mediaType === 'musicvideo');
+}
+
+/** Near the end of a song, turn it down as it closes. */
+function fadeOutTail(position: number, duration: number) {
+  if (fadeInNext) return; // the next song is waiting to fade in
+  const { index, queue } = get();
+  const more = index + 1 < queue.length || useSettings.getState().repeat === 'all';
+  const f = crossfades(track(get().currentId)) && more && duration > FADE_S * 3 ? Math.max(0, Math.min(1, (duration - position) / FADE_S)) : 1;
+  if (Math.abs(f - fade) < 0.02 && !(f === 1 && fade !== 1)) return;
+  fade = f;
+  active?.setVolume(outVolume());
+}
+
+function fadeIn() {
+  window.clearInterval(fadeTimer);
+  const t0 = performance.now();
+  const from = fade;
+  fadeTimer = window.setInterval(() => {
+    fade = Math.min(1, from + (performance.now() - t0) / (FADE_S * 1000));
+    active?.setVolume(outVolume());
+    if (fade >= 1) window.clearInterval(fadeTimer);
+  }, 50);
+}
+
 function makeCallbacks(kind: MediaAdapter['kind']): AdapterCallbacks {
   const isActive = () => active?.kind === kind;
   return {
@@ -88,6 +127,7 @@ function makeCallbacks(kind: MediaAdapter['kind']): AdapterCallbacks {
       const d = duration || get().duration;
       set({ position, duration: d });
       maybeSaveBookmark(position, d);
+      if (!fadeTimer || fade >= 1) fadeOutTail(position, d);
     },
     onPlaying() {
       if (!isActive()) return;
@@ -97,6 +137,10 @@ function makeCallbacks(kind: MediaAdapter['kind']): AdapterCallbacks {
         return;
       }
       consecutiveErrors = 0;
+      if (fadeInNext) {
+        fadeInNext = false;
+        fadeIn();
+      }
       set({ status: 'playing', error: null });
       updateMediaSessionState();
     },
@@ -252,6 +296,11 @@ async function loadIndex(index: number, autoplay: boolean, startAt?: number) {
   const id = queue[index];
   const t = track(id);
   window.clearTimeout(errorTimer);
+  window.clearInterval(fadeTimer);
+  fadeTimer = undefined;
+  fade = fadeInNext && crossfades(t) ? 0 : 1;
+  if (!fade) fadeInNext = true;
+  else fadeInNext = false;
   if (!t) {
     set({ currentId: null, status: 'idle', index: 0 });
     return;
@@ -272,11 +321,13 @@ async function loadIndex(index: number, autoplay: boolean, startAt?: number) {
     trackSerial: get().trackSerial + 1,
   });
   updateMediaSessionMeta();
-  await next.load(t, { autoplay: autoplay && !outputHeld, startAt: start, volume: effectiveVolume(), rate: rateFor(t) });
+  await next.load(t, { autoplay: autoplay && !outputHeld, startAt: start, volume: outVolume(), rate: rateFor(t) });
 }
 
 function handleEnded() {
   const { currentId, index, queue } = get();
+  // ended in a fade: the next song comes in the same way
+  fadeInNext = fade < 0.5;
   if (currentId) useLibrary.getState().recordPlay(currentId);
   if (currentId) useLibrary.getState().setBookmark(currentId, 0);
   const repeat = useSettings.getState().repeat;
@@ -470,7 +521,7 @@ export const player = {
 
   setVolume(v: number) {
     useSettings.getState().set('volume', Math.max(0, Math.min(1, v)));
-    active?.setVolume(effectiveVolume());
+    active?.setVolume(outVolume());
   },
 
   volumeBy(delta: number) {
@@ -547,7 +598,7 @@ if (typeof window !== 'undefined') {
   useSettings.subscribe((s) => {
     if (s.eq !== prev.eq) setEq(s.eq);
     if (s.soundCheck !== prev.soundCheck) setSoundCheck(s.soundCheck);
-    if (s.volume !== prev.volume || s.volumeLimit !== prev.volumeLimit) active?.setVolume(effectiveVolume());
+    if (s.volume !== prev.volume || s.volumeLimit !== prev.volumeLimit) active?.setVolume(outVolume());
     if (s.audiobookSpeed !== prev.audiobookSpeed) player.applyRate();
     prev = s;
   });

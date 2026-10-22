@@ -1758,17 +1758,6 @@
   background: #007aff;
 }
 
-/* device turns for landscape video */
-/* Settings ▸ Videos ▸ Rotate for Video: the whole iPod turns sideways.
-   The stage wrapper is rotated (not just the device) so the EarPods jack
-   markers that live next to the device turn with it. */
-.device-enter:has(> .n7-device) {
-  transition: transform 0.65s cubic-bezier(0.3, 0.9, 0.3, 1);
-}
-.device-enter:has(> .n7-landscape) {
-  transform: translate(-50%, -50%) rotateZ(-90deg);
-}
-
 /* ------------------------------------------------------------- settings */
 .n7-sicon {
   width: 22px;

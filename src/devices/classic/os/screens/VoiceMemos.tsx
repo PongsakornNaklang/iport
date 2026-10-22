@@ -7,6 +7,7 @@ import { formatTime } from '../../../../core/util/format';
 import { uid } from '../../../../core/util/id';
 import { useInput, useOS, type OSApi } from '../core';
 import { ListView, type Row } from '../ListView';
+import { t as tx } from '../i18n';
 
 /** Voice memos play through the shared player as 'voicememo' tracks. */
 function playMemo(os: OSApi, m: VoiceMemo) {
@@ -38,7 +39,7 @@ export function VoiceMemosScreen() {
   const current = usePlayer((s) => s.currentId);
   const rows = useMemo<Row[]>(
     () => [
-      { key: '__rec', label: 'Start Recording', chevron: true, onSelect: () => os.nav.push({ title: 'Record', el: <Recorder /> }) },
+      { key: '__rec', label: tx('Start Recording'), chevron: true, onSelect: () => os.nav.push({ title: tx('Record'), el: <Recorder /> }) },
       ...[...memos]
         .sort((a, b) => b.createdAt - a.createdAt)
         .map((m) => ({
@@ -51,15 +52,15 @@ export function VoiceMemosScreen() {
             os.menu({
               title: m.name,
               options: [
-                { label: 'Play', action: () => playMemo(os, m) },
+                { label: tx('Play'), action: () => playMemo(os, m) },
                 {
-                  label: 'Delete',
+                  label: tx('Delete'),
                   action: () => {
                     useLibrary.getState().removeTracks([`vm_${m.id}`].filter((id) => useLibrary.getState().tracks[id]));
                     useLibrary.getState().removeVoiceMemo(m.id);
                   },
                 },
-                { label: 'Cancel' },
+                { label: tx('Cancel') },
               ],
             }),
         })),
@@ -93,7 +94,7 @@ function Recorder() {
   const start = async () => {
     if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') {
       setState('error');
-      setError('Recording is not supported in this browser.');
+      setError(tx('Recording is not supported in this browser.'));
       return;
     }
     setState('starting');
@@ -131,7 +132,7 @@ function Recorder() {
       tick();
     } catch (e) {
       setState('error');
-      setError(e instanceof Error && e.name === 'NotAllowedError' ? 'Microphone access was denied.' : 'No microphone is available.');
+      setError(tx(e instanceof Error && e.name === 'NotAllowedError' ? 'Microphone access was denied.' : 'No microphone is available.'));
     }
   };
 
@@ -187,7 +188,7 @@ function Recorder() {
       return true;
     }
     if (e.type === 'click' && e.button === 'menu' && rec.current) {
-      os.menu({ title: 'Discard this recording?', options: [{ label: 'Discard', action: () => (cleanup(), os.nav.pop()) }, { label: 'Stop and Save', action: save }, { label: 'Cancel' }] });
+      os.menu({ title: tx('Discard this recording?'), options: [{ label: tx('Discard'), action: () => (cleanup(), os.nav.pop()) }, { label: tx('Stop and Save'), action: save }, { label: tx('Cancel') }] });
       return true;
     }
     return false;
@@ -206,7 +207,7 @@ function Recorder() {
       <div className="cl-rec-opts">
         {options.map((o, i) => (
           <div key={o} className={`cl-rec-opt ${i === Math.min(sel, options.length - 1) ? 'cl-sel' : ''}`}>
-            {o}
+            {tx(o)}
           </div>
         ))}
       </div>

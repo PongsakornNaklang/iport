@@ -1,8 +1,8 @@
 import { memo, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { appName } from '../apps/registry';
 import { claim, localPoint, suppressNextClick } from './gesture';
 import { AppIcon } from './icons';
-import { os, prefs, usePrefs, useOS, type HomeLayout } from './store';
+import { isFolder, os, prefs, usePrefs, useOS, type HomeLayout } from './store';
+import { FolderIcon, FolderView, iconName, mergeInto, takeOut } from './Folders';
 import { Wallpaper } from './wallpapers';
 import { player } from '../../../core/player/player';
 import { Glyph } from './glyphs';
@@ -66,6 +66,15 @@ export function HomeScreen({ wall, dark }: { wall: string; dark: boolean }) {
   const [drag, setDrag] = useState<{ id: string; x: number; y: number } | null>(null);
   const [work, setWork] = useState<HomeLayout | null>(null);
   const lay = work ?? layout;
+  const workRef = useRef(work);
+  workRef.current = work;
+  // folders: the one open, and the icon a dragged app is held over (to make or fill one)
+  const [openFolder, setOpenFolder] = useState<string | null>(null);
+  const [merge, setMerge] = useState<string | null>(null);
+  const mergeRef = useRef<{ over: string | null; on: boolean; t?: number }>({ over: null, on: false });
+  useEffect(() => {
+    if (app || locked) setOpenFolder(null);
+  }, [app, locked]);
   const nPages = lay.pages.length;
 
   // app launch / close animation of the icons
@@ -142,6 +151,11 @@ export function HomeScreen({ wall, dark }: { wall: string; dark: boolean }) {
       if (Math.hypot(dx, dy) < 8) return;
       if (Math.abs(dx) < Math.abs(dy)) {
         pg.current = null;
+        // a pull down opens Spotlight
+        if (dy > 0 && !useOS.getState().jiggle) {
+          suppressNextClick();
+          os.setOverlay('spotlight');
+        }
         return;
       }
       if (!claim(e.pointerId, e.currentTarget)) {
@@ -195,7 +209,7 @@ export function HomeScreen({ wall, dark }: { wall: string; dark: boolean }) {
   };
 
   // ---------------------------------------------------------------- drag to rearrange
-  const dragInfo = useRef<{ id: string; pointer: number; hoverT: number; edge: number } | null>(null);
+  const dragInfo = useRef<{ id: string; pointer: number; hoverT: number; edge: number; settle?: number } | null>(null);
   const startDrag = (id: string, e: React.PointerEvent) => {
     const scr = contentRef.current!;
     const p = localPoint(scr, e.clientX, e.clientY);
@@ -211,6 +225,35 @@ export function HomeScreen({ wall, dark }: { wall: string; dark: boolean }) {
       if (!d || ev.pointerId !== d.pointer) return;
       const p = localPoint(scr, ev.clientX, ev.clientY);
       setDrag({ id: d.id, x: p.x, y: p.y });
+      // held over another icon's middle: it will go into a folder with it
+      const m = mergeRef.current;
+      const cur0 = useOS.getState().homePage;
+      const here = (workRef.current ?? prefs().layout).pages[cur0] ?? [];
+      let over: string | null = null;
+      if (!isFolder(d.id)) {
+        here.forEach((other, i) => {
+          if (other === d.id) return;
+          const g = gridPos(i);
+          if (Math.hypot(p.x - (g.x + 30), p.y - (g.y + 30)) < 22) over = other;
+        });
+      }
+      if (over !== m.over) {
+        window.clearTimeout(m.t);
+        m.over = over;
+        m.on = false;
+        setMerge(null);
+        if (over) {
+          const target = over;
+          m.t = window.setTimeout(() => {
+            m.on = true;
+            setMerge(target);
+          }, 420);
+        }
+      }
+      if (over) {
+        window.clearTimeout(d.settle);
+        return;
+      }
       // page flip at the edges
       const edge = p.x < 14 ? -1 : p.x > 306 ? 1 : 0;
       if (edge !== d.edge) {
@@ -230,21 +273,37 @@ export function HomeScreen({ wall, dark }: { wall: string; dark: boolean }) {
         });
         return;
       }
-      setWork((w) => (w ? reorder(w, d.id, p.x, p.y, useOS.getState().homePage) : w));
+      // the others make room once the finger pauses (so it can be held over one instead)
+      window.clearTimeout(d.settle);
+      d.settle = window.setTimeout(() => setWork((w) => (w ? reorder(w, d.id, p.x, p.y, useOS.getState().homePage) : w)), 220);
     };
     const up = (ev: PointerEvent) => {
       const d = dragInfo.current;
       if (!d || ev.pointerId !== d.pointer) return;
       dragInfo.current = null;
       setDrag(null);
-      setWork((w) => {
-        if (w) {
-          const pages = w.pages.filter((p2, i) => p2.length || i === 0);
-          usePrefs.getState().set('layout', { pages, dock: w.dock });
-          if (useOS.getState().homePage >= pages.length) useOS.setState({ homePage: pages.length - 1 });
-        }
-        return null;
-      });
+      window.clearTimeout(d.settle);
+      const end = localPoint(scr, ev.clientX, ev.clientY);
+      const m = mergeRef.current;
+      window.clearTimeout(m.t);
+      const into = m.on ? m.over : null;
+      mergeRef.current = { over: null, on: false };
+      setMerge(null);
+      // (outside a state updater: those may run twice)
+      const w = workRef.current;
+      setWork(null);
+      if (w && into) {
+        // dropped onto an icon: into a folder together
+        const res = mergeInto(w, into, d.id);
+        usePrefs.getState().set('layout', { pages: res.layout.pages.filter((p2, i) => p2.length || i === 0), dock: res.layout.dock });
+        window.setTimeout(() => setOpenFolder(res.fid), 60);
+      } else if (w) {
+        // where it was let go, even if the others had no time to make room
+        const L2 = keep(reorder(w, d.id, end.x, end.y, useOS.getState().homePage), d.id, useOS.getState().homePage);
+        const pages = L2.pages.filter((p2, i) => p2.length || i === 0);
+        usePrefs.getState().set('layout', { pages, dock: L2.dock });
+        if (useOS.getState().homePage >= pages.length) useOS.setState({ homePage: pages.length - 1 });
+      }
     };
     window.addEventListener('pointermove', move, true);
     window.addEventListener('pointerup', up, true);
@@ -273,7 +332,20 @@ export function HomeScreen({ wall, dark }: { wall: string; dark: boolean }) {
             <div key={pi} className="t7-page-grid" style={{ left: pi * 320 }}>
               {p.map((id, i) => {
                 const pos = gridPos(i);
-                return <HomeIcon key={id} id={id} x={pos.x} y={pos.y} jiggle={jiggle} dragging={drag?.id === id} onDragStart={startDrag} seed={i + pi * 7} />;
+                return (
+                  <HomeIcon
+                    key={id}
+                    id={id}
+                    x={pos.x}
+                    y={pos.y}
+                    jiggle={jiggle}
+                    dragging={drag?.id === id}
+                    merging={merge === id}
+                    onDragStart={startDrag}
+                    onOpenFolder={setOpenFolder}
+                    seed={i + pi * 7}
+                  />
+                );
               })}
             </div>
           ))}
@@ -285,7 +357,18 @@ export function HomeScreen({ wall, dark }: { wall: string; dark: boolean }) {
         </div>
         <div className="t7-dock">
           {lay.dock.map((id, i) => (
-            <HomeIcon key={id} id={id} x={dockX(i, lay.dock.length)} y={DOCK_ICON_Y - DOCK_TOP} jiggle={jiggle} dragging={drag?.id === id} onDragStart={startDrag} seed={i + 3} noLabel />
+            <HomeIcon
+              key={id}
+              id={id}
+              x={dockX(i, lay.dock.length)}
+              y={DOCK_ICON_Y - DOCK_TOP}
+              jiggle={jiggle}
+              dragging={drag?.id === id}
+              onDragStart={startDrag}
+              onOpenFolder={setOpenFolder}
+              seed={i + 3}
+              noLabel
+            />
           ))}
         </div>
         {jiggle && (
@@ -299,9 +382,21 @@ export function HomeScreen({ wall, dark }: { wall: string; dark: boolean }) {
           </>
         )}
       </div>
+      {openFolder && (
+        <FolderView
+          key={openFolder}
+          fid={openFolder}
+          onClose={() => setOpenFolder(null)}
+          onDragOut={(a, e) => {
+            takeOut(openFolder, a);
+            setOpenFolder(null);
+            startDrag(a, e);
+          }}
+        />
+      )}
       {drag && (
         <div className="t7-drag-icon" style={{ left: drag.x - 34, top: drag.y - 34 }}>
-          <AppIcon id={drag.id} size={68} />
+          {isFolder(drag.id) ? <FolderIcon fid={drag.id.slice(7)} size={68} /> : <AppIcon id={drag.id} size={68} />}
         </div>
       )}
       {overlay === 'switcher' && <div className="t7-home-block" />}
@@ -341,6 +436,16 @@ function reorder(L: HomeLayout, id: string, x: number, y: number, page: number):
   const res = { pages, dock };
   return same(res, L) ? L : res;
 }
+/** An app taken out of a folder and let go where it can't go (a full dock) still lands somewhere: the end of the page. */
+function keep(L: HomeLayout, id: string, page: number): HomeLayout {
+  if (L.dock.includes(id) || L.pages.some((p) => p.includes(id))) return L;
+  const pages = L.pages.map((p) => [...p]);
+  let i = Math.min(page, pages.length - 1);
+  while (pages[i] && pages[i].length >= PER_PAGE) i++;
+  if (!pages[i]) pages[i] = [];
+  pages[i].push(id);
+  return { pages, dock: L.dock };
+}
 function same(a: HomeLayout, b: HomeLayout) {
   return JSON.stringify(a) === JSON.stringify(b);
 }
@@ -352,8 +457,10 @@ const HomeIcon = memo(function HomeIcon({
   jiggle,
   dragging,
   onDragStart,
+  onOpenFolder,
   seed,
   noLabel,
+  merging,
 }: {
   id: string;
   x: number;
@@ -361,9 +468,14 @@ const HomeIcon = memo(function HomeIcon({
   jiggle: boolean;
   dragging: boolean;
   onDragStart: (id: string, e: React.PointerEvent) => void;
+  onOpenFolder: (fid: string) => void;
   seed: number;
   noLabel?: boolean;
+  /** a dragged app is held over it: it will become (or join) a folder */
+  merging?: boolean;
 }) {
+  const folders = usePrefs((s) => s.folders);
+  const folder = isFolder(id);
   const [pressed, setPressed] = useState(false);
   const st = useRef<{ x: number; y: number; t: number; id: number; e: React.PointerEvent | null } | null>(null);
   const ref = useRef<HTMLDivElement>(null);
@@ -390,7 +502,7 @@ const HomeIcon = memo(function HomeIcon({
           const scr = ref.current?.closest('.t7-screen') as HTMLElement | null;
           const r = ref.current!.getBoundingClientRect();
           const p = scr ? localPoint(scr, r.left, r.bottom) : { x: 0, y: 300 };
-          os.showMenu(items, p.y + 8, appName(id));
+          os.showMenu(folder ? items.slice(-1) : items, p.y + 8, iconName(id, folders));
           s.e = null;
         }, 520);
         st.current = { x: e.clientX, y: e.clientY, t, id: e.pointerId, e: evt };
@@ -420,15 +532,18 @@ const HomeIcon = memo(function HomeIcon({
         setPressed(false);
       }}
       onClick={() => {
+        // a folder opens even while the icons jiggle
+        if (folder) return onOpenFolder(id.slice(7));
         if (useOS.getState().jiggle) return;
         os.openApp(id, true);
       }}
     >
-      <div className="t7-hicon-art">
-        <AppIcon id={id} />
-        {jiggle && <span className="t7-hicon-minus">−</span>}
+      <div className={`t7-hicon-art ${merging ? 'merging' : ''}`}>
+        {folder ? <FolderIcon fid={id.slice(7)} /> : <AppIcon id={id} />}
+        {merging && !folder && <span className="t7-merge-ring" />}
+        {jiggle && !folder && <span className="t7-hicon-minus">−</span>}
       </div>
-      {!noLabel && <div className="t7-hicon-label">{appName(id)}</div>}
+      {!noLabel && <div className="t7-hicon-label">{iconName(id, folders)}</div>}
     </div>
   );
 });

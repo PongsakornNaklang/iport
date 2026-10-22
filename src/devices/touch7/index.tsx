@@ -4,9 +4,10 @@
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Box3D, Device3D, EdgeDecal } from '../../shell/Device3D';
-import { BodyExtras } from '../../shell/bodySlot';
+import { BodyExtras, SockScreenGuard } from '../../shell/bodySlot';
 import { Decals } from '../../shell/decals/Decals';
 import { isTypingTarget } from '../../shell/keyboard';
+import { useStage } from '../../shell/stageStore';
 import { player } from '../../core/player/player';
 import type { DeviceProps } from '../types';
 import { APPLE_LOGO } from './os/icons';
@@ -39,6 +40,7 @@ function useHomeButton() {
 
   const down = () => {
     setPressed(true);
+    os.homePressed(true);
     longFired.current = false;
     window.clearTimeout(longTimer.current);
     longTimer.current = window.setTimeout(() => {
@@ -50,7 +52,10 @@ function useHomeButton() {
   };
   const up = () => {
     setPressed(false);
+    os.homePressed(false);
     window.clearTimeout(longTimer.current);
+    // part of a screenshot (Home + Sleep/Wake): nothing else
+    if (os.homeConsumed()) return;
     if (longFired.current) return;
     const st = useOS.getState();
     if (pending.current) {
@@ -71,6 +76,7 @@ function useHomeButton() {
   };
   const cancel = () => {
     setPressed(false);
+    os.homePressed(false);
     window.clearTimeout(longTimer.current);
   };
   useEffect(
@@ -90,18 +96,23 @@ export default function IpodTouch({ model, appearance }: DeviceProps) {
   const darkFront = luminance(front) < 0.35;
   const landscape = useOS((s) => s.landscape);
   const home = useHomeButton();
-  const rootRef = useRef<HTMLDivElement>(null);
-  const [lsScale, setLsScale] = useState(1);
   const [btn, setBtn] = useState<string | null>(null);
 
-  // fit the rotated body on narrow viewports
+  // A landscape video lays the iPod on its side on the stage, and turning it
+  // by hand (the view controls) turns the video too, as its motion sensor would.
   useEffect(() => {
-    if (!landscape || !rootRef.current) return;
-    const r = rootRef.current.getBoundingClientRect();
-    const projected = Math.max(r.width, r.height);
-    const avail = window.innerWidth * 0.94;
-    setLsScale(Math.min(1, avail / Math.max(1, projected)));
+    useStage.getState().autoRoll(landscape);
   }, [landscape]);
+  useEffect(() => {
+    const off = useStage.subscribe((s, prev) => {
+      if (s.roll === prev.roll) return;
+      if (useOS.getState().videoOpen && s.roll !== useOS.getState().landscape) os.setLandscape(s.roll);
+    });
+    return () => {
+      off();
+      useStage.getState().autoRoll(false);
+    };
+  }, []);
 
   // keyboard: H home, L sleep/wake, +/- volume, space play/pause
   useEffect(() => {
@@ -117,7 +128,7 @@ export default function IpodTouch({ model, appearance }: DeviceProps) {
         e.preventDefault();
       } else if (k === 'l' || k === 'L') {
         if (e.repeat) return;
-        os.sleepWake();
+        os.topDown();
         flash('sleep');
       } else if (k === '+' || k === '=' || k === 'ArrowUp') {
         if (k === 'ArrowUp' && !e.shiftKey) return;
@@ -133,6 +144,7 @@ export default function IpodTouch({ model, appearance }: DeviceProps) {
       }
     };
     const onUp = (e: KeyboardEvent) => {
+      if (e.key === 'l' || e.key === 'L') os.topUp();
       if (e.key === 'h' || e.key === 'H') {
         if (hDown) {
           hDown = false;
@@ -210,9 +222,8 @@ export default function IpodTouch({ model, appearance }: DeviceProps) {
 
   return (
     <div
-      ref={rootRef}
       className={`t7-root ${landscape ? 'is-landscape' : ''}`}
-      style={{ width, height, transform: landscape ? `rotate(-90deg) scale(${lsScale})` : undefined }}
+      style={{ width, height }}
     >
       <Device3D
         width={width}
@@ -260,6 +271,11 @@ export default function IpodTouch({ model, appearance }: DeviceProps) {
                 <Screen appearance={appearance} />
               </div>
             </div>
+            <SockScreenGuard
+              area={{ left: (width - SCREEN_W) / 2 - FRONT_INSET, top: (height - SCREEN_H) / 2 - FRONT_INSET, width: SCREEN_W, height: SCREEN_H }}
+              height={height}
+              top={FRONT_INSET}
+            />
             <button
               className={`t7-homebtn ${home.pressed ? 'pressed' : ''}`}
               data-control=""
@@ -332,9 +348,11 @@ export default function IpodTouch({ model, appearance }: DeviceProps) {
           onPointerDown={(e) => {
             if (e.button !== 0) return;
             e.stopPropagation();
+            e.currentTarget.setPointerCapture(e.pointerId);
             flash('sleep');
-            os.sleepWake();
+            os.topDown();
           }}
+          onPointerUp={() => os.topUp()}
         />
         {/* Volume + / − on the left edge */}
         <Box3D

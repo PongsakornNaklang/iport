@@ -10,6 +10,7 @@ import { useNow } from '../../../../core/util/hooks';
 import { clamp, useInput, useOS } from '../core';
 import { ChoiceList } from '../common';
 import { ListView, type Row } from '../ListView';
+import { locale, t } from '../i18n';
 
 // ------------------------------------------------------------------ alarms
 
@@ -26,6 +27,15 @@ const REPEATS: { label: string; days: number[] }[] = [
   { label: 'Weekends', days: [0, 6] },
   ...['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map((d, i) => ({ label: `Every ${d}`, days: [i] })),
 ];
+
+/** a repeat as the chosen language says it ("Every Sunday" names the day in it) */
+function repeatText(label: string): string {
+  const r = REPEATS.find((x) => x.label === label);
+  if (!label.startsWith('Every ') || !r || r.days.length !== 1) return t(label);
+  // 1 Jan 2023 was a Sunday
+  const day = new Date(2023, 0, 1 + r.days[0]).toLocaleDateString(locale(), { weekday: 'long' });
+  return t('Every {d}', { d: day });
+}
 
 function repeatLabel(days: number[]): string {
   const key = [...days].sort().join(',');
@@ -45,29 +55,29 @@ export function AlarmsScreen() {
     return [
       {
         key: '__create',
-        label: 'Create Alarm',
+        label: t('Create Alarm'),
         chevron: true,
         onSelect: () => {
           const id = useLibrary.getState().upsertAlarm({ time: 7 * 60, label: 'Alarm', enabled: true, repeat: [] });
-          os.nav.push({ title: 'Alarm', el: <AlarmEditor id={id} /> });
+          os.nav.push({ title: t('Alarm'), el: <AlarmEditor id={id} /> });
         },
       },
       {
         key: '__sleep',
-        label: 'Sleep Timer',
+        label: t('Sleep Timer'),
         detail: sleepAt ? `${left} min` : 'Off',
         chevron: true,
-        onSelect: () => os.nav.push({ title: 'Sleep Timer', el: <SleepTimer /> }),
+        onSelect: () => os.nav.push({ title: t('Sleep Timer'), el: <SleepTimer /> }),
       },
       ...[...alarms]
         .sort((a, b) => a.time - b.time)
         .map((a) => ({
           key: a.id,
-          label: `${minutesLabel(a.time, use24h)}  ${a.label}`,
-          detail: a.enabled ? 'On' : 'Off',
+          label: `${minutesLabel(a.time, use24h)}  ${t(a.label)}`,
+          detail: t(a.enabled ? 'On' : 'Off'),
           dim: !a.enabled,
           chevron: true,
-          onSelect: () => os.nav.push({ title: 'Alarm', el: <AlarmEditor id={a.id} /> }),
+          onSelect: () => os.nav.push({ title: t('Alarm'), el: <AlarmEditor id={a.id} /> }),
         })),
     ];
   }, [alarms, use24h, sleepAt, now, os]);
@@ -84,36 +94,37 @@ function AlarmEditor({ id }: { id: string }) {
     if (!a) return [];
     const soundLabel = a.playlistId ? lists.find((p) => p.id === a.playlistId)?.name ?? 'Playlist' : a.sound === 'None' ? 'None' : 'Beep';
     return [
-      { key: 'on', label: 'Alarm', detail: a.enabled ? 'On' : 'Off', onSelect: () => set({ enabled: !a.enabled }) },
+      { key: 'on', label: t('Alarm'), detail: t(a.enabled ? 'On' : 'Off'), onSelect: () => set({ enabled: !a.enabled }) },
       {
         key: 'time',
-        label: 'Time',
+        label: t('Time'),
         detail: minutesLabel(a.time, use24h),
         chevron: true,
-        onSelect: () => os.nav.push({ title: 'Time', el: <TimePicker value={a.time} onDone={(m) => set({ time: m, enabled: true })} /> }),
+        onSelect: () => os.nav.push({ title: t('Time'), el: <TimePicker value={a.time} onDone={(m) => set({ time: m, enabled: true })} /> }),
       },
       {
         key: 'repeat',
-        label: 'Repeat',
-        detail: repeatLabel(a.repeat),
+        label: t('Repeat'),
+        detail: repeatText(repeatLabel(a.repeat)),
         chevron: true,
         onSelect: () =>
           os.nav.push({
-            title: 'Repeat',
-            el: <ChoiceList choices={REPEATS.map((r) => ({ value: r.label, label: r.label }))} value={repeatLabel(a.repeat)} onPick={(v) => set({ repeat: REPEATS.find((r) => r.label === v)?.days ?? [] })} />,
+            title: t('Repeat'),
+            el: <ChoiceList raw choices={REPEATS.map((r) => ({ value: r.label, label: repeatText(r.label) }))} value={repeatLabel(a.repeat)} onPick={(v) => set({ repeat: REPEATS.find((r) => r.label === v)?.days ?? [] })} />,
           }),
       },
       {
         key: 'sound',
-        label: 'Alerts',
+        label: t('Alerts'),
         detail: soundLabel,
         chevron: true,
         onSelect: () =>
           os.nav.push({
-            title: 'Alerts',
+            title: t('Alerts'),
             el: (
               <ChoiceList
-                choices={[{ value: '__beep', label: 'Beep' }, { value: '__none', label: 'None' }, ...lists.map((p) => ({ value: p.id, label: p.name }))]}
+                raw
+                choices={[{ value: '__beep', label: t('Beep') }, { value: '__none', label: t('None') }, ...lists.map((p) => ({ value: p.id, label: p.name }))]}
                 value={a.playlistId ?? (a.sound === 'None' ? '__none' : '__beep')}
                 onPick={(v) => (v === '__beep' ? set({ sound: 'Beep', playlistId: undefined }) : v === '__none' ? set({ sound: 'None', playlistId: undefined }) : set({ playlistId: v }))}
               />
@@ -122,33 +133,33 @@ function AlarmEditor({ id }: { id: string }) {
       },
       {
         key: 'label',
-        label: 'Label',
-        detail: a.label,
+        label: t('Label'),
+        detail: t(a.label),
         chevron: true,
-        onSelect: () => os.nav.push({ title: 'Label', el: <ChoiceList choices={LABELS.map((l) => ({ value: l, label: l }))} value={a.label} onPick={(v) => set({ label: v })} /> }),
+        onSelect: () => os.nav.push({ title: t('Label'), el: <ChoiceList choices={LABELS.map((l) => ({ value: l, label: l }))} value={a.label} onPick={(v) => set({ label: v })} /> }),
       },
       {
         key: 'delete',
-        label: 'Delete',
+        label: t('Delete'),
         onSelect: () =>
           os.menu({
-            title: 'Delete this alarm?',
+            title: t('Delete this alarm?'),
             options: [
               {
-                label: 'Delete',
+                label: t('Delete'),
                 action: () => {
                   useLibrary.getState().removeAlarm(id);
                   os.nav.pop();
                 },
               },
-              { label: 'Cancel' },
+              { label: t('Cancel') },
             ],
           }),
       },
     ];
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [a, use24h, lists, os, id]);
-  if (!a) return <ListView rows={[]} empty="Alarm deleted" />;
+  if (!a) return <ListView rows={[]} empty={t('Alarm deleted')} />;
   return <ListView rows={rows} />;
 }
 
@@ -189,7 +200,7 @@ export function TimePicker({ value, onDone }: { value: number; onDone: (minutes:
         <span className={`cl-picker-f ${field === 1 ? 'on' : ''}`}>{String(m).padStart(2, '0')}</span>
         {!use24h && <span className={`cl-picker-f cl-picker-ampm ${field === 2 ? 'on' : ''}`}>{h >= 12 ? 'PM' : 'AM'}</span>}
       </div>
-      <div className="cl-picker-hint">Turn the wheel to change, press center to continue.</div>
+      <div className="cl-picker-hint">{t('Turn the wheel to change, press center to continue.')}</div>
     </div>
   );
 }
@@ -299,7 +310,7 @@ export function ClocksScreen() {
 
   const addClock = () =>
     os.nav.push({
-      title: 'Add Clock',
+      title: t('Add Clock'),
       el: (
         <ChoiceList
           choices={CITIES.map((c) => ({ value: c.city, label: c.city }))}
@@ -322,9 +333,9 @@ export function ClocksScreen() {
       os.menu({
         title: c?.city ?? 'Clocks',
         options: [
-          { label: 'Add', action: addClock },
-          ...(c ? [{ label: 'Delete', action: () => useLibrary.getState().removeWorldClock(c.id) }] : []),
-          { label: 'Cancel' },
+          { label: t('Add'), action: addClock },
+          ...(c ? [{ label: t('Delete'), action: () => useLibrary.getState().removeWorldClock(c.id) }] : []),
+          { label: t('Cancel') },
         ],
       });
       return true;
@@ -332,7 +343,7 @@ export function ClocksScreen() {
     return false;
   });
 
-  if (!clocks.length) return <ListView rows={[{ key: 'add', label: 'Add Clock', chevron: true, onSelect: addClock }]} />;
+  if (!clocks.length) return <ListView rows={[{ key: 'add', label: t('Add Clock'), chevron: true, onSelect: addClock }]} />;
   return (
     <div className="cl-clocks">
       {clocks.slice(top, top + visible + 1).map((c, k) => {
@@ -347,7 +358,7 @@ export function ClocksScreen() {
             <AnalogClock h={z.h} m={z.m} s={z.s} size={44} night={night} />
             <div className="cl-clock-text">
               <b>{c.city}</b>
-              <span>{diff === 0 ? 'Today' : diff > 0 ? 'Tomorrow' : 'Yesterday'}</span>
+              <span>{t(diff === 0 ? 'Today' : diff > 0 ? 'Tomorrow' : 'Yesterday')}</span>
             </div>
             <div className="cl-clock-time">{formatClock(d, use24h)}</div>
           </div>
@@ -422,7 +433,7 @@ export function StopwatchScreen() {
     <div className="cl-sw">
       <div className="cl-sw-main">{fmtSw(total)}</div>
       <div className="cl-sw-lap">
-        Lap {sw.laps.length + 1}: {fmtSw(current)}
+        {t('Lap {n}', { n: sw.laps.length + 1 })}: {fmtSw(current)}
       </div>
       <div className="cl-sw-laps">
         {[...sw.laps]
@@ -431,12 +442,12 @@ export function StopwatchScreen() {
           .slice(0, 5)
           .map(({ l, i }) => (
             <div key={i}>
-              <span>Lap {i + 1}</span>
+              <span>{t('Lap {n}', { n: i + 1 })}</span>
               <span>{fmtSw(l)}</span>
             </div>
           ))}
       </div>
-      <div className="cl-sw-hint">{sw.running ? '❚❚ Stop  ·  ● Lap' : total ? '▶ Resume  ·  ● Reset' : '▶ Start'}</div>
+      <div className="cl-sw-hint">{sw.running ? `❚❚ ${t('Stop')}  ·  ● ${t('Lap')}` : total ? `▶ ${t('Resume')}  ·  ● ${t('Reset')}` : `▶ ${t('Start')}`}</div>
     </div>
   );
 }

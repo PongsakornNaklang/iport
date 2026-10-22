@@ -582,15 +582,23 @@ export function SearchField({
   placeholder = 'Search',
   className,
   onFocusChange,
+  autoFocus,
 }: {
   value: string;
   onChange: (v: string) => void;
   placeholder?: string;
   className?: string;
   onFocusChange?: (f: boolean) => void;
+  /** focus once it has slid in */
+  autoFocus?: boolean;
 }) {
   const ref = useRef<HTMLInputElement>(null);
   const [focus, setFocus] = useState(false);
+  useEffect(() => {
+    if (!autoFocus) return;
+    const t = window.setTimeout(() => ref.current?.focus({ preventScroll: true }), 320);
+    return () => window.clearTimeout(t);
+  }, [autoFocus]);
   const clicks = usePrefs((s) => s.keyboardClicks);
   return (
     <div className={`t7-search ${focus ? 'focused' : ''} ${className ?? ''}`}>
@@ -599,6 +607,7 @@ export function SearchField({
         <input
           ref={ref}
           value={value}
+          enterKeyHint="search"
           placeholder={placeholder}
           onChange={(e) => onChange(e.target.value)}
           onKeyDown={() => clicks && playTap()}

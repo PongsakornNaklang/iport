@@ -1,8 +1,11 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect } from 'react';
 import { useCustomize } from '../core/customize/store';
 import { getModel, MODELS } from '../devices/registry';
 import type { DeviceModel } from '../devices/types';
-import { IconChevronDown } from './icons';
+import { isTypingTarget } from '../shell/keyboard';
+import { switchModel, useModelSwitch } from '../shell/modelSwitch';
+import { toggleOverview, useOverview } from '../shell/overview';
+import { ModelArt } from './ModelArt';
 
 /** Tiny line drawing of each model for the picker. */
 export function ModelThumb({ model, color, size = 44 }: { model: DeviceModel; color?: string; size?: number }) {
@@ -43,67 +46,60 @@ export function ModelThumb({ model, color, size = 44 }: { model: DeviceModel; co
   );
 }
 
+/**
+ * The iPod's name in the top bar. Click it and every iPod floats up on the
+ * stage to choose from (shell/overview.ts). Shift ← → steps to the
+ * previous or next iPod at any time.
+ */
 export function ModelPicker() {
   const modelId = useCustomize((s) => s.modelId);
-  const setModel = useCustomize((s) => s.setModel);
-  const appearances = useCustomize((s) => s.appearances);
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const appearance = useCustomize((s) => s.appearances[s.modelId]);
+  const open = useOverview((s) => s.open);
   const model = getModel(modelId);
 
+  // Ahead of the iPod's own keys (the Click Wheel uses ← →), so take them first.
   useEffect(() => {
-    if (!open) return;
-    const close = (e: PointerEvent) => {
-      if (!ref.current?.contains(e.target as Node)) setOpen(false);
+    const taken = new Set<string>();
+    const down = (e: KeyboardEvent) => {
+      if (useOverview.getState().open || !e.shiftKey || isTypingTarget(e.target) || e.metaKey || e.ctrlKey || e.altKey) return;
+      const d = e.key === 'ArrowLeft' ? -1 : e.key === 'ArrowRight' ? 1 : 0;
+      if (!d) return;
+      if (!e.repeat) step(d);
+      taken.add(e.key);
+      e.preventDefault();
+      e.stopImmediatePropagation();
     };
-    window.addEventListener('pointerdown', close);
-    return () => window.removeEventListener('pointerdown', close);
-  }, [open]);
-
-  const swatchOf = (m: DeviceModel) => {
-    const a = appearances[m.id];
-    const f = m.finishes.find((x) => x.id === a?.finishId);
-    return f?.swatch ?? Object.values(a?.colors ?? {})[0] ?? m.finishes[0].swatch;
-  };
+    const up = (e: KeyboardEvent) => {
+      if (taken.delete(e.key)) e.stopImmediatePropagation();
+    };
+    window.addEventListener('keydown', down, true);
+    window.addEventListener('keyup', up, true);
+    return () => {
+      window.removeEventListener('keydown', down, true);
+      window.removeEventListener('keyup', up, true);
+    };
+  }, []);
 
   return (
-    <div className="model-picker" ref={ref}>
-      <button className="model-picker-btn" onClick={() => setOpen(!open)} aria-haspopup="listbox" aria-expanded={open}>
-        <ModelThumb model={model} color={swatchOf(model)} size={28} />
-        <div>
-          <div className="mp-name">{model.name}</div>
-          <div className="mp-gen">
-            {model.generation} · {model.year}
-          </div>
-        </div>
-        <IconChevronDown width={14} height={14} style={{ opacity: 0.6 }} />
+    <div className="model-picker">
+      <button
+        className="model-picker-btn"
+        onClick={toggleOverview}
+        aria-expanded={open}
+        aria-label={`${model.name}: choose an iPod`}
+        title={`${model.name} · ${model.generation} · ${model.year}\nChoose an iPod (Shift ← →)`}
+      >
+        <ModelArt model={model} appearance={appearance} height={28} />
       </button>
-      {open && (
-        <div className="model-menu" role="listbox">
-          {MODELS.map((m) => (
-            <button
-              key={m.id}
-              role="option"
-              aria-selected={m.id === modelId}
-              className={`model-item ${m.id === modelId ? 'selected' : ''}`}
-              onClick={() => {
-                setModel(m.id);
-                setOpen(false);
-              }}
-            >
-              <div className="mi-thumb">
-                <ModelThumb model={m} color={swatchOf(m)} />
-              </div>
-              <div style={{ minWidth: 0 }}>
-                <div className="mi-name">{m.name}</div>
-                <div className="mi-meta">{m.generation}</div>
-                <div className="mi-blurb">{m.blurb}</div>
-              </div>
-              <div className="mi-year">{m.year}</div>
-            </button>
-          ))}
-        </div>
-      )}
     </div>
   );
+}
+
+/** where quick presses are heading, so they step on from there, not from the iPod still turning away */
+let aim: string | null = null;
+function step(d: number) {
+  const cur = useCustomize.getState().modelId;
+  const from = MODELS.findIndex((m) => m.id === (aim && useModelSwitch.getState().leaving ? aim : cur));
+  aim = MODELS[(from + d + MODELS.length) % MODELS.length].id;
+  switchModel(aim);
 }

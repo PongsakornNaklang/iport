@@ -1681,3 +1681,618 @@
     transform: rotate(360deg);
   }
 }
+
+/* ------------------------------------------------------------------ slide to power off */
+.t7-power {
+  position: absolute;
+  inset: 0;
+  z-index: 880;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.35);
+  -webkit-backdrop-filter: blur(18px) saturate(1.2);
+  backdrop-filter: blur(18px) saturate(1.2);
+  opacity: 0;
+  transition: opacity 280ms ease;
+}
+.t7-power.on {
+  opacity: 1;
+}
+.t7-power-track {
+  position: relative;
+  margin-top: 74px;
+  height: 60px;
+  border-radius: 30px;
+  background: rgba(255, 255, 255, 0.28);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  transition: opacity 300ms ease;
+}
+.t7-power.off .t7-power-track {
+  opacity: 0;
+}
+.t7-power-label {
+  position: absolute;
+  inset: 0 0 0 52px;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-size: 17px;
+  letter-spacing: -0.2px;
+  pointer-events: none;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.55) 0%, #fff 45%, rgba(255, 255, 255, 0.55) 90%) 0 0 / 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: t7-power-shimmer 2.4s linear infinite;
+}
+@keyframes t7-power-shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: 0 0;
+  }
+}
+.t7-power-knob {
+  position: absolute;
+  left: 4px;
+  top: 4px;
+  border-radius: 50%;
+  background: #fff;
+  color: #ff3b30;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+  transition: transform 300ms var(--t7-ease);
+  touch-action: none;
+  cursor: grab;
+}
+.t7-power-cancel {
+  margin-top: auto;
+  margin-bottom: 70px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  background: none;
+  color: #fff;
+  font: inherit;
+  font-size: 15px;
+}
+.t7-power-x {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.28);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+}
+.t7-power-spin {
+  position: absolute;
+  left: calc(50% - 14px);
+  top: calc(50% - 14px);
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.25);
+  border-top-color: #fff;
+  animation: t7-spin 0.9s linear infinite;
+}
+@keyframes t7-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+/* starting up: the Apple on black */
+.t7-boot {
+  position: absolute;
+  inset: 0;
+  z-index: 990;
+  background: #000;
+  display: grid;
+  place-items: center;
+  animation: t7-boot-in 700ms ease both;
+}
+@keyframes t7-boot-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* ------------------------------------------------------------------ banners */
+.t7-banner {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  top: 6px;
+  z-index: 740;
+  transform: translateY(-120%);
+  transition: transform 420ms var(--t7-ease);
+  touch-action: none;
+}
+.t7-banner.on {
+  transform: translateY(0);
+}
+.t7-banner .t7-notif {
+  animation: none;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18);
+  background: rgba(245, 245, 247, 0.86);
+}
+.t7-dark .t7-banner .t7-notif {
+  background: rgba(40, 40, 44, 0.86);
+}
+
+/* ------------------------------------------------------------------ screenshots */
+.t7-shot-flash {
+  position: absolute;
+  inset: 0;
+  z-index: 960;
+  background: #fff;
+  pointer-events: none;
+  animation: t7-shot-flash 520ms ease-out forwards;
+}
+@keyframes t7-shot-flash {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+.t7-shot-thumb {
+  position: absolute;
+  left: 14px;
+  bottom: 16px;
+  z-index: 950;
+  width: 84px;
+  padding: 0;
+  border: 3px solid #fff;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #000;
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.35);
+  animation: t7-shot-in 520ms var(--t7-ease) both;
+}
+.t7-shot-thumb img {
+  display: block;
+  width: 100%;
+}
+@keyframes t7-shot-in {
+  from {
+    transform: translate(-14px, 16px) scale(3.6);
+    transform-origin: 0 100%;
+    opacity: 0.6;
+  }
+}
+
+/* ------------------------------------------------------------------ Spotlight */
+.t7-spot {
+  position: absolute;
+  inset: 0;
+  z-index: 560;
+  display: flex;
+  flex-direction: column;
+  background: rgba(30, 30, 40, 0.38);
+  -webkit-backdrop-filter: blur(28px) saturate(1.4);
+  backdrop-filter: blur(28px) saturate(1.4);
+  color: #fff;
+  opacity: 0;
+  transform: translateY(-14px);
+  transition:
+    opacity 260ms ease,
+    transform 320ms var(--t7-ease);
+}
+.t7-spot.on {
+  opacity: 1;
+  transform: none;
+}
+.t7-spot-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 28px 10px 6px;
+}
+.t7-spot-bar .t7-search {
+  flex: 1;
+  padding: 0;
+}
+.t7-spot-bar .t7-search-box {
+  background: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.75);
+}
+.t7-spot-bar input {
+  color: #fff;
+}
+.t7-spot-bar input::placeholder {
+  color: rgba(255, 255, 255, 0.65);
+}
+.t7-spot-cancel {
+  border: 0;
+  background: none;
+  color: #fff;
+  font: inherit;
+  font-size: 16px;
+  padding: 4px 2px;
+}
+.t7-spot-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 12px 20px;
+}
+.t7-spot-h {
+  margin: 14px 4px 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.7);
+}
+.t7-spot-apps {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px 0;
+  padding: 12px 4px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.14);
+}
+.t7-spot-apps button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  border: 0;
+  background: none;
+  color: #fff;
+  font: inherit;
+  font-size: 11px;
+  min-width: 0;
+}
+.t7-spot-apps span {
+  max-width: 66px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.t7-spot-list {
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.14);
+  overflow: hidden;
+}
+.t7-spot-list button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 12px;
+  border: 0;
+  background: none;
+  color: #fff;
+  font: inherit;
+  text-align: left;
+}
+.t7-spot-list button + button {
+  border-top: 0.5px solid rgba(255, 255, 255, 0.18);
+}
+.t7-spot-txt {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.t7-spot-txt b,
+.t7-spot-txt small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.t7-spot-txt b {
+  font-size: 15px;
+  font-weight: 500;
+}
+.t7-spot-txt small {
+  font-size: 12.5px;
+  color: rgba(255, 255, 255, 0.7);
+}
+.t7-spot-none {
+  margin-top: 60px;
+  text-align: center;
+  font-size: 17px;
+  color: rgba(255, 255, 255, 0.7);
+}
+/* Spotlight has its own Cancel, which closes it */
+.t7-spot-bar .t7-search-cancel {
+  display: none;
+}
+
+/* ------------------------------------------------------------------ keyboard */
+.t7-kb {
+  --kb-key: #fff;
+  --kb-fn: #abb1ba;
+  --kb-ink: #000;
+  --kb-shadow: #898a8d;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 705;
+  padding: 0 3px 4px;
+  background: rgba(209, 212, 218, 0.94);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  transform: translateY(100%);
+  transition: transform 280ms var(--t7-ease);
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.t7-dark .t7-kb {
+  --kb-key: #6b6b6e;
+  --kb-fn: #464648;
+  --kb-ink: #fff;
+  --kb-shadow: #1e1e1f;
+  background: rgba(43, 43, 46, 0.94);
+}
+.t7-kb.on {
+  transform: none;
+}
+.t7-kb-qt {
+  display: flex;
+  height: 38px;
+  align-items: center;
+  margin: 0 -3px 6px;
+}
+.t7-kb-qt span {
+  flex: 1;
+  text-align: center;
+  font-size: 16px;
+  color: var(--kb-ink);
+}
+.t7-kb-qt span + span {
+  border-left: 1px solid rgba(128, 128, 128, 0.3);
+  height: 22px;
+  line-height: 22px;
+}
+.t7-kb-row {
+  display: flex;
+  gap: 6px;
+  height: 42px;
+  margin-bottom: 11px;
+}
+.t7-kb-row2 {
+  padding: 0 16px;
+}
+.t7-kb-bottom {
+  margin-bottom: 0;
+}
+.t7-kb-key {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  border-radius: 5px;
+  padding: 0;
+  background: var(--kb-key);
+  color: var(--kb-ink);
+  box-shadow: 0 1px 0 var(--kb-shadow);
+  font: inherit;
+  font-size: 22px;
+  font-weight: 300;
+  display: grid;
+  place-items: center;
+}
+.t7-kb-key:active {
+  background: var(--kb-fn);
+}
+.t7-kb-fn {
+  background: var(--kb-fn);
+  font-size: 15px;
+  font-weight: 400;
+}
+.t7-kb-fn:active {
+  background: var(--kb-key);
+}
+.t7-kb-shift,
+.t7-kb-del,
+.t7-kb-sym {
+  flex: 0 0 42px;
+}
+.t7-kb-shift.on {
+  background: var(--kb-key);
+}
+.t7-kb-mid {
+  flex: 1;
+  display: flex;
+  gap: 6px;
+  padding: 0 8px;
+}
+.t7-kb-mid-wide {
+  padding: 0 4px;
+}
+.t7-kb-mid-wide .t7-kb-key {
+  flex: 0 0 auto;
+  width: calc((100% - 24px) / 5);
+}
+.t7-kb-123,
+.t7-kb-return {
+  flex: 0 0 78px;
+}
+.t7-kb-space {
+  flex: 1;
+  font-size: 15px;
+  font-weight: 400;
+}
+.t7-kb-return.blue {
+  background: #007aff;
+  color: #fff;
+}
+/* the key under the finger, bigger above it */
+.t7-kb-pop {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 46px;
+  height: 92px;
+  margin-left: -23px;
+  border-radius: 10px;
+  background: var(--kb-key);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  font-size: 34px;
+  padding-top: 8px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  pointer-events: none;
+  z-index: 2;
+}
+/* a long text (Notes) or a message bar stays above the keyboard (--kb-h: Keyboard.tsx) */
+.t7-screen.kb-inset .t7-app,
+.t7-screen.kb-inset .t7-sheet-wrap {
+  bottom: var(--kb-h, 251px);
+}
+.t7-kb-globe {
+  flex: 0 0 40px;
+}
+.t7-kb-globe + .t7-kb-space {
+  margin-left: 0;
+}
+.t7-kb-123 {
+  flex-basis: 40px;
+}
+/* Thai: four rows of twelve narrow keys */
+.t7-kb-th .t7-kb-row {
+  gap: 4px;
+  height: 38px;
+  margin-bottom: 9px;
+}
+.t7-kb-th .t7-kb-bottom {
+  margin-bottom: 0;
+}
+.t7-kb-th .t7-kb-row .t7-kb-key {
+  font-size: 19px;
+}
+.t7-kb-th .t7-kb-row .t7-kb-fn,
+.t7-kb-th .t7-kb-space {
+  font-size: 14px;
+}
+.t7-kb-th .t7-kb-row11 {
+  padding: 0 12px;
+}
+.t7-kb-th .t7-kb-shift,
+.t7-kb-th .t7-kb-del {
+  flex-basis: 34px;
+}
+.t7-kb-th .t7-kb-mid {
+  gap: 4px;
+  padding: 0 2px;
+}
+
+/* ------------------------------------------------------------------ folders (Folders.tsx) */
+.t7-folder-icon {
+  position: relative;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.32);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  backdrop-filter: blur(18px) saturate(1.4);
+}
+.t7-dark .t7-folder-icon {
+  background: rgba(40, 40, 46, 0.45);
+}
+.t7-folder-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  justify-items: center;
+}
+.t7-folder-grid .t7-appicon {
+  box-shadow: none;
+}
+/* an app held over another: the folder it will make */
+.t7-hicon-art.merging {
+  transform: scale(1.08);
+  transition: transform 200ms var(--t7-ease);
+}
+.t7-merge-ring {
+  position: absolute;
+  inset: -7px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.35);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  z-index: -1;
+}
+/* an open folder */
+.t7-folder-open {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+  background: rgba(0, 0, 0, 0.12);
+  -webkit-backdrop-filter: blur(0);
+  backdrop-filter: blur(0);
+  opacity: 0;
+  transition:
+    opacity 260ms ease,
+    backdrop-filter 260ms ease,
+    -webkit-backdrop-filter 260ms ease;
+}
+.t7-folder-open.on {
+  opacity: 1;
+  -webkit-backdrop-filter: blur(22px);
+  backdrop-filter: blur(22px);
+}
+.t7-folder-title {
+  color: #fff;
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: -0.4px;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.25);
+  max-width: 260px;
+  text-align: center;
+}
+.t7-folder-name {
+  width: 260px;
+  border: 0;
+  border-radius: 12px;
+  padding: 4px 10px;
+  background: rgba(255, 255, 255, 0.28);
+  color: #fff;
+  font: inherit;
+  text-align: center;
+  outline: none;
+}
+.t7-folder-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, 76px);
+  gap: 14px 0;
+  justify-items: center;
+  padding: 22px 14px;
+  min-height: 250px;
+  align-content: start;
+  border-radius: 36px;
+  background: rgba(255, 255, 255, 0.3);
+  -webkit-backdrop-filter: blur(24px) saturate(1.4);
+  backdrop-filter: blur(24px) saturate(1.4);
+  transform: scale(0.4);
+  transition: transform 340ms var(--t7-ease);
+}
+.t7-folder-open.on .t7-folder-card {
+  transform: none;
+}
+.t7-dark .t7-folder-card {
+  background: rgba(40, 40, 46, 0.5);
+}
+.t7-folder-app {
+  position: relative;
+  left: auto;
+  top: auto;
+}
+.t7-folder-app.jig .t7-hicon-art {
+  animation: t7-jiggle 0.26s ease-in-out infinite alternate;
+  animation-delay: var(--jd);
+}

@@ -589,6 +589,25 @@
   gap: 3px;
   min-width: 0;
 }
+/* on a tall screen (art above) and a grey LCD (no art) the text is centred */
+.cl-np-tall .cl-np-info,
+.cl-np-text .cl-np-info {
+  align-items: center;
+  text-align: center;
+  gap: 2px;
+}
+.cl-np-tall .cl-np-count,
+.cl-np-text .cl-np-count {
+  align-self: stretch;
+  margin-bottom: 4px;
+}
+.cl-np-text .cl-np-count {
+  margin-bottom: 14px;
+}
+.cl-np-tall .cl-np-info > *,
+.cl-np-text .cl-np-info > * {
+  max-width: 100%;
+}
 .cl-np-count {
   display: flex;
   justify-content: space-between;
@@ -1095,6 +1114,10 @@
 }
 .cl-boot-light {
   background: #fff;
+}
+.cl-mono .cl-boot-light,
+.cl-mono .cl-np {
+  background: var(--bg);
 }
 .cl-boot-logo {
   color: #e9e9e9;

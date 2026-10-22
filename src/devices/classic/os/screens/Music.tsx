@@ -24,6 +24,7 @@ import { useSettings } from '../../../../core/settings/store';
 import { clamp, useInput, useOS, type OSApi, type MenuOption } from '../core';
 import { ListView, type Row } from '../ListView';
 import { R } from '../routes';
+import { t as tx } from '../i18n';
 
 // ------------------------------------------------------------------ shared helpers
 
@@ -48,21 +49,21 @@ export function songMenu(os: OSApi, id: string, from: 'list' | 'nowplaying' = 'l
   const t = useLibrary.getState().tracks[id];
   if (!t) return;
   const addOTG: MenuOption = {
-    label: 'Add to On-The-Go',
+    label: tx('Add to On-The-Go'),
     action: () => {
       useLibrary.getState().addToOnTheGo([id]);
       os.hud('Added to On-The-Go');
     },
   };
-  const genius: MenuOption[] = os.caps.genius ? [{ label: 'Start Genius', action: () => startGenius(os, id) }] : [];
-  const album: MenuOption = { label: 'Browse Album', action: () => os.nav.push(R.album(albumKey(t), t.album || 'Unknown Album')) };
-  const artist: MenuOption = { label: 'Browse Artist', action: () => os.nav.push(R.artist(t.artist || 'Unknown Artist')) };
+  const genius: MenuOption[] = os.caps.genius ? [{ label: tx('Start Genius'), action: () => startGenius(os, id) }] : [];
+  const album: MenuOption = { label: tx('Browse Album'), action: () => os.nav.push(R.album(albumKey(t), t.album || tx('Unknown Album'))) };
+  const artist: MenuOption = { label: tx('Browse Artist'), action: () => os.nav.push(R.artist(t.artist || tx('Unknown Artist'))) };
   const options: MenuOption[] =
     from === 'nowplaying'
-      ? [...genius, addOTG, album, artist, { label: 'Cancel' }]
+      ? [...genius, addOTG, album, artist, { label: tx('Cancel') }]
       : [
           {
-            label: 'Play Next',
+            label: tx('Play Next'),
             action: () => {
               player.enqueueNext([id]);
               os.hud('Play Next');
@@ -72,7 +73,7 @@ export function songMenu(os: OSApi, id: string, from: 'list' | 'nowplaying' = 'l
           ...genius,
           album,
           artist,
-          { label: 'Cancel' },
+          { label: tx('Cancel') },
         ];
   os.menu({ title: t.title, options });
 }
@@ -80,7 +81,7 @@ export function songMenu(os: OSApi, id: string, from: 'list' | 'nowplaying' = 'l
 /** A list of songs: select plays the list from that song, hold opens the song menu. */
 const NO_ROWS: Row[] = [];
 
-export function SongList({ ids, indexed, before = NO_ROWS, after = NO_ROWS, empty = 'No Songs' }: { ids: string[]; indexed?: boolean; before?: Row[]; after?: Row[]; empty?: string }) {
+export function SongList({ ids, indexed, before = NO_ROWS, after = NO_ROWS, empty = tx('No Songs') }: { ids: string[]; indexed?: boolean; before?: Row[]; after?: Row[]; empty?: string }) {
   const os = useOS();
   const tracks = useTracks();
   const current = usePlayer((s) => s.currentId);
@@ -91,7 +92,7 @@ export function SongList({ ids, indexed, before = NO_ROWS, after = NO_ROWS, empt
         const t = tracks[id];
         return {
           key: `${i}:${id}`,
-          label: t?.title || 'Untitled',
+          label: t?.title || tx('Untitled'),
           speaker: id === current,
           onSelect: () => playList(os, ids, i),
           onHold: () => songMenu(os, id),
@@ -112,16 +113,18 @@ export function MusicMenu() {
   const rows = useMemo(() => {
     const all: { label: string; go: () => void; cap?: boolean }[] = [
       { label: 'Cover Flow', go: () => os.nav.push(R.coverFlow()), cap: os.caps.coverFlow },
-      { label: 'Genius Mixes', go: () => os.nav.push(R.geniusMixes()), cap: os.caps.genius },
-      { label: 'Playlists', go: () => os.nav.push(R.playlists()) },
-      { label: 'Artists', go: () => os.nav.push(R.artists()) },
-      { label: 'Albums', go: () => os.nav.push(R.albums()) },
-      { label: 'Compilations', go: () => os.nav.push(R.compilations()) },
-      { label: 'Songs', go: () => os.nav.push(R.songs()) },
-      { label: 'Genres', go: () => os.nav.push(R.genres()) },
-      { label: 'Composers', go: () => os.nav.push(R.composers()) },
-      { label: 'Audiobooks', go: () => os.nav.push(R.audiobooks()) },
-      { label: 'Search', go: () => os.nav.push(R.search()), cap: os.caps.search },
+      { label: tx('Genius Mixes'), go: () => os.nav.push(R.geniusMixes()), cap: os.caps.genius },
+      { label: tx('Playlists'), go: () => os.nav.push(R.playlists()) },
+      { label: tx('Artists'), go: () => os.nav.push(R.artists()) },
+      { label: tx('Albums'), go: () => os.nav.push(R.albums()) },
+      { label: tx('Compilations'), go: () => os.nav.push(R.compilations()) },
+      { label: tx('Songs'), go: () => os.nav.push(R.songs()) },
+      // the iPods before the classic kept Podcasts here, not in the main menu
+      { label: tx('Podcasts'), go: () => os.nav.push(R.podcasts()), cap: os.caps.podcasts && os.caps.backlightItem },
+      { label: tx('Genres'), go: () => os.nav.push(R.genres()) },
+      { label: tx('Composers'), go: () => os.nav.push(R.composers()) },
+      { label: tx('Audiobooks'), go: () => os.nav.push(R.audiobooks()) },
+      { label: tx('Search'), go: () => os.nav.push(R.search()), cap: os.caps.search },
     ];
     return all
       .filter((x) => x.cap !== false && mm[x.label] !== false)
@@ -145,7 +148,7 @@ export function PlaylistsScreen() {
       })),
     [lists, os],
   );
-  return <ListView rows={rows} empty="No Playlists" />;
+  return <ListView rows={rows} empty={tx('No Playlists')} />;
 }
 
 export function PlaylistScreen({ id }: { id: string }) {
@@ -158,34 +161,34 @@ export function PlaylistScreen({ id }: { id: string }) {
     return [
       {
         key: '__save',
-        label: 'Save Playlist',
+        label: tx('Save Playlist'),
         onSelect: () =>
           os.menu({
-            title: 'Save On-The-Go?',
+            title: tx('Save On-The-Go?'),
             options: [
               {
-                label: 'Save Playlist',
+                label: tx('Save Playlist'),
                 action: () => {
                   useLibrary.getState().saveOnTheGo();
                   os.hud('Playlist Saved');
                 },
               },
-              { label: 'Cancel' },
+              { label: tx('Cancel') },
             ],
           }),
       },
       {
         key: '__clear',
-        label: 'Clear Playlist',
+        label: tx('Clear Playlist'),
         onSelect: () =>
           os.menu({
-            title: 'Clear On-The-Go?',
-            options: [{ label: 'Clear Playlist', action: () => useLibrary.getState().clearOnTheGo() }, { label: 'Cancel' }],
+            title: tx('Clear On-The-Go?'),
+            options: [{ label: tx('Clear Playlist'), action: () => useLibrary.getState().clearOnTheGo() }, { label: tx('Cancel') }],
           }),
       },
     ];
   }, [p, ids.length, os]);
-  if (!p) return <ListView rows={[]} empty="Playlist not found" />;
+  if (!p) return <ListView rows={[]} empty={tx('Playlist not found')} />;
   return <SongList ids={ids} after={after} empty={id === ON_THE_GO_ID ? 'No Songs' : 'No Songs'} />;
 }
 
@@ -198,7 +201,7 @@ export function ArtistsScreen() {
     () => artists(tracks).map((a) => ({ key: a.name, label: a.name, chevron: true, onSelect: () => os.nav.push(R.artist(a.name)) })),
     [tracks, os],
   );
-  return <ListView rows={rows} indexed empty="No Artists" />;
+  return <ListView rows={rows} indexed empty={tx('No Artists')} />;
 }
 
 export function ArtistScreen({ name }: { name: string }) {
@@ -207,7 +210,7 @@ export function ArtistScreen({ name }: { name: string }) {
   const rows = useMemo<Row[]>(() => {
     const al = albumsOfArtist(tracks, name);
     return [
-      { key: '__all', label: 'All Albums', chevron: true, onSelect: () => os.nav.push(R.artistSongs(name)) },
+      { key: '__all', label: tx('All Albums'), chevron: true, onSelect: () => os.nav.push(R.artistSongs(name)) },
       ...al.map((a) => ({ key: a.key, label: a.title, chevron: true, onSelect: () => os.nav.push(R.album(a.key, a.title)) })),
     ];
   }, [tracks, name, os]);
@@ -236,7 +239,7 @@ export function AlbumsScreen() {
       })),
     [tracks, os],
   );
-  return <ListView rows={rows} variant="art" indexed empty="No Albums" />;
+  return <ListView rows={rows} variant="art" indexed empty={tx('No Albums')} />;
 }
 
 export function CompilationsScreen() {
@@ -254,7 +257,7 @@ export function CompilationsScreen() {
       })),
     [tracks, os],
   );
-  return <ListView rows={rows} variant="art" empty="No Compilations" />;
+  return <ListView rows={rows} variant="art" empty={tx('No Compilations')} />;
 }
 
 export function AlbumScreen({ albumKey: key }: { albumKey: string }) {
@@ -278,7 +281,7 @@ export function GenresScreen() {
     () => genres(tracks).map((g) => ({ key: g.name, label: g.name, chevron: true, onSelect: () => os.nav.push(R.genre(g.name)) })),
     [tracks, os],
   );
-  return <ListView rows={rows} indexed empty="No Genres" />;
+  return <ListView rows={rows} indexed empty={tx('No Genres')} />;
 }
 
 export function GenreScreen({ name }: { name: string }) {
@@ -287,9 +290,9 @@ export function GenreScreen({ name }: { name: string }) {
   const rows = useMemo<Row[]>(() => {
     const g = genres(tracks).find((x) => x.name === name);
     const ids = g?.trackIds ?? [];
-    const names = [...new Set(ids.map((id) => tracks[id]?.artist || 'Unknown Artist'))].sort((a, b) => a.localeCompare(b));
+    const names = [...new Set(ids.map((id) => tracks[id]?.artist || tx('Unknown Artist')))].sort((a, b) => a.localeCompare(b));
     return [
-      { key: '__all', label: 'All Songs', chevron: true, onSelect: () => os.nav.push({ title: name, el: <SongList ids={ids} /> }) },
+      { key: '__all', label: tx('All Songs'), chevron: true, onSelect: () => os.nav.push({ title: name, el: <SongList ids={ids} /> }) },
       ...names.map((n) => ({ key: n, label: n, chevron: true, onSelect: () => os.nav.push(R.artist(n)) })),
     ];
   }, [tracks, name, os]);
@@ -303,7 +306,7 @@ export function ComposersScreen() {
     () => composers(tracks).map((g) => ({ key: g.name, label: g.name, chevron: true, onSelect: () => os.nav.push(R.composer(g.name)) })),
     [tracks, os],
   );
-  return <ListView rows={rows} indexed empty="No Composers" />;
+  return <ListView rows={rows} indexed empty={tx('No Composers')} />;
 }
 
 export function ComposerScreen({ name }: { name: string }) {
@@ -326,7 +329,7 @@ export function AudiobooksScreen() {
       })),
     [tracks, os, current],
   );
-  return <ListView rows={rows} empty="No Audiobooks" />;
+  return <ListView rows={rows} empty={tx('No Audiobooks')} />;
 }
 
 // ------------------------------------------------------------------ Genius
@@ -336,10 +339,10 @@ export function GeniusScreen({ seedId }: { seedId: string }) {
   const [ids, setIds] = useState(() => geniusPlaylist(useLibrary.getState().tracks, seedId));
   const before = useMemo<Row[]>(
     () => [
-      { key: '__refresh', label: 'Refresh', onSelect: () => setIds(geniusPlaylist(useLibrary.getState().tracks, seedId)) },
+      { key: '__refresh', label: tx('Refresh'), onSelect: () => setIds(geniusPlaylist(useLibrary.getState().tracks, seedId)) },
       {
         key: '__save',
-        label: 'Save Playlist',
+        label: tx('Save Playlist'),
         onSelect: () => {
           useLibrary.getState().saveGenius(seedId, ids);
           os.hud('Playlist Saved');
@@ -372,8 +375,8 @@ export function GeniusMixesScreen() {
   if (!mixes.length)
     return (
       <div className="cl-message">
-        <b>No Genius Mixes</b>
-        <span>Genius Mixes are created from your library when you have enough songs in a genre.</span>
+        <b>{tx('No Genius Mixes')}</b>
+        <span>{tx('Genius Mixes are created from your library when you have enough songs in a genre.')}</span>
       </div>
     );
   return (

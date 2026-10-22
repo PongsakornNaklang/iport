@@ -18,7 +18,18 @@ interface StageState {
   back(): void;
   side(): void;
   toggleSpin(): void;
+  /** the iPod lying on its side, turned a quarter to the left (landscape) */
+  roll: boolean;
+  toggleRoll(): void;
+  /**
+   * A device turning itself for landscape content (video, Cover Flow) and
+   * back. Turning back restores whatever the button had set.
+   */
+  autoRoll(on: boolean): void;
 }
+
+/** what `roll` was before a device turned itself (null: it hasn't) */
+let beforeAuto: boolean | null = null;
 
 export const useStage = create<StageState>((set, get) => ({
   zoom: 1,
@@ -47,7 +58,27 @@ export const useStage = create<StageState>((set, get) => ({
   toggleSpin() {
     set({ spinning: !get().spinning });
   },
+  roll: false,
+  toggleRoll() {
+    beforeAuto = null;
+    set({ roll: !get().roll });
+  },
+  autoRoll(on) {
+    if (on) {
+      if (beforeAuto === null) beforeAuto = get().roll;
+      set({ roll: true });
+    } else if (beforeAuto !== null) {
+      set({ roll: beforeAuto });
+      beforeAuto = null;
+    }
+  },
 }));
 
-/** Current device orientation in degrees, updated every frame by the stage (not reactive). */
-export const liveOrientation = { rx: 0, ry: 0 };
+/** The angle `roll` turns the iPod by (CSS rotateZ, degrees). */
+export const ROLL_ANGLE = -90;
+
+/**
+ * Current device orientation in degrees, updated every frame by the stage
+ * (not reactive). `roll` is the turn in the screen plane, 0 to ROLL_ANGLE.
+ */
+export const liveOrientation = { rx: 0, ry: 0, roll: 0 };

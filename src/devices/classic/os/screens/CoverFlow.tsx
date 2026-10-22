@@ -7,6 +7,7 @@ import { compareTitles, formatTime } from '../../../../core/util/format';
 import { clamp, useInput, useOS, useScreen } from '../core';
 import { SpeakerGlyph } from '../glyphs';
 import { playList, songMenu } from './Music';
+import { t as tx } from '../i18n';
 
 const COVER = 128;
 const TOP = 34;
@@ -140,7 +141,7 @@ export function CoverFlow() {
   if (!n)
     return (
       <div className="cl-cf">
-        <div className="cl-cf-empty">No Albums</div>
+        <div className="cl-cf-empty">{tx('No Albums')}</div>
       </div>
     );
 

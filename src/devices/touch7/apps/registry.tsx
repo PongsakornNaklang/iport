@@ -29,7 +29,7 @@ export const APPS: Record<string, AppDef> = {
   itunes: { id: 'itunes', name: 'iTunes Store', status: 'auto', bg: 'system', Comp: lazy(() => import('./ITunes')) },
   safari: { id: 'safari', name: 'Safari', status: 'auto', bg: 'system', Comp: lazy(() => import('./Safari')) },
   reminders: { id: 'reminders', name: 'Reminders', status: 'auto', bg: 'grouped', Comp: lazy(() => import('./Reminders')) },
-  messages: { id: 'messages', name: 'Messages', status: 'auto', bg: 'system', Comp: stub('messages') },
+  messages: { id: 'messages', name: 'Messages', status: 'auto', bg: 'system', Comp: lazy(() => import('./Messages')) },
   facetime: { id: 'facetime', name: 'FaceTime', status: 'auto', bg: 'system', Comp: stub('facetime') },
   mail: { id: 'mail', name: 'Mail', status: 'auto', bg: 'grouped', Comp: stub('mail') },
   maps: { id: 'maps', name: 'Maps', status: 'auto', bg: 'system', Comp: stub('maps') },

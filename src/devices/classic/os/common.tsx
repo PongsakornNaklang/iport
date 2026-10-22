@@ -1,16 +1,17 @@
 import { useMemo, useState, type ReactNode } from 'react';
 import { useInput, useOS } from './core';
 import { ListView, type Row } from './ListView';
+import { t } from './i18n';
 
 /** A row that toggles On/Off in place, like Settings ▸ Sound Check. */
 export function toggleRow(label: string, value: boolean, set: (v: boolean) => void): Row {
-  return { key: label, label, detail: value ? 'On' : 'Off', onSelect: () => set(!value) };
+  return { key: label, label: t(label), detail: t(value ? 'On' : 'Off'), onSelect: () => set(!value) };
 }
 
 /** A row that cycles through values in place, like Settings ▸ Repeat. */
 export function cycleRow<T>(label: string, value: T, choices: { value: T; label: string }[], set: (v: T) => void): Row {
   const i = Math.max(0, choices.findIndex((c) => c.value === value));
-  return { key: label, label, detail: choices[i]?.label ?? '', onSelect: () => set(choices[(i + 1) % choices.length].value) };
+  return { key: label, label: t(label), detail: t(choices[i]?.label ?? ''), onSelect: () => set(choices[(i + 1) % choices.length].value) };
 }
 
 /** Pick one value from a list (✓ on the current one); goes back after picking. */
@@ -19,26 +20,29 @@ export function ChoiceList<T>({
   value,
   onPick,
   stay,
+  raw,
 }: {
   choices: { value: T; label: string }[];
   value: T;
   onPick: (v: T) => void;
   /** stay on the list after picking */
   stay?: boolean;
+  /** the labels are names (playlists…) or already translated: shown as they are */
+  raw?: boolean;
 }) {
   const os = useOS();
   const rows = useMemo<Row[]>(
     () =>
       choices.map((c, i) => ({
         key: `${i}:${c.label}`,
-        label: c.label,
+        label: raw ? c.label : t(c.label),
         check: c.value === value,
         onSelect: () => {
           onPick(c.value);
           if (!stay) os.nav.pop();
         },
       })),
-    [choices, value, onPick, os, stay],
+    [choices, value, onPick, os, stay, raw],
   );
   const initial = Math.max(0, choices.findIndex((c) => c.value === value));
   return <ListView rows={rows} initial={initial} />;

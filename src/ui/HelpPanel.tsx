@@ -32,8 +32,8 @@ export default function HelpPanel({ onClose }: { onClose: () => void }) {
           <ul>
             <li>Your mouse is your finger: click to tap, drag to scroll and swipe.</li>
             <li>Press the <b>Home button</b> to go home, double-press for the app switcher, hold for Siri.</li>
-            <li>Swipe up from the bottom edge for Control Center, down from the top for notifications.</li>
-            <li>The real buttons work: Sleep/Wake on top, volume on the left side.</li>
+            <li>Swipe up from the bottom edge for Control Center, down from the top for notifications, down on the Home Screen to search.</li>
+            <li>The real buttons work: Sleep/Wake on top (hold it to power off or on), volume on the left side. Home and Sleep/Wake together take a screenshot.</li>
           </ul>
         )}
         {model.family === 'nano-touch' && (
@@ -144,9 +144,21 @@ export default function HelpPanel({ onClose }: { onClose: () => void }) {
             </tr>
             <tr>
               <td>
+                <K>T</K>
+              </td>
+              <td>Turn the iPod on its side (landscape) and back</td>
+            </tr>
+            <tr>
+              <td>
                 <K>⌘/Ctrl</K> <K>Z</K>
               </td>
               <td>Undo a design change (add <K>Shift</K> to redo)</td>
+            </tr>
+            <tr>
+              <td>
+                <K>Shift</K> <K>←</K> <K>→</K>
+              </td>
+              <td>Previous / next iPod</td>
             </tr>
           </tbody>
         </table>
@@ -155,8 +167,12 @@ export default function HelpPanel({ onClose }: { onClose: () => void }) {
         <ul>
           <li>Drag the background to rotate. It keeps spinning if you let go mid-swipe.</li>
           <li>Hold <K>Shift</K> or drag with the right mouse button to rotate while over the controls.</li>
-          <li>Scroll on the background to zoom; double-click empty space to face front.</li>
-          <li>The camera button with the view controls saves the iPod as a picture, as you see it, on a transparent background.</li>
+          <li>Scroll on the background to zoom (two fingers on a phone); double-click or double-tap empty space to face front at 100%.</li>
+          <li>On a phone, the round button in the bottom corner holds the views: front, back, side, spin and landscape.</li>
+          <li>
+            Landscape lays the iPod on its side. Everything still works the way it would in your hand: the top of a turned click wheel is
+            Forward, and swipes on a touch screen go along the iPod. Videos and Cover Flow turn it for you, and stand it back up after.
+          </li>
         </ul>
 
         <h3>Adding music</h3>

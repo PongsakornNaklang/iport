@@ -49,8 +49,10 @@ export interface ListViewProps {
  * The iPod list: blue selection bar, chevrons, a scroll bar on long lists,
  * marquee for long titles, scroll acceleration and the big index letter.
  */
-export function ListView({ rows, indexed, variant = 'plain', height, initial = 0, onHighlight, empty, className, style, disabled }: ListViewProps) {
+export function ListView({ rows, indexed, variant: asked = 'plain', height, initial = 0, onHighlight, empty, className, style, disabled }: ListViewProps) {
   const os = useOS();
+  // a grey LCD shows no artwork
+  const variant = os.color ? asked : 'plain';
   const { active } = useScreen();
   const areaH = height ?? os.height - os.hdr;
   const rowH = variant === 'art' ? Math.round(os.row * 1.6) : os.row;

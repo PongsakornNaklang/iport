@@ -6,10 +6,12 @@
 import { useEffect } from 'react';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { playLock } from '../../../core/sound/click';
+import { playLock, playTone } from '../../../core/sound/click';
 import { useSettings } from '../../../core/settings/store';
 
-export type Overlay = null | 'cc' | 'nc' | 'switcher' | 'siri';
+export type Overlay = null | 'cc' | 'nc' | 'switcher' | 'siri' | 'spotlight';
+/** running · "slide to power off" showing · switched off · starting up */
+export type Power = 'on' | 'menu' | 'off' | 'boot';
 
 export interface Notif {
   id: string;
@@ -70,6 +72,11 @@ export interface OSState {
   shutterSerial: number;
   /** pending deep link for an app, e.g. { app:'clock', tab:'timer' } */
   intent: { app: string; data: string; serial: number } | null;
+  power: Power;
+  /** a notification shown as a banner at the top while the iPod is in use */
+  banner: Notif | null;
+  /** the last screenshot: shown small in the corner for a moment */
+  shot: { url: string; serial: number } | null;
 }
 
 export const useOS = create<OSState>(() => ({
@@ -94,6 +101,9 @@ export const useOS = create<OSState>(() => ({
   toast: null,
   shutterSerial: 0,
   intent: null,
+  power: 'on',
+  banner: null,
+  shot: null,
 }));
 
 const S = useOS.setState;
@@ -102,9 +112,16 @@ const G = useOS.getState;
 // ------------------------------------------------------------------ prefs
 
 export interface HomeLayout {
+  /** app ids, or "folder:<id>" for a folder (see Prefs.folders) */
   pages: string[][];
   dock: string[];
 }
+
+export interface Folder {
+  name: string;
+  apps: string[];
+}
+export const isFolder = (id: string) => id.startsWith('folder:');
 
 export const DEFAULT_LAYOUT: HomeLayout = {
   pages: [
@@ -122,6 +139,7 @@ export const DEFAULT_LAYOUT: HomeLayout = {
 
 export interface Prefs {
   layout: HomeLayout;
+  folders: Record<string, Folder>;
   wifi: boolean;
   bluetooth: boolean;
   airplane: boolean;
@@ -131,6 +149,8 @@ export interface Prefs {
   autoLock: number;
   batteryPercent: boolean;
   keyboardClicks: boolean;
+  /** the keyboard's language (the globe key switches) */
+  kbLang: 'en' | 'th';
   lockSound: boolean;
   musicTab: string;
   /** Library categories hidden with Edit */
@@ -148,6 +168,7 @@ export interface Prefs {
 
 const DEFAULT_PREFS: Prefs = {
   layout: DEFAULT_LAYOUT,
+  folders: {},
   wifi: true,
   bluetooth: true,
   airplane: false,
@@ -156,6 +177,7 @@ const DEFAULT_PREFS: Prefs = {
   autoLock: 0,
   batteryPercent: false,
   keyboardClicks: true,
+  kbLang: 'en',
   lockSound: true,
   musicTab: 'library',
   musicHidden: ['genres', 'compilations', 'composers'],
@@ -185,15 +207,24 @@ export const usePrefs = create<Prefs & { set: <K extends keyof Prefs>(k: K, v: P
         // make sure every app is still somewhere on the Home Screen
         const all = new Set([...DEFAULT_LAYOUT.pages.flat(), ...DEFAULT_LAYOUT.dock]);
         const lay = merged.layout && Array.isArray(merged.layout.pages) ? merged.layout : DEFAULT_LAYOUT;
-        const seen = new Set([...lay.pages.flat(), ...lay.dock]);
+        // folders: only known apps, and only folders that are on the Home Screen
+        const placed = new Set([...lay.pages.flat(), ...lay.dock]);
+        const folders: Record<string, Folder> = {};
+        for (const [fid, f] of Object.entries(merged.folders ?? {})) {
+          const apps = (f?.apps ?? []).filter((x) => all.has(x));
+          if (placed.has(`folder:${fid}`) && apps.length) folders[fid] = { name: f.name || 'Folder', apps };
+        }
+        merged.folders = folders;
+        const known = (x: string) => all.has(x) || (isFolder(x) && !!folders[x.slice(7)]);
+        const seen = new Set([...lay.pages.flat(), ...lay.dock, ...Object.values(folders).flatMap((f) => f.apps)]);
         const missing = [...all].filter((x) => !seen.has(x));
-        const pages = lay.pages.map((p2) => p2.filter((x) => all.has(x))).filter((p2, i) => p2.length || i === 0);
+        const pages = lay.pages.map((p2) => p2.filter(known)).filter((p2, i) => p2.length || i === 0);
         if (missing.length) {
           const last = pages[pages.length - 1];
           if (last.length + missing.length <= 20) pages[pages.length - 1] = [...last, ...missing];
           else pages.push(missing);
         }
-        merged.layout = { pages, dock: lay.dock.filter((x) => all.has(x)) };
+        merged.layout = { pages, dock: lay.dock.filter(known) };
         return merged;
       },
     },
@@ -205,14 +236,27 @@ export const prefs = () => usePrefs.getState();
 // ------------------------------------------------------------------ actions
 
 let notifSeq = 0;
+let openAfterUnlock: Notif | null = null;
+// the top and Home buttons, for holds and the screenshot chord
+let topHeld = false;
+let homeHeld = false;
+let topUsed = false;
+let homeUsed = false;
+let topTimer: number | undefined;
+
+function shotSound() {
+  playTone(2400, 30, { volume: 0.12, type: 'square' });
+  playTone(1200, 60, { volume: 0.08, delayMs: 40, type: 'triangle' });
+}
 
 export const os = {
   wake() {
-    if (G().screenOn) return;
+    if (G().screenOn || G().power !== 'on') return;
     S({ screenOn: true });
   },
   sleep() {
-    if (!G().screenOn) return;
+    if (G().power === 'menu') S({ power: 'on' });
+    if (!G().screenOn || G().power !== 'on') return;
     if (prefs().lockSound) playLock();
     S({ screenOn: false, locked: true, passcode: false, overlay: null, edgeDrag: null, menu: null, jiggle: false });
   },
@@ -231,6 +275,20 @@ export const os = {
   /** after a correct passcode */
   passcodeOK() {
     S({ locked: false, passcode: false });
+    if (openAfterUnlock) {
+      const n = openAfterUnlock;
+      openAfterUnlock = null;
+      os.openNotification(n);
+    }
+  },
+  /** a notification tapped on the Lock Screen: unlock (passcode first), then open its app */
+  openFromLock(n: Notif) {
+    openAfterUnlock = n;
+    os.unlock();
+    if (!G().locked) {
+      openAfterUnlock = null;
+      os.openNotification(n);
+    }
   },
   openApp(id: string, fromIcon = false) {
     const st = G();
@@ -274,7 +332,134 @@ export const os = {
   },
   notify(app: string, title: string, body: string) {
     const n: Notif = { id: `n${++notifSeq}_${Date.now()}`, app, title, body, time: Date.now() };
-    S({ notifications: [n, ...G().notifications].slice(0, 30) });
+    const st = G();
+    // in use: it drops down as a banner (not over the app it comes from)
+    const banner = st.screenOn && !st.locked && st.power === 'on' && st.app !== app ? n : st.banner;
+    S({ notifications: [n, ...st.notifications].slice(0, 30), banner });
+  },
+  /** a notification tapped: its app (a message opens its conversation) */
+  openNotification(n: Notif) {
+    if (n.app === 'messages') os.openAppWith('messages', n.title);
+    else os.openApp(n.app);
+  },
+  dismissBanner() {
+    S({ banner: null });
+  },
+
+  // ---------------------------------------------------------------- top (Sleep/Wake) button
+  /**
+   * A press wakes the screen at once; a short press on a lit screen puts it
+   * to sleep when let go. Held for about two seconds it offers "slide to
+   * power off", and when the iPod is off it starts it up. Pressed together
+   * with Home it takes a screenshot.
+   */
+  topDown() {
+    topHeld = true;
+    const st = G();
+    if (homeHeld && st.power === 'on' && st.screenOn) {
+      topUsed = homeUsed = true;
+      void os.screenshot();
+      return;
+    }
+    topUsed = false;
+    window.clearTimeout(topTimer);
+    if (st.power === 'boot') {
+      topUsed = true;
+      return;
+    }
+    if (st.power === 'off') {
+      topUsed = true;
+      topTimer = window.setTimeout(() => os.boot(), 2000);
+      return;
+    }
+    if (!st.screenOn) {
+      os.wake();
+      topUsed = true;
+    }
+    topTimer = window.setTimeout(() => {
+      topUsed = true;
+      if (G().power === 'on') S({ power: 'menu', screenOn: true, overlay: null, menu: null, edgeDrag: null, jiggle: false, banner: null });
+    }, 2200);
+  },
+  topUp() {
+    topHeld = false;
+    window.clearTimeout(topTimer);
+    if (topUsed) return;
+    if (G().power === 'menu') S({ power: 'on' });
+    else if (G().power === 'on') os.sleep();
+  },
+  /** Home held down / let go (for the screenshot chord) */
+  homePressed(on: boolean) {
+    homeHeld = on;
+    if (on && topHeld && G().power === 'on' && G().screenOn) {
+      homeUsed = topUsed = true;
+      void os.screenshot();
+    }
+  },
+  /** true once: the Home press was part of a screenshot, so it does nothing else */
+  homeConsumed() {
+    const u = homeUsed;
+    homeUsed = false;
+    return u;
+  },
+  powerOff() {
+    S({
+      power: 'off',
+      screenOn: false,
+      locked: true,
+      passcode: false,
+      overlay: null,
+      menu: null,
+      alert: null,
+      app: null,
+      recents: [],
+      banner: null,
+      jiggle: false,
+      videoOpen: false,
+      landscape: false,
+    });
+  },
+  boot() {
+    S({ power: 'boot', screenOn: true });
+    window.setTimeout(() => S({ power: 'on', locked: true, homePage: 0 }), 3400);
+  },
+  /** Home + Sleep/Wake: the screen flashes and the picture goes to Photos ▸ Screenshots */
+  async screenshot() {
+    const el = document.querySelector<HTMLElement>('.stage-center:not(.ov-item) .t7-screen');
+    if (!el) return;
+    shotSound();
+    S({ shot: null });
+    try {
+      const { toCanvas } = await import('html-to-image');
+      // the 7th generation's screen: 640 × 1136
+      const canvas = await toCanvas(el, {
+        pixelRatio: 2,
+        skipFonts: true,
+        filter: (n) => !(n instanceof Element && (n.classList.contains('t7-shot') || n.classList.contains('t7-off') || n.classList.contains('t7-bright'))),
+      });
+      const blob = await new Promise<Blob | null>((r) => canvas.toBlob(r, 'image/png'));
+      if (!blob) return;
+      const [{ putBlob }, { useLibrary }, { uid }] = await Promise.all([import('../../../core/db'), import('../../../core/library/store'), import('../../../core/util/id')]);
+      const id = uid('ph');
+      const key = `photo:${id}`;
+      await putBlob(key, blob);
+      const d = new Date();
+      const pad = (n: number) => String(n).padStart(2, '0');
+      useLibrary.getState().addPhotos([
+        {
+          id,
+          name: `Screenshot ${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} at ${pad(d.getHours())}.${pad(d.getMinutes())}.${pad(d.getSeconds())}.png`,
+          blobKey: key,
+          width: canvas.width,
+          height: canvas.height,
+          addedAt: Date.now(),
+          album: 'Screenshots',
+        },
+      ]);
+      S({ shot: { url: URL.createObjectURL(blob), serial: (G().shot?.serial ?? 0) + 1 } });
+    } catch {
+      os.toast('Couldn’t take a screenshot', 'exclamationmark.triangle');
+    }
   },
   clearNotifications() {
     S({ notifications: [] });
@@ -302,6 +487,11 @@ export const os = {
   // ---------------------------------------------------------------- Home button
   homeClick() {
     const st = G();
+    if (st.power === 'menu') {
+      S({ power: 'on' });
+      return;
+    }
+    if (st.power !== 'on') return;
     if (!st.screenOn) {
       os.wake();
       return;
@@ -339,6 +529,7 @@ export const os = {
   },
   homeDouble() {
     const st = G();
+    if (st.power !== 'on') return;
     if (!st.screenOn || st.locked) return;
     if (st.overlay === 'switcher') {
       S({ overlay: null });
@@ -348,6 +539,7 @@ export const os = {
   },
   homeLong() {
     const st = G();
+    if (st.power !== 'on') return;
     if (!st.screenOn) S({ screenOn: true });
     S({ overlay: 'siri', menu: null, edgeDrag: null });
   },

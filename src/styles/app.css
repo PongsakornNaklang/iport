@@ -84,7 +84,6 @@ button {
 .glass,
 .tb-group,
 .model-picker-btn,
-.model-menu,
 .view-controls,
 .panel,
 .toast {
@@ -98,7 +97,6 @@ button {
 .glass::after,
 .tb-group::after,
 .model-picker-btn::after,
-.model-menu::after,
 .view-controls::after,
 .panel::after,
 .toast::after {
@@ -229,89 +227,33 @@ button {
   position: relative;
 }
 .model-picker-btn {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  height: 44px;
-  padding: 0 14px 0 10px;
-  border-radius: 999px;
-  border: 0;
-  cursor: pointer;
-  text-align: left;
-  transition: transform 160ms var(--ease);
-}
-.model-picker-btn:active {
-  transform: scale(0.98);
-}
-.model-picker-btn .mp-name {
-  font-size: 14px;
-  font-weight: 600;
-  line-height: 1.15;
-}
-.model-picker-btn .mp-gen {
-  font-size: 11.5px;
-  color: var(--ui-text-2);
-}
-.model-menu {
-  position: absolute;
-  top: calc(100% + 10px);
-  left: 0;
-  width: min(400px, calc(100vw - 24px));
-  padding: 8px;
-  border-radius: 26px;
-  background: var(--glass-strong);
-  box-shadow: var(--glass-shadow-lg);
-  z-index: 50;
-  transform-origin: 30% 0;
-  animation: pop-in 280ms var(--ease);
-}
-.model-item {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  width: 100%;
-  padding: 10px 12px;
-  border-radius: 18px;
-  border: 0;
-  background: transparent;
-  cursor: pointer;
-  text-align: left;
-  transition: background 160ms var(--ease);
-}
-.model-item:hover {
-  background: rgba(0, 0, 0, 0.04);
-}
-.model-item.selected {
-  background: rgba(0, 113, 227, 0.08);
-}
-.model-item .mi-thumb {
-  flex: none;
-  width: 40px;
-  height: 52px;
   display: grid;
   place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border-radius: 50%;
+  border: 0;
+  cursor: pointer;
+  transition: transform 160ms var(--ease);
 }
-.model-item .mi-name {
-  font-weight: 600;
-  font-size: 14.5px;
+.model-picker-btn:hover .model-art {
+  transform: rotate(-6deg) scale(1.06);
 }
-.model-item .mi-meta {
-  font-size: 12px;
-  color: var(--ui-text-2);
+.model-picker-btn .model-art {
+  transition: transform 220ms var(--ease);
 }
-.model-item .mi-blurb {
-  font-size: 12px;
-  color: var(--ui-text-3);
-  margin-top: 2px;
-  line-height: 1.35;
+.model-picker-btn:active {
+  transform: scale(0.94);
 }
-.model-item .mi-year {
-  margin-left: auto;
-  align-self: flex-start;
-  margin-top: 2px;
-  font-size: 12px;
-  color: var(--ui-text-3);
-  font-variant-numeric: tabular-nums;
+.app.choosing .model-picker-btn {
+  box-shadow:
+    0 0 0 2px var(--ui-accent),
+    var(--glass-shadow);
+}
+.model-art {
+  display: block;
+  overflow: visible;
 }
 
 @keyframes pop-in {
@@ -364,16 +306,6 @@ button {
   background: linear-gradient(120deg, #0b1026, #1a0b2e, #04202a, #0b1026);
   background-size: 300% 300%;
   animation: aurora 24s ease-in-out infinite;
-}
-.stage.snapshotting::before {
-  display: none;
-}
-/* while saving a picture, a case or sock shows only its outside (shell/snapshot.ts) */
-.stage.snapshotting .cv .d3-facet,
-.stage.snapshotting .cv .d3-facet i,
-.stage.snapshotting .cv .d3-face {
-  backface-visibility: hidden !important;
-  -webkit-backface-visibility: hidden !important;
 }
 .backdrop-aurora::before {
   content: '';
@@ -439,16 +371,38 @@ button {
   position: absolute;
   transform: translate(-50%, -50%);
   transform-style: preserve-3d;
-  animation: device-in 640ms var(--ease);
+  animation: device-in 620ms var(--ease);
 }
+/* a new iPod turns in from the side (see shell/modelSwitch.ts) */
 @keyframes device-in {
   from {
     opacity: 0;
-    transform: translate(-50%, -47%) scale(0.95);
+    transform: translate(-50%, -50%) rotateY(-75deg) scale(0.7);
+  }
+  30% {
+    opacity: 1;
   }
   to {
     opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
+    transform: translate(-50%, -50%);
+  }
+}
+/* an iPod that floated in the chooser doesn't make an entrance again */
+.device-enter.quiet {
+  animation: none;
+}
+/* …after the old one turns away */
+.device-enter.device-leave {
+  animation: device-out 260ms cubic-bezier(0.55, 0, 0.9, 0.4) forwards;
+  pointer-events: none;
+}
+@keyframes device-out {
+  70% {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotateY(75deg) scale(0.7);
   }
 }
 .device-loading {
@@ -814,32 +768,27 @@ button {
  * standard properties; Safari uses the ::-webkit ones.
  */
 .panel,
-.panel *,
-.model-menu {
+.panel * {
   scrollbar-width: thin;
   scrollbar-color: rgba(0, 0, 0, 0.22) transparent;
 }
-.panel ::-webkit-scrollbar,
-.model-menu::-webkit-scrollbar {
+.panel ::-webkit-scrollbar {
   width: 12px;
   height: 12px;
   background: transparent;
 }
-.panel ::-webkit-scrollbar-track,
-.model-menu::-webkit-scrollbar-track {
+.panel ::-webkit-scrollbar-track {
   background: transparent;
   /* keep clear of the rounded corners */
   margin: 14px 0 22px;
 }
-.panel ::-webkit-scrollbar-thumb,
-.model-menu::-webkit-scrollbar-thumb {
+.panel ::-webkit-scrollbar-thumb {
   background: rgba(0, 0, 0, 0.2);
   background-clip: padding-box;
   border: 4px solid transparent;
   border-radius: 999px;
 }
-.panel ::-webkit-scrollbar-thumb:hover,
-.model-menu::-webkit-scrollbar-thumb:hover {
+.panel ::-webkit-scrollbar-thumb:hover {
   background-color: rgba(0, 0, 0, 0.36);
 }
 .panel ::-webkit-scrollbar-corner {
@@ -1278,8 +1227,7 @@ textarea.input {
   }
   .brand span,
   .brand small,
-  .icon-btn .lbl,
-  .model-picker-btn .mp-gen {
+  .icon-btn .lbl {
     display: none;
   }
   .icon-btn {
@@ -1287,6 +1235,7 @@ textarea.input {
     width: 36px;
   }
   .model-picker-btn {
+    width: 40px;
     height: 40px;
   }
   .panel {
@@ -1312,3 +1261,371 @@ textarea.input {
     transition-duration: 1ms !important;
   }
 }
+
+
+/* ------------------------------------------------------------------ model chooser */
+/* every iPod floats on the stage (shell/overview.ts) */
+.stage.overview {
+  cursor: default;
+}
+.stage.overview .stage-shadow {
+  visibility: hidden;
+}
+.stage.overview .device-enter,
+.ov-float {
+  animation: ov-bob 6s ease-in-out infinite;
+  animation-delay: calc(var(--ov-i, 0) * -1.4s);
+}
+@keyframes ov-bob {
+  0%,
+  100% {
+    transform: translate(-50%, -50%) translateY(-2.5%) rotateX(4deg) rotateY(-12deg);
+  }
+  50% {
+    transform: translate(-50%, -50%) translateY(2.5%) rotateX(-2deg) rotateY(12deg);
+  }
+}
+.ov-item {
+  transition:
+    transform 420ms var(--ease),
+    opacity 420ms var(--ease),
+    scale 420ms var(--ease);
+  animation: ov-in 620ms var(--ease) backwards;
+  animation-delay: calc(var(--ov-i, 0) * 70ms);
+}
+@keyframes ov-in {
+  from {
+    opacity: 0;
+    scale: 0.7;
+  }
+}
+.ov-item.ov-out {
+  opacity: 0;
+  scale: 0.8;
+}
+.ov-hits {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  animation: ov-fade 300ms var(--ease);
+}
+@keyframes ov-fade {
+  from {
+    opacity: 0;
+  }
+}
+.ov-title {
+  position: absolute;
+  translate: -50% 0;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--ui-text-2);
+  white-space: nowrap;
+  pointer-events: none;
+}
+.scene-dark .ov-title {
+  color: rgba(255, 255, 255, 0.7);
+}
+.ov-hit {
+  position: absolute;
+  border: 0;
+  padding: 0;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+  border-radius: 28px;
+  outline: none;
+}
+/* the shadow on the floor, breathing with the float */
+.ov-shadow {
+  position: absolute;
+  left: 50%;
+  top: var(--ov-floor);
+  width: calc(var(--ov-w) * 0.95);
+  height: 16px;
+  translate: -50% 0;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(0, 0, 0, 0.26), transparent);
+  animation: ov-shadow 6s ease-in-out infinite;
+  animation-delay: calc(var(--ov-i, 0) * -1.4s);
+  pointer-events: none;
+}
+@keyframes ov-shadow {
+  0%,
+  100% {
+    scale: 0.82;
+    opacity: 0.55;
+  }
+  50% {
+    scale: 1;
+    opacity: 0.9;
+  }
+}
+.ov-label {
+  position: absolute;
+  left: 50%;
+  bottom: 6px;
+  translate: -50% 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  padding: 7px 16px;
+  border-radius: 999px;
+  white-space: nowrap;
+  transition:
+    background 220ms var(--ease),
+    box-shadow 220ms var(--ease),
+    translate 220ms var(--ease);
+}
+.ov-label b {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.ov-label small {
+  font-size: 11.5px;
+  color: var(--ui-text-2);
+}
+.scene-dark .ov-hit:not(.on) .ov-label {
+  color: #fff;
+}
+.scene-dark .ov-hit:not(.on) .ov-label small {
+  color: rgba(255, 255, 255, 0.65);
+}
+.ov-hit.on .ov-label {
+  background: var(--glass-strong);
+  box-shadow: var(--glass-shadow);
+  translate: -50% -4px;
+}
+.ov-hit.current .ov-label b::after {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-left: 6px;
+  vertical-align: middle;
+  border-radius: 50%;
+  background: var(--ui-accent);
+}
+
+/* while choosing an iPod, the panels' buttons and the view controls step aside */
+.topbar .tb-group,
+.view-controls,
+.view-menu {
+  transition:
+    opacity 260ms var(--ease),
+    visibility 260ms;
+}
+.app.choosing .topbar .tb-group,
+.app.choosing .view-controls,
+.app.choosing .view-menu,
+.app.choosing .vc-grip {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* in the chooser the iPods only float: their own screens' animations wait (a phone has four iPods to draw) */
+.ov-float *,
+.stage.overview .device-enter * {
+  animation-play-state: paused !important;
+}
+
+/* the phone carousel: one iPod in the middle, its neighbours peeking in at the edges */
+.ov-hits.carousel {
+  touch-action: none;
+}
+.stage.swiping .ov-item,
+.stage.swiping .stage-center {
+  transition: none;
+}
+.ov-hits.carousel .ov-label {
+  transition: opacity 220ms var(--ease);
+}
+/* on a phone only the middle one is named; wider, the near ones are too, softly */
+.ov-hits.carousel .ov-hit:not(.on) .ov-label {
+  opacity: 0.5;
+}
+@media (max-width: 760px) {
+  .ov-hits.carousel .ov-hit:not(.on) .ov-label {
+    opacity: 0;
+  }
+}
+.ov-dots {
+  position: absolute;
+  translate: -50% 0;
+  display: flex;
+  gap: 2px;
+  z-index: 2;
+}
+.ov-dots button {
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+.ov-dots button::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.2);
+  transition:
+    background 200ms var(--ease),
+    width 260ms var(--ease);
+}
+.ov-dots button.on::before {
+  width: 18px;
+  border-radius: 4px;
+  background: var(--ui-text);
+}
+.scene-dark .ov-dots button::before {
+  background: rgba(255, 255, 255, 0.35);
+}
+.scene-dark .ov-dots button.on::before {
+  background: #fff;
+}
+.ov-arrow {
+  position: absolute;
+  top: 50%;
+  z-index: 2;
+  width: 40px;
+  height: 40px;
+  margin: -20px 0 0 -20px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--glass-strong);
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  font-size: 26px;
+  line-height: 1;
+  padding-bottom: 3px;
+  color: var(--ui-text);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 200ms var(--ease);
+}
+.ov-hits:hover .ov-arrow {
+  opacity: 0.9;
+}
+@media (hover: none) {
+  .ov-arrow {
+    display: none;
+  }
+}
+/* an iPod's picture in the chooser, laid on the front of the live one while it comes alive (Stage.tsx OverviewSlot) */
+.ov-art {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transition:
+    opacity 360ms var(--ease),
+    visibility 0s;
+  pointer-events: none;
+}
+.ov-art svg {
+  display: block;
+}
+.ov-art.gone {
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 360ms var(--ease),
+    visibility 0s 360ms;
+}
+.ov-hits.carousel .ov-hit {
+  transition: none;
+}
+
+/* ------------------------------------------------------------------ phone view menu */
+/* one round button in the corner; its views stack above it (ViewControls.tsx) */
+.view-menu {
+  position: absolute;
+  right: 14px;
+  bottom: max(16px, env(safe-area-inset-bottom));
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.view-menu button {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  color: var(--ui-text);
+  cursor: pointer;
+}
+.view-menu .lbl {
+  display: none;
+}
+.view-menu svg {
+  width: 20px;
+  height: 20px;
+}
+.vm-toggle {
+  width: 48px !important;
+  height: 48px !important;
+  transition: transform 200ms var(--ease);
+}
+.vm-toggle:active {
+  transform: scale(0.92);
+}
+.view-menu.open .vm-toggle {
+  color: var(--ui-accent);
+}
+.vm-toggle.spinning svg {
+  animation: vm-spin 2.4s linear infinite;
+}
+@keyframes vm-spin {
+  to {
+    rotate: 360deg;
+  }
+}
+.vm-items {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+}
+.vm-items button {
+  background: var(--glass-strong);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  box-shadow: var(--glass-shadow);
+  opacity: 0;
+  translate: 0 16px;
+  scale: 0.6;
+  transition:
+    opacity 180ms var(--ease),
+    translate 260ms var(--ease),
+    scale 260ms var(--ease);
+}
+.vm-items button.on {
+  color: var(--ui-accent);
+}
+.view-menu.open .vm-items {
+  pointer-events: auto;
+}
+.view-menu.open .vm-items button {
+  opacity: 1;
+  translate: 0 0;
+  scale: 1;
+}
+/* the one nearest the toggle comes first */
+.view-menu.open .vm-items button:nth-last-child(1) { transition-delay: 0ms; }
+.view-menu.open .vm-items button:nth-last-child(2) { transition-delay: 30ms; }
+.view-menu.open .vm-items button:nth-last-child(3) { transition-delay: 60ms; }
+.view-menu.open .vm-items button:nth-last-child(4) { transition-delay: 90ms; }
+.view-menu.open .vm-items button:nth-last-child(5) { transition-delay: 120ms; }

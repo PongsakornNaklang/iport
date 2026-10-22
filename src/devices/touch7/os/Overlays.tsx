@@ -8,7 +8,10 @@ import { formatClock } from '../../../core/util/format';
 import { useNow } from '../../../core/util/hooks';
 import { APPS } from '../apps/registry';
 import { Glyph } from './glyphs';
-import { usePresence } from './LockScreen';
+import { NotifCard, usePresence } from './LockScreen';
+import { APPLE_LOGO, AppIcon } from './icons';
+import { SearchField } from './ui';
+import { Artwork } from '../../../core/library/Artwork';
 import { os, usePrefs, useOS } from './store';
 import { Wallpaper } from './wallpapers';
 
@@ -442,6 +445,320 @@ export function SiriOverlay() {
           <span />
           <span />
         </button>
+      </div>
+    </div>
+  );
+}
+
+// ------------------------------------------------------------------ power
+
+const POWER_GLYPH = (
+  <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+    <path d="M12 3v8" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" fill="none" />
+    <path d="M7.2 6.2a7.5 7.5 0 1 0 9.6 0" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" fill="none" />
+  </svg>
+);
+
+/** Held Sleep/Wake: "slide to power off", with Cancel below. */
+export function PowerOverlay() {
+  const open = useOS((s) => s.power === 'menu');
+  const { mounted, shown } = usePresence(open, 300);
+  const [x, setX] = useState(0);
+  const [off, setOff] = useState(false);
+  const drag = useRef<{ id: number; x0: number; k: number } | null>(null);
+  const TRACK = 250;
+  const KNOB = 52;
+  const max = TRACK - KNOB - 8;
+  useEffect(() => {
+    if (open) {
+      setX(0);
+      setOff(false);
+    }
+  }, [open]);
+  if (!mounted) return null;
+  const end = () => {
+    drag.current = null;
+    if (x >= max * 0.92) {
+      setX(max);
+      setOff(true);
+      // a moment with the spinner, then dark
+      window.setTimeout(() => {
+        player.pause();
+        os.powerOff();
+      }, 1400);
+    } else setX(0);
+  };
+  return (
+    <div className={`t7-power ${shown ? 'on' : ''} ${off ? 'off' : ''}`}>
+      <div className="t7-power-track" style={{ width: TRACK }}>
+        <span className="t7-power-label" style={{ opacity: Math.max(0, 1 - x / (max * 0.6)) }}>
+          slide to power off
+        </span>
+        <div
+          className="t7-power-knob"
+          style={{ width: KNOB, height: KNOB, transform: `translateX(${x}px)`, transition: drag.current ? 'none' : undefined }}
+          onPointerDown={(e) => {
+            if (off) return;
+            e.stopPropagation();
+            e.currentTarget.setPointerCapture(e.pointerId);
+            const el = e.currentTarget.parentElement!;
+            drag.current = { id: e.pointerId, x0: e.clientX - x / (el.offsetWidth / (el.getBoundingClientRect().width || 1)), k: el.offsetWidth / (el.getBoundingClientRect().width || 1) };
+          }}
+          onPointerMove={(e) => {
+            const d = drag.current;
+            if (!d || d.id !== e.pointerId) return;
+            setX(Math.max(0, Math.min(max, (e.clientX - d.x0) * d.k)));
+          }}
+          onPointerUp={end}
+          onPointerCancel={end}
+        >
+          {POWER_GLYPH}
+        </div>
+      </div>
+      {off && <div className="t7-power-spin" />}
+      {!off && (
+        <button className="t7-power-cancel" onClick={() => useOS.setState({ power: 'on' })}>
+          <span className="t7-power-x">
+            <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+              <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
+            </svg>
+          </span>
+          Cancel
+        </button>
+      )}
+    </div>
+  );
+}
+
+/** Starting up: the Apple on black, then the Lock Screen. */
+export function BootOverlay() {
+  const booting = useOS((s) => s.power === 'boot');
+  if (!booting) return null;
+  return (
+    <div className="t7-boot">
+      <svg viewBox="0 0 170 170" width="78" height="78" aria-hidden="true">
+        <path fill="#fff" d={APPLE_LOGO} />
+      </svg>
+    </div>
+  );
+}
+
+// ------------------------------------------------------------------ banners
+
+/** A notification while the iPod is in use: it drops in at the top, tap to open, swipe up to put it away. */
+export function BannerOverlay() {
+  const banner = useOS((s) => s.banner);
+  const [shown, setShown] = useState<typeof banner>(null);
+  const [visible, setVisible] = useState(false);
+  const drag = useRef<{ y0: number; k: number; dy: number } | null>(null);
+  const [dy, setDy] = useState(0);
+  useEffect(() => {
+    if (!banner) {
+      setVisible(false);
+      return;
+    }
+    setShown(banner);
+    setDy(0);
+    const r = requestAnimationFrame(() => setVisible(true));
+    const t = window.setTimeout(() => os.dismissBanner(), 5000);
+    return () => {
+      cancelAnimationFrame(r);
+      window.clearTimeout(t);
+    };
+  }, [banner]);
+  if (!shown) return null;
+  return (
+    <div
+      className={`t7-banner ${visible ? 'on' : ''}`}
+      style={dy ? { transform: `translateY(${Math.min(0, dy)}px)`, transition: 'none' } : undefined}
+      onTransitionEnd={() => !visible && setShown(null)}
+      onPointerDown={(e) => {
+        e.stopPropagation();
+        e.currentTarget.setPointerCapture(e.pointerId);
+        const el = e.currentTarget;
+        drag.current = { y0: e.clientY, k: el.offsetHeight / (el.getBoundingClientRect().height || 1), dy: 0 };
+      }}
+      onPointerMove={(e) => {
+        const d = drag.current;
+        if (!d) return;
+        d.dy = (e.clientY - d.y0) * d.k;
+        setDy(d.dy);
+      }}
+      onPointerUp={() => {
+        const d = drag.current;
+        drag.current = null;
+        setDy(0);
+        if (!d) return;
+        if (d.dy < -20) os.dismissBanner();
+        else if (Math.abs(d.dy) < 6) {
+          os.dismissBanner();
+          os.openNotification(shown);
+        }
+      }}
+    >
+      <NotifCard n={shown} />
+    </div>
+  );
+}
+
+// ------------------------------------------------------------------ screenshots
+
+/** The screen flashes white, then the picture shrinks to the corner for a few seconds. */
+export function ShotOverlay() {
+  const shot = useOS((s) => s.shot);
+  const [flash, setFlash] = useState(0);
+  const [thumb, setThumb] = useState<string | null>(null);
+  useEffect(() => {
+    if (!shot) return;
+    setFlash((f) => f + 1);
+    setThumb(shot.url);
+    const t = window.setTimeout(() => setThumb(null), 4500);
+    return () => window.clearTimeout(t);
+  }, [shot]);
+  return (
+    <>
+      {flash > 0 && <div key={flash} className="t7-shot t7-shot-flash" />}
+      {thumb && (
+        <button
+          className="t7-shot t7-shot-thumb"
+          onClick={() => {
+            setThumb(null);
+            os.openApp('photos');
+          }}
+        >
+          <img src={thumb} alt="Screenshot" draggable={false} />
+        </button>
+      )}
+    </>
+  );
+}
+
+// ------------------------------------------------------------------ Spotlight
+
+const SUGGESTED = ['music', 'photos', 'camera', 'settings', 'clock', 'notes', 'safari', 'weather'];
+
+/** Swipe down on the Home Screen: search apps, music, contacts and notes. */
+export function SpotlightOverlay() {
+  const open = useOS((s) => s.overlay === 'spotlight');
+  const { mounted, shown } = usePresence(open, 320);
+  const recents = useOS((s) => s.recents);
+  const tracks = useLibrary((s) => s.tracks);
+  const contacts = useLibrary((s) => s.contacts);
+  const notes = useLibrary((s) => s.notes);
+  const [q, setQ] = useState('');
+  useEffect(() => {
+    if (open) setQ('');
+  }, [open]);
+  if (!mounted) return null;
+  const close = () => os.setOverlay(null);
+  const go = (fn: () => void) => {
+    close();
+    fn();
+  };
+  const query = q.trim().toLowerCase();
+  const suggested = [...new Set([...recents, ...SUGGESTED])].filter((id) => APPS[id]).slice(0, 8);
+  const apps = query ? Object.values(APPS).filter((a) => a.name.toLowerCase().includes(query)) : [];
+  const found = query ? searchLibrary(tracks, query, 6) : [];
+  const people = query ? contacts.filter((c) => `${c.firstName} ${c.lastName} ${c.company ?? ''}`.toLowerCase().includes(query)).slice(0, 4) : [];
+  const memo = query ? notes.filter((n) => `${n.title} ${n.body}`.toLowerCase().includes(query)).slice(0, 4) : [];
+  const nothing = query && !apps.length && !found.length && !people.length && !memo.length;
+  return (
+    <div className={`t7-spot ${shown ? 'on' : ''}`} onPointerDown={(e) => e.stopPropagation()}>
+      <div className="t7-spot-bar">
+        <SearchField value={q} onChange={setQ} placeholder="Search" autoFocus />
+        <button className="t7-spot-cancel" onClick={close}>
+          Cancel
+        </button>
+      </div>
+      <div className="t7-spot-body">
+        {!query && (
+          <>
+            <div className="t7-spot-h">Siri Suggestions</div>
+            <div className="t7-spot-apps">
+              {suggested.map((id) => (
+                <button key={id} onClick={() => go(() => os.openApp(id))}>
+                  <AppIcon id={id} size={56} />
+                  <span>{APPS[id].name}</span>
+                </button>
+              ))}
+            </div>
+          </>
+        )}
+        {apps.length > 0 && (
+          <>
+            <div className="t7-spot-h">Applications</div>
+            <div className="t7-spot-apps">
+              {apps.slice(0, 8).map((a) => (
+                <button key={a.id} onClick={() => go(() => os.openApp(a.id))}>
+                  <AppIcon id={a.id} size={56} />
+                  <span>{a.name}</span>
+                </button>
+              ))}
+            </div>
+          </>
+        )}
+        {found.length > 0 && (
+          <>
+            <div className="t7-spot-h">Music</div>
+            <div className="t7-spot-list">
+              {found.map((t, i) => (
+                <button
+                  key={t.id}
+                  onClick={() =>
+                    go(() => {
+                      player.playTracks(
+                        found.map((x) => x.id),
+                        i,
+                      );
+                      os.openApp('music');
+                    })
+                  }
+                >
+                  <Artwork src={t.artwork} size={40} radius={5} />
+                  <span className="t7-spot-txt">
+                    <b>{t.title}</b>
+                    <small>
+                      Song · {t.artist}
+                    </small>
+                  </span>
+                </button>
+              ))}
+            </div>
+          </>
+        )}
+        {people.length > 0 && (
+          <>
+            <div className="t7-spot-h">Contacts</div>
+            <div className="t7-spot-list">
+              {people.map((c) => (
+                <button key={c.id} onClick={() => go(() => os.openApp('contacts'))}>
+                  <AppIcon id="contacts" size={40} />
+                  <span className="t7-spot-txt">
+                    <b>{`${c.firstName} ${c.lastName}`.trim() || c.company}</b>
+                    <small>{c.phones[0]?.value ?? c.emails[0]?.value ?? 'Contact'}</small>
+                  </span>
+                </button>
+              ))}
+            </div>
+          </>
+        )}
+        {memo.length > 0 && (
+          <>
+            <div className="t7-spot-h">Notes</div>
+            <div className="t7-spot-list">
+              {memo.map((n) => (
+                <button key={n.id} onClick={() => go(() => os.openApp('notes'))}>
+                  <AppIcon id="notes" size={40} />
+                  <span className="t7-spot-txt">
+                    <b>{n.title || 'New Note'}</b>
+                    <small>{n.body.slice(0, 60)}</small>
+                  </span>
+                </button>
+              ))}
+            </div>
+          </>
+        )}
+        {nothing && <div className="t7-spot-none">No Results</div>}
       </div>
     </div>
   );

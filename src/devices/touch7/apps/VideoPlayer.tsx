@@ -66,7 +66,7 @@ function VideoPlayerInner() {
   const d = dur || t?.duration || 0;
   const p = scrub ?? (d ? pos / d : 0);
   return (
-    <div className={`t7-video ${landscape ? 'land' : 'port'}`}>
+    <div className={`t7-video ${landscape ? 'land' : 'port'}`} data-upright={landscape ? '' : undefined}>
       <div className="t7-video-box" ref={box} onClick={() => (controls ? setControls(false) : bump())}>
         {status === 'loading' && <div className="t7-spinner light" />}
       </div>

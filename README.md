@@ -6,16 +6,19 @@ music (or stream from YouTube, SoundCloud and free sources), spin it around in
 
 ![iPod touch, iPod nano, iPod shuffle and iPod classic shown side by side at their real relative sizes](docs/screenshots/lineup.png)
 
-**Current version:** 1.0.0 · see [CHANGELOG.md](CHANGELOG.md)
+**Current version:** 1.3.0 · see [CHANGELOG.md](CHANGELOG.md)
 
 ## Models
 
 | Model | Year | Highlights |
 | --- | --- | --- |
-| iPod touch (7th generation) | 2019 | Lock screen, home screen, Control Center, app switcher, Music with synced lyrics, Podcasts, TV, Photos, Camera, Clock, Calculator, Notes, Calendar, Contacts, Voice Memos, Weather, Settings, iTunes Store previews |
+| iPod touch (7th generation) | 2019 | Lock screen with notifications, home screen with folders and Spotlight, Control Center, app switcher, the iOS keyboard (English and Thai), Messages, Music with synced lyrics, Podcasts, TV, Photos, Camera, Clock, Calculator, Notes, Calendar, Contacts, Voice Memos, Weather, Settings, iTunes Store previews; screenshots and slide to power off |
 | iPod nano (7th generation) | 2012 | Circular app icons, Music, Videos that turn the iPod sideways, FM-style Radio, Fitness, Photos, Clock, Podcasts, iTunes U |
 | iPod shuffle (4th generation) | 2010 | Clickable control pad, three-way switch, status light, VoiceOver with spoken playlists |
-| iPod classic (6th generation, 160GB) | 2009 | Click Wheel, Cover Flow, Now Playing with Genius and lyrics, On-The-Go, Extras, full Settings, five games |
+| iPod classic (6th generation, 160GB) | 2009 | Click Wheel, Cover Flow, Now Playing with Genius and lyrics, On-The-Go, Extras, full Settings in six languages, Klondike, Music Quiz and Vortex |
+| iPod (5th generation, "iPod video", 30GB) | 2005 | Glossy white or black front (and the U2 Special Edition), headphone jack on top, the Click Wheel software from before Cover Flow and Genius |
+| iPod nano (4th generation, "chromatic", 8GB) | 2008 | Nine colours of curved aluminium, a tall 240 × 320 screen, Cover Flow and Genius; turns on its side for Cover Flow, video and photos, shake to shuffle |
+| iPod mini (2nd generation, 6GB) | 2005 | Anodized aluminium with coloured Click Wheel labels and end caps, a grey-blue monochrome screen (Contrast, no artwork), music only |
 
 ### iPod classic
 
@@ -27,9 +30,15 @@ Cover Flow, Now Playing and the polished steel back with your own engraving.
 
 ![iPod touch lock and home screens, iPod nano home screen, and iPod shuffle](docs/screenshots/touch-nano-shuffle.png)
 
-### Click Wheel games
+### Click Wheel software
 
-Brick, Parachute, Solitaire and Vortex (plus Music Quiz) under Extras ▸ Games on the iPod classic.
+Each Click Wheel iPod runs the software it shipped with: the mini's music-only
+menus on a grey screen, the 5th generation from before Cover Flow and Genius,
+the nano 4G that turns on its side and shuffles when shaken. Settings ▸ Language
+switches the menus to ไทย, 日本語, Deutsch, Español or Français. Under
+Extras ▸ Games each has its own games: Brick, Music Quiz, Parachute and
+Solitaire on the mini and 5th generation, Klondike, Music Quiz and Vortex on
+the classic, Klondike and Vortex on the nano.
 
 ![Brick, Parachute, Solitaire and Vortex games](docs/screenshots/games.png)
 
@@ -46,9 +55,10 @@ just like a real iPod.
 
 ### Real 3D
 
-Drag the background to spin the iPod, scroll to zoom, or use Front, Back, Side
-and 360°: move the pointer to the right edge of the window and they slide in
-(along the bottom on phones).
+Drag the background to spin the iPod, scroll to zoom, or use Front, Back, Side,
+360° and Landscape: move the pointer to the right edge of the window and they
+slide in (a round button in the corner on phones). Landscape lays the iPod on
+its side, and everything still works as it would in your hand.
 
 ![iPod classic seen at an angle, showing its thickness and edges](docs/screenshots/classic-side.png)
 
@@ -56,8 +66,9 @@ and 360°: move the pointer to the right edge of the window and they slide in
 
 Every colored part, the materials, wallpapers, screen theme, engraving on the
 back and the backdrop. Put it in a silicone, leather or clear case, or in one
-of Apple's knitted iPod Socks, and cover the back in stickers and engraved
-text wherever you like. Save a design as a preset, share it as a link, or export
+of Apple's knitted iPod Socks (drag the sock down to pull it off), and cover
+the front and back in stickers and the back in engraved text, wherever you like. Undo and
+redo every change. Save a design as a preset, share it as a link, or export
 all your presets to a file.
 
 ![The Customize panel next to an iPod classic](docs/screenshots/customize.png)
@@ -88,7 +99,7 @@ all your presets to a file.
 
 ```bash
 npm install
-npm run dev        # http://localhost:5173  (?model=classic|touch7|nano7|shuffle4)
+npm run dev        # http://localhost:5173  (?model=classic|nano4|video5|mini2|touch7|nano7|shuffle4)
 npm run build      # type-check + production build into dist/
 npm test           # unit tests
 ```

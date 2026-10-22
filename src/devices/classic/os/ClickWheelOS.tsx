@@ -7,12 +7,15 @@
 import { lazy, memo, Suspense, type ComponentType, type LazyExoticComponent, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { MediaLayer } from '../../../core/player/MediaLayer';
 import { player } from '../../../core/player/player';
-import { useSettings } from '../../../core/settings/store';
+import { useDeviceSetting, useSettings } from '../../../core/settings/store';
 import { useAlarmState } from '../../../core/alarms';
+import { songs } from '../../../core/library/selectors';
+import { useLibrary } from '../../../core/library/store';
 import { WheelBus, type WheelButton, type WheelEvent } from '../../shared/clickwheel/bus';
 import { GAMES } from '../../shared/games/registry';
 import type { GameProps } from '../../shared/games/types';
 import {
+  CONTRAST_DEFAULT,
   FULL_CAPS,
   InputStack,
   OSContext,
@@ -30,12 +33,13 @@ import {
 } from './core';
 import { StatusBar } from './StatusBar';
 import { ContextMenu } from './ContextMenu';
-import { AppleLogo, BigLock } from './glyphs';
+import { AppleLogo, BigLock, ShuffleGlyph } from './glyphs';
 import { MainMenu } from './screens/MainMenu';
 import { R } from './routes';
 import { AlarmRinging } from './screens/AlarmRinging';
 import { LockScreen } from './screens/ScreenLock';
 import './os.css';
+import { t, useLang } from './i18n';
 
 export interface ClickWheelOSProps {
   bus: WheelBus;
@@ -53,6 +57,8 @@ export interface ClickWheelOSProps {
   bootStyle?: 'dark' | 'light';
   /** play the boot animation when first mounted */
   boot?: boolean;
+  /** with a motion sensor: the screen on top wants the iPod sideways (or not) */
+  onLandscape?: (on: boolean) => void;
 }
 
 type Power = 'boot' | 'on' | 'sleep' | 'reboot';
@@ -71,6 +77,7 @@ export function ClickWheelOS({
   caps: capsIn,
   bootStyle = 'dark',
   boot = true,
+  onLandscape,
 }: ClickWheelOSProps) {
   const scale = height / 240;
   const hdr = Math.round(22 * scale);
@@ -173,6 +180,15 @@ export function ClickWheelOS({
   powerRef.current = power;
   const backlightSec = useSettings((s) => s.backlight);
   const brightness = useSettings((s) => s.brightness);
+  // a new language redraws every screen in it (Settings ▸ Language goes back to the Main Menu)
+  const lang = useLang();
+  const langSeen = useRef(lang);
+  useEffect(() => {
+    if (langSeen.current === lang) return;
+    langSeen.current = lang;
+    nav.root();
+  }, [lang, nav]);
+  const [contrast] = useDeviceSetting<number>(modelId, 'contrast', CONTRAST_DEFAULT);
   const [lit, setLit] = useState(true);
   const lastInput = useRef(Date.now());
   const [lockFlash, setLockFlash] = useState(0);
@@ -199,6 +215,12 @@ export function ClickWheelOS({
   const wake = useCallback(() => {
     lastInput.current = Date.now();
     setLit(true);
+  }, []);
+  const toggleLight = useCallback(() => {
+    setLit((l) => {
+      lastInput.current = l ? 0 : Date.now();
+      return !l;
+    });
   }, []);
 
   /** video, slideshows and games keep the backlight on */
@@ -289,13 +311,7 @@ export function ClickWheelOS({
       }
       // backlight: touching / pressing anything lights the screen; holding Menu toggles it
       if (e.type === 'hold' && e.button === 'menu') {
-        if (Date.now() - lastInput.current < 300000) {
-          setLit((l) => {
-            if (l) lastInput.current = 0;
-            else lastInput.current = Date.now();
-            return !l;
-          });
-        }
+        if (Date.now() - lastInput.current < 300000) toggleLight();
         return true;
       }
       if (!(e.type === 'up' || (e.type === 'touch' && !e.active) || (e.type === 'repeat' && e.button === 'menu'))) wake();
@@ -329,7 +345,7 @@ export function ClickWheelOS({
       off();
       window.clearTimeout(rebootTimer);
     };
-  }, [bus, input, nav, wake]);
+  }, [bus, input, nav, wake, toggleLight]);
 
   // ---------------------------------------------------------------- api
   const api: OSApi = useMemo(
@@ -349,17 +365,94 @@ export function ClickWheelOS({
       menu: (spec) => setMenuSpec(spec),
       hud: (text, icon) => {
         window.clearTimeout(hudTimer.current);
-        setHud((h) => ({ text, icon, serial: (h?.serial ?? 0) + 1 }));
+        // the system's own messages, in the chosen language
+        setHud((h) => ({ text: t(text), icon, serial: (h?.serial ?? 0) + 1 }));
         hudTimer.current = window.setTimeout(() => setHud(null), 1300);
       },
       lockScreen: () => setLocked(true),
+      toggleBacklight: () => {
+        // the press that picked it lit the screen; this waits for that to pass
+        window.setTimeout(toggleLight, 0);
+      },
       runGame: (id) => setGame(id),
     }),
-    [width, height, hdr, row, color, theme, caps, info, modelId, input, nav, setMedia],
+    [width, height, hdr, row, color, theme, caps, info, modelId, input, nav, setMedia, toggleLight],
   );
 
-  // ---------------------------------------------------------------- render
+  // ---------------------------------------------------------------- motion sensor (nano 4G)
   const top = stack[stack.length - 1];
+  // Cover Flow, video and photos turn the iPod sideways
+  const sideways = caps.motion && power === 'on' && !game && !!top.landscape;
+  useEffect(() => {
+    onLandscape?.(sideways);
+  }, [sideways, onLandscape]);
+
+  // a shake shuffles the songs: a phone shaken, or the iPod dragged quickly back and forth
+  const [shakeMode] = useDeviceSetting<string>(modelId, 'shake', 'shuffle');
+  const busyRef = useRef(false);
+  busyRef.current = !!game || locked || !!ringing;
+  useEffect(() => {
+    if (!caps.motion || shakeMode === 'off') return;
+    let last = 0;
+    const shake = () => {
+      const now = performance.now();
+      if (now - last < 1500 || powerRef.current !== 'on' || bus.locked || busyRef.current) return;
+      const ids = songs(useLibrary.getState().tracks).map((t) => t.id);
+      if (!ids.length) return;
+      last = now;
+      wake();
+      player.playTracks(ids, Math.floor(Math.random() * ids.length), { shuffle: true });
+      nav.nowPlaying();
+      api.hud('Shuffle', <ShuffleGlyph size={22} />);
+    };
+    // the iPod dragged quickly back and forth (it turns with the pointer): count the turnarounds
+    let dir = 0;
+    let run = 0;
+    let flips: number[] = [];
+    let lastX: number | null = null;
+    const onMove = (e: PointerEvent) => {
+      if (!e.buttons || (e.target as Element | null)?.closest?.('[data-control]')) {
+        lastX = null;
+        return;
+      }
+      const dx = lastX === null ? 0 : e.clientX - lastX;
+      lastX = e.clientX;
+      if (!dx) return;
+      const now = performance.now();
+      if (Math.sign(dx) !== dir) {
+        if (dir && run > 40) {
+          flips = [...flips.filter((t) => now - t < 1000), now];
+          if (flips.length >= 3) {
+            flips = [];
+            shake();
+          }
+        }
+        dir = Math.sign(dx);
+        run = 0;
+      }
+      run += Math.abs(dx);
+    };
+    window.addEventListener('pointermove', onMove, true);
+    let hits: number[] = [];
+    const onMotion = (e: DeviceMotionEvent) => {
+      const a = e.acceleration;
+      if (!a || Math.hypot(a.x ?? 0, a.y ?? 0, a.z ?? 0) < 15) return;
+      const now = performance.now();
+      hits = [...hits.filter((t) => now - t < 600), now];
+      if (hits.length >= 3) {
+        hits = [];
+        shake();
+      }
+    };
+    window.addEventListener('devicemotion', onMotion);
+    return () => {
+      window.removeEventListener('pointermove', onMove, true);
+      window.removeEventListener('devicemotion', onMotion);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [caps.motion, shakeMode, bus, nav, wake]);
+
+  // ---------------------------------------------------------------- render
   const headerStyle = top.header ?? 'light';
   const entries = leaving ? [...stack, leaving] : stack;
   const mediaVisible = !!media?.req.visible && !anim && power === 'on' && !game && media.owner === top.id;
@@ -384,6 +477,8 @@ export function ClickWheelOS({
     ['--hdr' as string]: `${hdr}px`,
     ['--row' as string]: `${row}px`,
     ['--fs' as string]: `${Math.round(15 * scale)}px`,
+    // a grey LCD has Contrast instead of a brightness
+    ...(caps.contrast ? { filter: `${color ? '' : 'saturate(0) '}contrast(${(0.55 + contrast * 0.9).toFixed(2)})` } : null),
   } as CSSProperties;
 
   return (
@@ -396,13 +491,13 @@ export function ClickWheelOS({
         />
         <div className="cl-stack">
           {entries.map((e, i) => (
-            <ScreenHost key={e.id} id={e.id} active={e === top && !game && !locked && !ringing} className={cls(e, i)} padTop={(e.header ?? 'light') === 'light' ? hdr : 0}>
+            <ScreenHost key={`${e.id}:${lang}`} id={e.id} active={e === top && !game && !locked && !ringing} className={cls(e, i)} padTop={(e.header ?? 'light') === 'light' ? hdr : 0}>
               {e.el}
             </ScreenHost>
           ))}
         </div>
         {(!game || ringing) && (
-          <StatusBar title={ringing ? 'Alarm' : top.title} style={ringing ? 'light' : headerStyle} hold={hold} height={hdr} z={ringing ? 29 : undefined} />
+          <StatusBar title={ringing ? t('Alarm') : top.title} style={ringing ? 'light' : headerStyle} hold={hold} height={hdr} z={ringing ? 29 : undefined} />
         )}
         {menuSpec && <ContextMenu spec={menuSpec} onClose={() => setMenuSpec(null)} />}
         {game && <GameHost id={game} width={width} height={height} color={color} onExit={() => setGame(null)} />}
@@ -420,7 +515,7 @@ export function ClickWheelOS({
           </div>
         )}
         {/* LCD: brightness, backlight, power */}
-        <div className="cl-lcd-dim" style={{ opacity: Math.max(0, 0.8 - brightness) * 0.6 }} />
+        {!caps.contrast && <div className="cl-lcd-dim" style={{ opacity: Math.max(0, 0.8 - brightness) * 0.6 }} />}
         <div className={`cl-backlight ${lit ? '' : 'cl-backlight-off'}`} />
         {(power === 'boot' || power === 'reboot') && (
           <div className={`cl-boot cl-boot-${bootStyle} ${power === 'reboot' ? 'cl-boot-blank' : ''}`}>
@@ -480,11 +575,11 @@ function GameHost({ id, width, height, color, onExit }: { id: string; width: num
   return (
     <div className="cl-game" style={{ width, height }}>
       {Comp ? (
-        <Suspense fallback={<div className="cl-game-loading">Loading…</div>}>
+        <Suspense fallback={<div className="cl-game-loading">{t('Loading…')}</div>}>
           <Comp bus={gameBus} width={width} height={height} onExit={exit} color={color} />
         </Suspense>
       ) : (
-        <div className="cl-game-loading">Game not found</div>
+        <div className="cl-game-loading">{t('Game not found')}</div>
       )}
     </div>
   );

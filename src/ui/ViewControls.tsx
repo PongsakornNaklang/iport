@@ -1,9 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useStage } from '../shell/stageStore';
-import { useCustomize } from '../core/customize/store';
-import { getModel } from '../devices/registry';
-import { IconBack, IconCamera, IconFront, IconMinus, IconPlus, IconRotate, IconSide } from './icons';
-import { toast } from './toast';
+import { IconBack, IconFront, IconLandscape, IconMinus, IconPlus, IconRotate, IconSide, IconView } from './icons';
 
 /** How close to the right edge (px) the pointer brings the controls out. */
 const NEAR = 96;
@@ -38,8 +35,75 @@ function usePeek() {
   return peek;
 }
 
+/** Phones: a narrow screen with fingers rather than a mouse. */
+const PHONE = '(max-width: 720px)';
+function usePhone() {
+  const [on, setOn] = useState(() => typeof window !== 'undefined' && !!window.matchMedia?.(PHONE).matches);
+  useEffect(() => {
+    const mq = window.matchMedia?.(PHONE);
+    if (!mq) return;
+    const update = () => setOn(mq.matches);
+    mq.addEventListener('change', update);
+    return () => mq.removeEventListener('change', update);
+  }, []);
+  return on;
+}
+
 export function ViewControls() {
+  return usePhone() ? <ViewMenu /> : <ViewBar />;
+}
+
+/**
+ * On a phone the view controls fold into one round button in the corner,
+ * which opens a short stack above it. Zoom is two fingers on the stage, and
+ * a double tap faces the iPod front at 100% (Stage.tsx).
+ */
+function ViewMenu() {
   const spinning = useStage((s) => s.spinning);
+  const roll = useStage((s) => s.roll);
+  const [open, setOpen] = useState(false);
+  const st = useStage.getState;
+  useEffect(() => {
+    if (!open) return;
+    const close = (e: PointerEvent) => {
+      if (!(e.target as Element).closest?.('.view-menu')) setOpen(false);
+    };
+    window.addEventListener('pointerdown', close, true);
+    return () => window.removeEventListener('pointerdown', close, true);
+  }, [open]);
+  const act = (f: () => void) => () => {
+    f();
+    setOpen(false);
+  };
+  return (
+    <div className={`view-menu ${open ? 'open' : ''}`} data-no-stage="">
+      <div className="vm-items" aria-hidden={!open}>
+        <button className={roll ? 'on' : ''} onClick={act(() => st().toggleRoll())} title={roll ? 'Stand upright' : 'Turn sideways'} aria-pressed={roll} tabIndex={open ? 0 : -1}>
+          <IconLandscape />
+        </button>
+        <button className={spinning ? 'on' : ''} onClick={act(() => st().toggleSpin())} title="Spin 360°" tabIndex={open ? 0 : -1}>
+          <IconRotate />
+        </button>
+        <button onClick={act(() => st().side())} title="Side view" tabIndex={open ? 0 : -1}>
+          <IconSide />
+        </button>
+        <button onClick={act(() => st().back())} title="Back view" tabIndex={open ? 0 : -1}>
+          <IconBack />
+        </button>
+        <button onClick={act(() => st().front())} title="Front view" tabIndex={open ? 0 : -1}>
+          <IconFront />
+        </button>
+      </div>
+      <button className={`vm-toggle glass ${spinning ? 'spinning' : ''}`} onClick={() => setOpen(!open)} aria-expanded={open} aria-label="View">
+        <IconView />
+      </button>
+    </div>
+  );
+}
+
+function ViewBar() {
+  const spinning = useStage((s) => s.spinning);
+  const roll = useStage((s) => s.roll);
   const zoom = useStage((s) => s.zoom);
   const st = useStage.getState;
   const peek = usePeek();
@@ -63,7 +127,10 @@ export function ViewControls() {
           <IconRotate />
           <span className="lbl">360°</span>
         </button>
-        <SaveImageButton />
+        <button className={roll ? 'on' : ''} onClick={() => st().toggleRoll()} title={roll ? 'Stand upright (T)' : 'Turn sideways (T)'} aria-pressed={roll}>
+          <IconLandscape />
+          <span className="lbl">Landscape</span>
+        </button>
         <span className="sep" />
         {/* − % + in a row; stacked vertically it reads + % − (see app.css) */}
         <div className="vc-zoom">
@@ -79,33 +146,5 @@ export function ViewControls() {
         </div>
       </div>
     </>
-  );
-}
-
-/** Download the iPod as a PNG, as decorated, on a transparent background. */
-function SaveImageButton() {
-  const [busy, setBusy] = useState(false);
-  return (
-    <button
-      className={busy ? 'on' : ''}
-      disabled={busy}
-      title="Save image"
-      onClick={async () => {
-        setBusy(true);
-        toast('Saving image…');
-        try {
-          const { saveImage } = await import('../shell/snapshot');
-          await saveImage(`iPort ${getModel(useCustomize.getState().modelId).name}`);
-          toast('Image saved');
-        } catch {
-          toast('Couldn’t save the image');
-        } finally {
-          setBusy(false);
-        }
-      }}
-    >
-      <IconCamera />
-      <span className="lbl">Save</span>
-    </button>
   );
 }

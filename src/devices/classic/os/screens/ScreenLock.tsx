@@ -3,6 +3,7 @@ import { useSettings } from '../../../../core/settings/store';
 import { useInput, useOS } from '../core';
 import { BigLock } from '../glyphs';
 import { ListView, type Row } from '../ListView';
+import { t } from '../i18n';
 
 /** Four number wheels set with the Click Wheel (center confirms each digit). */
 export function CombinationDial({ prompt, onComplete, error, shake = 0 }: { prompt: string; onComplete: (code: string) => void; error?: string | null; shake?: number }) {
@@ -52,14 +53,14 @@ export function ScreenLockMenu() {
   const rows = useMemo<Row[]>(() => {
     const set: Row = {
       key: 'set',
-      label: code ? 'Change Combination' : 'Set Combination',
+      label: t(code ? 'Change Combination' : 'Set Combination'),
       chevron: true,
       onSelect: () =>
         os.nav.push({
-          title: 'Screen Lock',
+          title: t('Screen Lock'),
           el: (
             <CombinationDial
-              prompt="Enter new combination"
+              prompt={t('Enter new combination')}
               onComplete={(c) => {
                 useSettings.getState().set('lockCode', c);
                 os.nav.pop();
@@ -71,15 +72,15 @@ export function ScreenLockMenu() {
     };
     if (!code) return [set];
     return [
-      { key: 'lock', label: 'Lock', onSelect: () => os.lockScreen() },
+      { key: 'lock', label: t('Lock'), onSelect: () => os.lockScreen() },
       set,
       {
         key: 'off',
-        label: 'Turn Off',
+        label: t('Turn Off'),
         onSelect: () =>
           os.menu({
-            title: 'Remove the combination?',
-            options: [{ label: 'Turn Off', action: () => useSettings.getState().set('lockCode', '') }, { label: 'Cancel' }],
+            title: t('Remove the combination?'),
+            options: [{ label: t('Turn Off'), action: () => useSettings.getState().set('lockCode', '') }, { label: t('Cancel') }],
           }),
       },
     ];
@@ -109,8 +110,8 @@ export function LockScreen({ onUnlock }: { onUnlock: () => void }) {
     <div className="cl-lock">
       {entering ? (
         <CombinationDial
-          prompt="Enter combination"
-          error={fails ? 'Wrong combination' : null}
+          prompt={t('Enter combination')}
+          error={fails ? t('Wrong combination') : null}
           shake={fails}
           onComplete={(c) => {
             if (!code || c === code) onUnlock();
@@ -120,7 +121,7 @@ export function LockScreen({ onUnlock }: { onUnlock: () => void }) {
       ) : (
         <div className="cl-lock-idle">
           <BigLock size={70} />
-          <div>Press center to unlock</div>
+          <div>{t('Press center to unlock')}</div>
         </div>
       )}
     </div>

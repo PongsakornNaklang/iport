@@ -10,6 +10,7 @@ import { shuffleArray } from '../../../../core/player/player';
 import { clamp, useHeader, useInput, useOS, useScreen } from '../core';
 import { ChoiceList, toggleRow } from '../common';
 import { ListView, type Row } from '../ListView';
+import { t } from '../i18n';
 
 const TRANSITIONS = ['Random', 'Dissolve', 'Push Across', 'Wipe Across', 'Zoom Out', 'Ken Burns', 'Cube Across', 'Off'];
 const TIMES: { value: number; label: string }[] = [
@@ -37,10 +38,10 @@ export function PhotosMenu() {
   const rows = useMemo<Row[]>(() => {
     const albums = [...new Set(photos.map((p) => p.album).filter(Boolean) as string[])].sort();
     return [
-      { key: '__settings', label: 'Slideshow Settings', chevron: true, onSelect: () => os.nav.push({ title: 'Slideshow Settings', el: <SlideshowSettings /> }) },
-      { key: '__all', label: 'Photo Library', chevron: true, onSelect: () => os.nav.push({ title: 'Photo Library', el: <PhotoGrid /> }) },
+      { key: '__settings', label: t('Slideshow Settings'), chevron: true, onSelect: () => os.nav.push({ title: t('Slideshow Settings'), el: <SlideshowSettings /> }) },
+      { key: '__all', label: t('Photo Library'), chevron: true, onSelect: () => os.nav.push({ title: t('Photo Library'), el: <PhotoGrid /> }) },
       ...(photos.some((p) => p.favorite)
-        ? [{ key: '__fav', label: 'Favorites', chevron: true, onSelect: () => os.nav.push({ title: 'Favorites', el: <PhotoGrid filter="__fav" /> }) }]
+        ? [{ key: '__fav', label: t('Favorites'), chevron: true, onSelect: () => os.nav.push({ title: t('Favorites'), el: <PhotoGrid filter="__fav" /> }) }]
         : []),
       ...albums.map((a) => ({ key: a, label: a, chevron: true, onSelect: () => os.nav.push({ title: a, el: <PhotoGrid filter={a} /> }) })),
     ];
@@ -52,27 +53,28 @@ function SlideshowSettings() {
   const os = useOS();
   const s = useSlideSettings();
   const lists = usePlaylists();
-  const musicLabel = s.music === 'off' ? 'Off' : s.music === 'nowplaying' ? 'Now Playing' : lists.find((p) => p.id === s.music)?.name ?? 'Now Playing';
+  const musicLabel = s.music === 'off' ? t('Off') : s.music === 'nowplaying' ? t('Now Playing') : (lists.find((p) => p.id === s.music)?.name ?? t('Now Playing'));
   const timeLabel = TIMES.find((t) => t.value === s.time)?.label ?? `${s.time} Seconds`;
   const rows: Row[] = [
     {
       key: 'time',
-      label: 'Time Per Slide',
-      detail: timeLabel.replace(' Seconds', ' Secs'),
+      label: t('Time Per Slide'),
+      detail: t(timeLabel).replace(' Seconds', ' Secs'),
       chevron: true,
-      onSelect: () => os.nav.push({ title: 'Time Per Slide', el: <ChoiceList choices={TIMES} value={s.time} onPick={s.setTime} /> }),
+      onSelect: () => os.nav.push({ title: t('Time Per Slide'), el: <ChoiceList choices={TIMES} value={s.time} onPick={s.setTime} /> }),
     },
     {
       key: 'music',
-      label: 'Music',
+      label: t('Music'),
       detail: musicLabel,
       chevron: true,
       onSelect: () =>
         os.nav.push({
-          title: 'Music',
+          title: t('Music'),
           el: (
             <ChoiceList
-              choices={[{ value: 'nowplaying', label: 'Now Playing' }, { value: 'off', label: 'Off' }, ...lists.map((p) => ({ value: p.id, label: p.name }))]}
+              raw
+              choices={[{ value: 'nowplaying', label: t('Now Playing') }, { value: 'off', label: t('Off') }, ...lists.map((p) => ({ value: p.id, label: p.name }))]}
               value={s.music}
               onPick={s.setMusic}
             />
@@ -83,10 +85,10 @@ function SlideshowSettings() {
     toggleRow('Shuffle Photos', s.shuffle, s.setShuffle),
     {
       key: 'tr',
-      label: 'Transitions',
-      detail: s.transition,
+      label: t('Transitions'),
+      detail: t(s.transition),
       chevron: true,
-      onSelect: () => os.nav.push({ title: 'Transitions', el: <ChoiceList choices={TRANSITIONS.map((v) => ({ value: v, label: v }))} value={s.transition} onPick={s.setTransition} /> }),
+      onSelect: () => os.nav.push({ title: t('Transitions'), el: <ChoiceList choices={TRANSITIONS.map((v) => ({ value: v, label: v }))} value={s.transition} onPick={s.setTransition} /> }),
     },
   ];
   return <ListView rows={rows} />;
@@ -124,17 +126,17 @@ function PhotoGrid({ filter }: { filter?: string }) {
       return true;
     }
     if (e.type === 'click' && e.button === 'select') {
-      os.nav.push({ title: 'Photo', el: <PhotoViewer photos={photos} start={s} />, header: 'hidden' });
+      os.nav.push({ title: t('Photo'), el: <PhotoViewer photos={photos} start={s} />, header: 'hidden', landscape: true });
       return true;
     }
     if (e.type === 'click' && e.button === 'play') {
-      os.nav.push({ title: 'Slideshow', el: <Slideshow photos={photos} start={s} />, header: 'hidden', kind: 'slideshow' });
+      os.nav.push({ title: t('Slideshow'), el: <Slideshow photos={photos} start={s} />, header: 'hidden', kind: 'slideshow', landscape: true });
       return true;
     }
     return false;
   });
 
-  if (!photos.length) return <ListView rows={[]} empty="No Photos" />;
+  if (!photos.length) return <ListView rows={[]} empty={t('No Photos')} />;
   const cells = [];
   for (let i = top * COLS; i < Math.min(photos.length, (top + visRows + 1) * COLS); i++) {
     const r = Math.floor(i / COLS) - top;
@@ -149,7 +151,7 @@ function PhotoGrid({ filter }: { filter?: string }) {
     <div className="cl-grid">
       {cells}
       <div className="cl-grid-count">
-        {s + 1} of {photos.length}
+        {t('{n} of {m}', { n: s + 1, m: photos.length })}
       </div>
     </div>
   );
@@ -179,7 +181,7 @@ function PhotoViewer({ photos, start }: { photos: Photo[]; start: number }) {
       return true;
     }
     if (e.type === 'click' && e.button === 'play') {
-      os.nav.push({ title: 'Slideshow', el: <Slideshow photos={photos} start={i} />, header: 'hidden', kind: 'slideshow' });
+      os.nav.push({ title: t('Slideshow'), el: <Slideshow photos={photos} start={i} />, header: 'hidden', kind: 'slideshow', landscape: true });
       return true;
     }
     if (e.type === 'click' && e.button === 'select') return true;

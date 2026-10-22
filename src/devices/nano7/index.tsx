@@ -6,13 +6,15 @@
  */
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { Box3D, Device3D, EdgeDecal, Slab3D, type EdgeSlice } from '../../shell/Device3D';
-import { BodyExtras } from '../../shell/bodySlot';
+import { BodyExtras, SockScreenGuard } from '../../shell/bodySlot';
 import { Decals } from '../../shell/decals/Decals';
 import { isTypingTarget } from '../../shell/keyboard';
+import { useStage } from '../../shell/stageStore';
 import { player, usePlayer } from '../../core/player/player';
 import { useLibrary } from '../../core/library/store';
 import { songs } from '../../core/library/selectors';
 import { useAlarmState } from '../../core/alarms';
+import { setMono } from '../../core/player/audioGraph';
 import type { Decal, DeviceProps } from '../types';
 import { nano, useNano, useNanoData } from './state';
 import { Screen } from './os/Screen';
@@ -41,6 +43,9 @@ function luminance(c: string): number {
 }
 
 // ---------------------------------------------------------------- button logic
+
+/** how long the screen stays on with nothing touched */
+const AUTO_SLEEP_MS = 30_000;
 
 function wake() {
   useNano.setState({ asleep: false, locked: true });
@@ -253,9 +258,44 @@ export default function IpodNano7({ appearance }: DeviceProps) {
   const asleep = useNano((s) => s.asleep);
   const video = useNano((s) => s.video);
   const turnForVideo = useNanoData((s) => s.turnForVideo);
+  // Settings ▸ Videos ▸ Rotate for Video: a video lays the iPod on its side on the stage
+  const turned = video && turnForVideo;
+  useEffect(() => {
+    useStage.getState().autoRoll(turned);
+  }, [turned]);
+  useEffect(() => () => useStage.getState().autoRoll(false), []);
   const playClick = useMultiClick();
 
   useServices();
+
+  // Settings ▸ Accessibility ▸ Mono Audio, while this iPod is the one in use
+  const mono = useNanoData((s) => s.mono);
+  useEffect(() => {
+    setMono(mono);
+    return () => setMono(false);
+  }, [mono]);
+
+  // the screen goes dark by itself when left alone (not while a video plays)
+  useEffect(() => {
+    let last = Date.now();
+    const touch = () => {
+      last = Date.now();
+    };
+    const evs = ['pointerdown', 'pointermove', 'keydown', 'wheel'] as const;
+    evs.forEach((e) => window.addEventListener(e, touch, { passive: true, capture: true }));
+    const t = window.setInterval(() => {
+      const s = useNano.getState();
+      if (s.asleep || s.video || useAlarmState.getState().ringing) {
+        last = Date.now();
+        return;
+      }
+      if (Date.now() - last > AUTO_SLEEP_MS) sleep();
+    }, 1000);
+    return () => {
+      evs.forEach((e) => window.removeEventListener(e, touch, { capture: true }));
+      window.clearInterval(t);
+    };
+  }, []);
 
   // wake up for alarms
   const ringing = useAlarmState((s) => s.ringing);
@@ -305,7 +345,7 @@ export default function IpodNano7({ appearance }: DeviceProps) {
 
   return (
     <Device3D
-      className={`n7-device ${video && turnForVideo ? 'n7-landscape' : ''}`}
+      className="n7-device"
       width={W}
       height={H}
       depth={D}
@@ -329,6 +369,7 @@ export default function IpodNano7({ appearance }: DeviceProps) {
           <div className="n7-screen-window" style={SCREEN}>
             <Screen wallpaper={wallpaper} />
           </div>
+          <SockScreenGuard area={SCREEN} height={H} />
           <HomeButton color={home} dark={darkGlass} />
           <div className={`n7-glare ${asleep ? 'n7-glare-strong' : ''}`} />
           <Decals decals={appearance.decals} side="front" />

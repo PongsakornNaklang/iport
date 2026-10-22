@@ -16,6 +16,7 @@ export function ClassicBack({
   decals,
   capacity,
   model,
+  modelNo = 'A1238',
 }: {
   material: string;
   color: string;
@@ -23,6 +24,7 @@ export function ClassicBack({
   decals?: Decal[];
   capacity: string;
   model: string;
+  modelNo?: string;
 }) {
   const style = { ['--paint' as string]: color, ['--paint-hi' as string]: shade(color, 0.25), ['--paint-lo' as string]: shade(color, -0.3) } as CSSProperties;
   const lines = engraving.filter((l) => l && l.trim());
@@ -59,7 +61,7 @@ export function ClassicBack({
       <div className="cl-back-print">
         <div>Designed by Apple in California. Assembled in China.</div>
         <div>
-          Model No.: A1238 &nbsp;EMC No.: 2173 &nbsp;{capacity}
+          Model No.: {modelNo} &nbsp;{capacity}
         </div>
         <div className="cl-back-marks">
           <Marks />
@@ -84,4 +86,72 @@ function Marks() {
       </g>
     </svg>
   );
+}
+
+/**
+ * An anodized aluminium back (iPod mini, iPod nano): the body's colour, a
+ * soft brushed sheen, a polished Apple logo, the product name, engraving
+ * and the small print.
+ */
+export function AluminiumBack({
+  color,
+  wordmark,
+  engraving,
+  decals,
+  capacity,
+  model,
+  modelNo,
+  badge = false,
+}: {
+  color: string;
+  wordmark: string;
+  /** the capacity in a small outlined box instead of the small print */
+  badge?: boolean;
+  engraving: [string, string];
+  decals?: Decal[];
+  capacity: string;
+  model: string;
+  modelNo: string;
+}) {
+  const style = { ['--anod' as string]: color, ['--anod-hi' as string]: shade(color, 0.12), ['--anod-lo' as string]: shade(color, -0.12) } as CSSProperties;
+  const lines = engraving.filter((l) => l && l.trim());
+  const dark = luminanceOf(color) < 0.35;
+  return (
+    <div className={`cl-alback ${dark ? 'cl-alback-dark' : ''} ${badge ? 'cl-alback-badged' : ''}`} style={style}>
+      <div className="cl-alback-sheen" />
+      <svg className="cl-alback-logo" viewBox="10 0 150 170" aria-hidden>
+        <path d={APPLE_PATH} />
+      </svg>
+      <div className="cl-alback-wordmark">{wordmark}</div>
+      {lines.length > 0 && (
+        <div className="cl-back-engraving cl-alback-engraving">
+          {lines.map((l, i) => (
+            <div key={i}>{l}</div>
+          ))}
+        </div>
+      )}
+      <Decals
+        decals={decals}
+        ink={dark ? 'rgba(255,255,255,0.55)' : 'rgba(255,255,255,0.7)'}
+        shadow={dark ? '0 1px 0 rgba(0,0,0,0.4)' : '0 -0.5px 0 rgba(0,0,0,0.18)'}
+      />
+      {badge && <div className="cl-alback-badge">{capacity}</div>}
+      <div className="cl-back-print cl-alback-print" hidden={badge}>
+        <div>Designed by Apple in California. Assembled in China.</div>
+        <div>
+          Model No.: {modelNo} &nbsp;{capacity}
+        </div>
+        <div className="cl-back-marks">
+          <Marks />
+          <span>{model}LL/A</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function luminanceOf(hex: string): number {
+  const h = hex.replace('#', '');
+  const n = parseInt(h.length === 3 ? h.replace(/./g, (c) => c + c) : h.slice(0, 6), 16);
+  return (0.2126 * ((n >> 16) & 255) + 0.7152 * ((n >> 8) & 255) + 0.0722 * (n & 255)) / 255;
 }

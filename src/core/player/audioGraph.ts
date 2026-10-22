@@ -2,7 +2,7 @@
  * Web Audio processing chain for media we are allowed to process
  * (local files and CORS-enabled streams):
  *
- *   <video> → preamp → 10-band EQ → Sound Check (compressor) → analyser → out
+ *   <video> → preamp → 10-band EQ → Sound Check (compressor) → mono → analyser → out
  */
 import { EQ_BANDS, EQ_PRESETS, preampFor } from './eq';
 
@@ -11,6 +11,9 @@ let preamp: GainNode;
 let bands: BiquadFilterNode[] = [];
 let compressor: DynamicsCompressorNode;
 let makeup: GainNode;
+/** Mono Audio: one channel, so both ears get the same sound */
+let monoNode: GainNode;
+let mono = false;
 let analyser: AnalyserNode;
 const connected = new WeakSet<HTMLMediaElement>();
 
@@ -30,6 +33,7 @@ function build(): AudioContext {
   });
   compressor = ctx.createDynamicsCompressor();
   makeup = ctx.createGain();
+  monoNode = ctx.createGain();
   analyser = ctx.createAnalyser();
   analyser.fftSize = 256;
   analyser.smoothingTimeConstant = 0.8;
@@ -41,10 +45,12 @@ function build(): AudioContext {
   }
   node.connect(compressor);
   compressor.connect(makeup);
-  makeup.connect(analyser);
+  makeup.connect(monoNode);
+  monoNode.connect(analyser);
   analyser.connect(ctx.destination);
   applyEq(currentEq);
   applySoundCheck(soundCheck);
+  applyMono(mono);
   return ctx;
 }
 
@@ -87,6 +93,20 @@ function applySoundCheck(on: boolean) {
 export function setEq(name: string): void {
   currentEq = name;
   applyEq(name);
+}
+
+function applyMono(on: boolean) {
+  if (!ctx) return;
+  // mixed down to one channel here; the speakers' upmix sends it to both
+  monoNode.channelCount = on ? 1 : 2;
+  monoNode.channelCountMode = on ? 'explicit' : 'max';
+  monoNode.channelInterpretation = 'speakers';
+}
+
+/** Mono Audio (an accessibility setting): the left and right channels mixed together. */
+export function setMono(on: boolean): void {
+  mono = on;
+  applyMono(on);
 }
 
 export function setSoundCheck(on: boolean): void {

@@ -10,18 +10,19 @@ import { AlarmsScreen, ClocksScreen, StopwatchScreen } from './Clock';
 import { CalendarsMenu, MonthView } from './Calendar';
 import { ScreenLockMenu } from './ScreenLock';
 import { VoiceMemosScreen } from './VoiceMemos';
+import { t } from '../i18n';
 
 export const EX = {
-  alarms: (): ScreenSpec => ({ title: 'Alarms', el: <AlarmsScreen /> }),
-  calendars: (): ScreenSpec => ({ title: 'Calendars', el: <CalendarsMenu /> }),
-  calendar: (): ScreenSpec => ({ title: 'Calendar', el: <MonthView /> }),
-  clocks: (): ScreenSpec => ({ title: 'Clocks', el: <ClocksScreen /> }),
-  contacts: (): ScreenSpec => ({ title: 'Contacts', el: <ContactsScreen /> }),
-  games: (): ScreenSpec => ({ title: 'Games', el: <GamesScreen /> }),
-  notes: (): ScreenSpec => ({ title: 'Notes', el: <NotesScreen /> }),
-  screenLock: (): ScreenSpec => ({ title: 'Screen Lock', el: <ScreenLockMenu /> }),
-  stopwatch: (): ScreenSpec => ({ title: 'Stopwatch', el: <StopwatchScreen /> }),
-  voiceMemos: (): ScreenSpec => ({ title: 'Voice Memos', el: <VoiceMemosScreen /> }),
+  alarms: (): ScreenSpec => ({ title: t('Alarms'), el: <AlarmsScreen /> }),
+  calendars: (): ScreenSpec => ({ title: t('Calendars'), el: <CalendarsMenu /> }),
+  calendar: (): ScreenSpec => ({ title: t('Calendar'), el: <MonthView /> }),
+  clocks: (): ScreenSpec => ({ title: t('Clocks'), el: <ClocksScreen /> }),
+  contacts: (): ScreenSpec => ({ title: t('Contacts'), el: <ContactsScreen /> }),
+  games: (): ScreenSpec => ({ title: t('Games'), el: <GamesScreen /> }),
+  notes: (): ScreenSpec => ({ title: t('Notes'), el: <NotesScreen /> }),
+  screenLock: (): ScreenSpec => ({ title: t('Screen Lock'), el: <ScreenLockMenu /> }),
+  stopwatch: (): ScreenSpec => ({ title: t('Stopwatch'), el: <StopwatchScreen /> }),
+  voiceMemos: (): ScreenSpec => ({ title: t('Voice Memos'), el: <VoiceMemosScreen /> }),
 };
 
 export function ExtrasMenu() {
@@ -34,19 +35,23 @@ export function ExtrasMenu() {
       ['Contacts', EX.contacts],
       ['Games', EX.games, os.caps.games],
       ['Notes', EX.notes],
-      ['Screen Lock', EX.screenLock],
-      ['Stopwatch', EX.stopwatch],
+      ['Screen Lock', EX.screenLock, os.caps.screenLock],
+      ['Stopwatch', EX.stopwatch, os.caps.stopwatch],
       ['Voice Memos', EX.voiceMemos, os.caps.voiceMemos],
     ];
-    return items.filter(([, , cap]) => cap !== false).map(([label, spec]) => ({ key: label, label, chevron: true, onSelect: () => os.nav.push(spec()) }));
+    return items.filter(([, , cap]) => cap !== false).map(([label, spec]) => ({ key: label, label: t(label), chevron: true, onSelect: () => os.nav.push(spec()) }));
   }, [os]);
   return <ListView rows={rows} />;
 }
 
 function GamesScreen() {
   const os = useOS();
-  const rows = useMemo<Row[]>(() => GAMES.map((g) => ({ key: g.id, label: g.name, onSelect: () => os.runGame(g.id) })), [os]);
-  return <ListView rows={rows} empty="No Games" />;
+  // the games this iPod came with, under the names it used
+  const rows = useMemo<Row[]>(
+    () => os.caps.gameList.filter((g) => GAMES.some((x) => x.id === g.id)).map((g) => ({ key: g.id, label: t(g.name), onSelect: () => os.runGame(g.id) })),
+    [os],
+  );
+  return <ListView rows={rows} empty={t('No Games')} />;
 }
 
 function NotesScreen() {
@@ -56,10 +61,10 @@ function NotesScreen() {
     () =>
       [...notes]
         .sort((a, b) => a.title.localeCompare(b.title))
-        .map((n) => ({ key: n.id, label: n.title || 'Untitled', chevron: true, onSelect: () => os.nav.push({ title: n.title || 'Note', el: <NoteView id={n.id} /> }) })),
+        .map((n) => ({ key: n.id, label: n.title || t('Untitled'), chevron: true, onSelect: () => os.nav.push({ title: n.title || t('Note'), el: <NoteView id={n.id} /> }) })),
     [notes, os],
   );
-  return <ListView rows={rows} empty="No Notes" />;
+  return <ListView rows={rows} empty={t('No Notes')} />;
 }
 
 function NoteView({ id }: { id: string }) {
@@ -69,7 +74,7 @@ function NoteView({ id }: { id: string }) {
 
 function contactName(c: Contact, by: 'first' | 'last'): string {
   const n = by === 'first' ? `${c.firstName} ${c.lastName}` : `${c.lastName}${c.lastName && c.firstName ? ', ' : ''}${c.firstName}`;
-  return n.trim() || c.company || 'No Name';
+  return n.trim() || c.company || t('No Name');
 }
 
 function ContactsScreen() {
@@ -82,13 +87,13 @@ function ContactsScreen() {
       .sort((a, b) => key(a).localeCompare(key(b)))
       .map((c) => ({
         key: c.id,
-        label: `${c.firstName} ${c.lastName}`.trim() || c.company || 'No Name',
+        label: `${c.firstName} ${c.lastName}`.trim() || c.company || t('No Name'),
         sort: key(c),
         chevron: true,
         onSelect: () => os.nav.push({ title: contactName(c, 'first'), el: <ContactView id={c.id} /> }),
       }));
   }, [contacts, by, os]);
-  return <ListView rows={rows} indexed empty="No Contacts" />;
+  return <ListView rows={rows} indexed empty={t('No Contacts')} />;
 }
 
 function ContactView({ id }: { id: string }) {

@@ -17,59 +17,7 @@ import { Glyph } from '../os/glyphs';
 import { AppIcon } from '../os/icons';
 import { os, usePrefs } from '../os/store';
 import { Scroller } from '../os/Scroller';
-import { Cell, Empty, IconTile, NavStack, Page, SearchField, Section, Sheet, SheetHeader, Tabs, TextButton, TextInput, useNav } from '../os/ui';
-
-// ------------------------------------------------------------------ Messages
-
-function Messages() {
-  const [q, setQ] = useState('');
-  const [compose, setCompose] = useState(false);
-  return (
-    <NavStack
-      rootTitle="Messages"
-      root={
-        <Page
-          title="Messages"
-          left={<TextButton>Edit</TextButton>}
-          right={
-            <button className="t7-gbtn" aria-label="Compose" onClick={() => setCompose(true)}>
-              <Glyph name="square.and.pencil" size={22} />
-            </button>
-          }
-          search={<SearchField value={q} onChange={setQ} />}
-        >
-          <Empty glyph="message.fill" title="No Messages" text="iMessage needs an Apple ID. Tap the compose button to start a conversation." />
-          <Sheet open={compose} onClose={() => setCompose(false)}>
-            <ComposeMessage onClose={() => setCompose(false)} />
-          </Sheet>
-        </Page>
-      }
-    />
-  );
-}
-
-function ComposeMessage({ onClose }: { onClose: () => void }) {
-  const [to, setTo] = useState('');
-  const [msg, setMsg] = useState('');
-  return (
-    <div className="t7c-editor t7x-compose">
-      <SheetHeader title="New Message" right={<TextButton onPress={onClose}>Cancel</TextButton>} />
-      <div className="t7x-to">
-        <span>To:</span>
-        <TextInput value={to} onChange={setTo} autoFocus />
-      </div>
-      <div className="t7x-thread" />
-      <div className="t7x-msgbar">
-        <span className="t7x-plus">
-          <Glyph name="plus" size={16} />
-        </span>
-        <div className="t7x-msgin">
-          <TextInput value={msg} onChange={setMsg} placeholder="iMessage" onEnter={() => msg && (os.toast('Not Delivered', 'exclamationmark.triangle'), setMsg(''))} />
-        </div>
-      </div>
-    </div>
-  );
-}
+import { Cell, Empty, IconTile, NavStack, Page, SearchField, Section, Tabs, TextButton, TextInput, useNav } from '../os/ui';
 
 // ------------------------------------------------------------------ FaceTime
 
@@ -758,7 +706,6 @@ function TipCard({ t }: { t: (typeof TIPS)[number] }) {
 // ------------------------------------------------------------------ registry
 
 export const STUBS: Record<string, ComponentType> = {
-  messages: Messages,
   facetime: FaceTime,
   mail: Mail,
   maps: Maps,
