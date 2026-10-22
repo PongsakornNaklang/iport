@@ -11,6 +11,7 @@ import { GeniusGlyph, RepeatGlyph, ShuffleGlyph, SpeakerLevel, Star } from '../g
 import { Marquee } from '../ListView';
 import { songMenu, startGenius } from './Music';
 import { geniusPlaylist } from '../../../../core/library/selectors';
+import { t as tx } from '../i18n';
 
 type Mode = 'progress' | 'scrub' | 'genius' | 'rating' | 'shuffle' | 'lyrics';
 
@@ -41,7 +42,7 @@ function NothingPlaying() {
   useHeader('light');
   return (
     <div className="cl-message">
-      <b>Nothing Playing</b>
+      <b>{tx('Nothing Playing')}</b>
     </div>
   );
 }
@@ -211,7 +212,7 @@ function MusicView({ t }: { t: Track }) {
             </span>
           </div>
         ) : (
-          <span className="cl-np-genius-na">Genius is not available for this song</span>
+          <span className="cl-np-genius-na">{tx('Genius is not available for this song')}</span>
         )}
       </div>
     );
@@ -227,10 +228,10 @@ function MusicView({ t }: { t: Track }) {
     bottom = (
       <div className="cl-np-shuffle">
         <ShuffleGlyph size={16} />
-        <span className="cl-np-shuffle-label">Shuffle</span>
+        <span className="cl-np-shuffle-label">{tx('Shuffle')}</span>
         {(['off', 'songs', 'albums'] as ShuffleMode[]).map((m) => (
           <span key={m} className={`cl-seg ${shuffle === m ? 'on' : ''}`}>
-            {m === 'off' ? 'Off' : m === 'songs' ? 'Songs' : 'Albums'}
+            {tx(m === 'off' ? 'Off' : m === 'songs' ? 'Songs' : 'Albums')}
           </span>
         ))}
       </div>
@@ -268,17 +269,17 @@ function MusicView({ t }: { t: Track }) {
       >
         <div className="cl-np-count">
           <span>
-            {qlen ? index + 1 : 0} of {qlen}
+            {tx('{n} of {m}', { n: qlen ? index + 1 : 0, m: qlen })}
           </span>
           <span className="cl-np-modes">
             {shuffle !== 'off' && <ShuffleGlyph size={13} />}
             {repeat !== 'off' && <RepeatGlyph size={13} one={repeat === 'one'} />}
           </span>
         </div>
-        <Marquee text={t.title || 'Untitled'} run className="cl-np-title" />
-        <Marquee text={t.artist || 'Unknown Artist'} run className="cl-np-line" />
-        <Marquee text={t.album || 'Unknown Album'} run className="cl-np-line" />
-        {status === 'loading' && <div className="cl-np-status">Loading…</div>}
+        <Marquee text={t.title || tx('Untitled')} run className="cl-np-title" />
+        <Marquee text={t.artist || tx('Unknown Artist')} run className="cl-np-line" />
+        <Marquee text={t.album || tx('Unknown Album')} run className="cl-np-line" />
+        {status === 'loading' && <div className="cl-np-status">{tx('Loading…')}</div>}
       </div>
       {mode === 'lyrics' && <LyricsPane plain={lyrics.plain} lines={lyrics.lines} scroll={lyricScroll} />}
       <div className="cl-np-bottom">{bottom}</div>
@@ -354,7 +355,7 @@ function VideoView({ t }: { t: Track }) {
   const style: CSSProperties = { position: 'absolute', inset: 0 };
   return (
     <div className="cl-video" style={style}>
-      {(status === 'loading' || error) && <div className="cl-video-msg">{error ? 'This video can’t be played' : 'Loading…'}</div>}
+      {(status === 'loading' || error) && <div className="cl-video-msg">{tx(error ? 'This video can’t be played' : 'Loading…')}</div>}
       {overlay === 'info' && (
         <div className="cl-video-osd">
           <div className="cl-video-title">{t.title}</div>

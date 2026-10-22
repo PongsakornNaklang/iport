@@ -60,6 +60,11 @@ The running app shows its version and build in the Help panel (?).
   of a turned Click Wheel is Forward, swipes on a touch screen go along the
   iPod, and the iPod touch turns a playing video with it.
 
+- Click Wheel iPods: Settings ▸ Language works. ไทย, 日本語, Deutsch, Español
+  and Français translate the menus, settings, messages and dates (your
+  music, contacts and notes keep their names); choosing one goes back to
+  the Main Menu in it, as on the real iPod.
+
 ### Changed
 - The nano 4G (Cover Flow, video, photos), the nano 7G (Rotate for Video)
   and the iPod touch (video) now lie down on the stage the same way the

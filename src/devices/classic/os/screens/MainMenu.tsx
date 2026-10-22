@@ -10,6 +10,7 @@ import { PanelIcon } from '../glyphs';
 import { R } from '../routes';
 import { EX } from './Extras';
 import { startGenius, playList } from './Music';
+import { t } from '../i18n';
 
 interface Item {
   label: string;
@@ -50,8 +51,8 @@ export function MainMenu() {
     if (caps.photos && on('Photos', true)) add('Photos', 'photos', () => nav.push(R.photos()));
     // before the classic, Podcasts lived in the Music menu
     if (caps.podcasts && !caps.backlightItem && on('Podcasts', true)) add('Podcasts', 'podcasts', () => nav.push(R.podcasts()));
-    if (on('iTunes U')) add('iTunes U', 'podcasts', () => nav.push({ title: 'iTunes U', el: <ListView rows={[]} empty="No iTunes U" /> }));
-    if (on('Radio')) add('Radio', 'music', () => nav.push({ title: 'Radio', el: <RadioScreen /> }));
+    if (on('iTunes U')) add('iTunes U', 'podcasts', () => nav.push({ title: 'iTunes U', el: <ListView rows={[]} empty={t('No iTunes U')} /> }));
+    if (on('Radio')) add('Radio', 'music', () => nav.push({ title: t('Radio'), el: <RadioScreen /> }));
     if (on('Extras', true)) add('Extras', 'extras', () => nav.push(R.extras()));
     if (caps.games && on('Games')) add('Games', 'extras', () => nav.push(EX.games()));
     if (on('Clock')) add('Clock', 'extras', () => nav.push(EX.clocks()));
@@ -74,7 +75,7 @@ export function MainMenu() {
     return list;
   }, [mm, caps, nav, os, hasNP]);
 
-  const rows = useMemo<Row[]>(() => items.map((it) => ({ key: it.label, label: it.label, chevron: it.chevron, onSelect: it.go })), [items]);
+  const rows = useMemo<Row[]>(() => items.map((it) => ({ key: it.label, label: t(it.label), chevron: it.chevron, onSelect: it.go })), [items]);
   const panel = items[Math.min(hl, items.length - 1)]?.panel ?? 'music';
 
   if (!caps.splitMenu) return <ListView rows={rows} />;
@@ -95,7 +96,7 @@ function RadioScreen() {
     const st = radioStations(tracks);
     return st.map((t, i) => ({ key: t.id, label: t.title, onSelect: () => playList(os, st.map((x) => x.id), i) }));
   }, [tracks, os]);
-  return <ListView rows={rows} empty="No Radio Stations" />;
+  return <ListView rows={rows} empty={t('No Radio Stations')} />;
 }
 
 // ------------------------------------------------------------------ artwork panel

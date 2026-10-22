@@ -4,12 +4,13 @@ import { useSettings } from '../../../../core/settings/store';
 import type { Alarm } from '../../../../core/types';
 import { clamp, useInput } from '../core';
 import { minutesLabel } from './Clock';
+import { t } from '../i18n';
 
 /** Full-screen alarm with Dismiss / Snooze. */
 export function AlarmRinging({ alarm }: { alarm: Alarm }) {
   const use24h = useSettings((s) => s.use24h);
   const [sel, setSel] = useState(0);
-  const options = ['Dismiss', 'Snooze'];
+  const options = [t('Dismiss'), t('Snooze')];
   useInput((e) => {
     if (e.type === 'scroll') {
       setSel((s) => clamp(s + e.steps, 0, 1));
@@ -37,7 +38,7 @@ export function AlarmRinging({ alarm }: { alarm: Alarm }) {
         </svg>
         <div>
           <div className="cl-alarm-time">{minutesLabel(alarm.time, use24h)}</div>
-          <div className="cl-alarm-label">{alarm.label}</div>
+          <div className="cl-alarm-label">{t(alarm.label)}</div>
         </div>
       </div>
       <div className="cl-alarm-opts">

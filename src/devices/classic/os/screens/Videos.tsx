@@ -8,9 +8,10 @@ import { useOS, type OSApi, type ScreenSpec } from '../core';
 import { cycleRow, toggleRow } from '../common';
 import { ListView, type Row } from '../ListView';
 import { NowPlaying } from './NowPlaying';
+import { t as tx } from '../i18n';
 
 export function videoNowPlaying(): ScreenSpec {
-  return { title: 'Now Playing', el: <NowPlaying video />, kind: 'nowplaying', header: 'hidden', landscape: true };
+  return { title: tx('Now Playing'), el: <NowPlaying video />, kind: 'nowplaying', header: 'hidden', landscape: true };
 }
 
 export function playVideos(os: OSApi, ids: string[], i: number) {
@@ -29,13 +30,13 @@ export function VideosMenu() {
   const os = useOS();
   const rows = useMemo<Row[]>(
     () => [
-      { key: 'movies', label: 'Movies', chevron: true, onSelect: () => os.nav.push({ title: 'Movies', el: <VideoList kind="movie" /> }) },
-      { key: 'rentals', label: 'Rentals', chevron: true, onSelect: () => os.nav.push({ title: 'Rentals', el: <ListView rows={[]} empty="No Rentals" /> }) },
-      { key: 'tv', label: 'TV Shows', chevron: true, onSelect: () => os.nav.push({ title: 'TV Shows', el: <TvShows /> }) },
-      { key: 'vpod', label: 'Video Podcasts', chevron: true, onSelect: () => os.nav.push({ title: 'Video Podcasts', el: <VideoPodcasts /> }) },
-      { key: 'mv', label: 'Music Videos', chevron: true, onSelect: () => os.nav.push({ title: 'Music Videos', el: <VideoList kind="musicvideo" /> }) },
-      { key: 'vp', label: 'Video Playlists', chevron: true, onSelect: () => os.nav.push({ title: 'Video Playlists', el: <VideoPlaylists /> }) },
-      { key: 'settings', label: 'Settings', chevron: true, onSelect: () => os.nav.push({ title: 'Video Settings', el: <VideoSettings /> }) },
+      { key: 'movies', label: tx('Movies'), chevron: true, onSelect: () => os.nav.push({ title: tx('Movies'), el: <VideoList kind="movie" /> }) },
+      { key: 'rentals', label: tx('Rentals'), chevron: true, onSelect: () => os.nav.push({ title: tx('Rentals'), el: <ListView rows={[]} empty={tx('No Rentals')} /> }) },
+      { key: 'tv', label: tx('TV Shows'), chevron: true, onSelect: () => os.nav.push({ title: tx('TV Shows'), el: <TvShows /> }) },
+      { key: 'vpod', label: tx('Video Podcasts'), chevron: true, onSelect: () => os.nav.push({ title: tx('Video Podcasts'), el: <VideoPodcasts /> }) },
+      { key: 'mv', label: tx('Music Videos'), chevron: true, onSelect: () => os.nav.push({ title: tx('Music Videos'), el: <VideoList kind="musicvideo" /> }) },
+      { key: 'vp', label: tx('Video Playlists'), chevron: true, onSelect: () => os.nav.push({ title: tx('Video Playlists'), el: <VideoPlaylists /> }) },
+      { key: 'settings', label: tx('Settings'), chevron: true, onSelect: () => os.nav.push({ title: tx('Video Settings'), el: <VideoSettings /> }) },
     ],
     [os],
   );
@@ -59,7 +60,7 @@ function VideoList({ kind, ids: given }: { kind?: 'movie' | 'tvshow' | 'musicvid
       onSelect: () => playVideos(os, ids, i),
     }));
   }, [list, current, os, kind]);
-  const empty = kind === 'movie' ? 'No Movies' : kind === 'tvshow' ? 'No TV Shows' : 'No Videos';
+  const empty = tx(kind === 'movie' ? 'No Movies' : kind === 'tvshow' ? 'No TV Shows' : 'No Videos');
   return <ListView rows={rows} variant="art" empty={empty} />;
 }
 
@@ -69,7 +70,7 @@ function TvShows() {
   const rows = useMemo<Row[]>(() => {
     const shows = new Map<string, Track[]>();
     for (const t of videosOfKind(tracks, 'tvshow')) {
-      const k = t.show || t.album || 'TV Show';
+      const k = t.show || t.album || tx('TV Show');
       if (!shows.has(k)) shows.set(k, []);
       shows.get(k)!.push(t);
     }
@@ -81,7 +82,7 @@ function TvShows() {
       onSelect: () => os.nav.push({ title: name, el: <VideoList kind="tvshow" ids={eps.map((t) => t.id)} /> }),
     }));
   }, [tracks, os]);
-  return <ListView rows={rows} empty="No TV Shows" />;
+  return <ListView rows={rows} empty={tx('No TV Shows')} />;
 }
 
 function VideoPodcasts() {
@@ -91,7 +92,7 @@ function VideoPodcasts() {
     const shows = new Map<string, Track[]>();
     for (const t of allTracks(tracks)) {
       if (t.mediaType !== 'podcast' || !t.hasVideo) continue;
-      const k = t.show || t.album || 'Podcast';
+      const k = t.show || t.album || tx('Podcast');
       if (!shows.has(k)) shows.set(k, []);
       shows.get(k)!.push(t);
     }
@@ -105,7 +106,7 @@ function VideoPodcasts() {
         onSelect: () => os.nav.push({ title: name, el: <VideoList ids={eps.sort((a, b) => (b.pubDate ?? 0) - (a.pubDate ?? 0)).map((t) => t.id)} /> }),
       }));
   }, [tracks, os]);
-  return <ListView rows={rows} empty="No Video Podcasts" />;
+  return <ListView rows={rows} empty={tx('No Video Podcasts')} />;
 }
 
 function VideoPlaylists() {
@@ -122,7 +123,7 @@ function VideoPlaylists() {
       .filter((x) => x.ids.length)
       .map(({ p, ids }) => ({ key: p.id, label: p.name, chevron: true, onSelect: () => os.nav.push({ title: p.name, el: <VideoList ids={ids} /> }) }));
   }, [lists, tracks, os]);
-  return <ListView rows={rows} empty="No Video Playlists" />;
+  return <ListView rows={rows} empty={tx('No Video Playlists')} />;
 }
 
 function VideoSettings() {

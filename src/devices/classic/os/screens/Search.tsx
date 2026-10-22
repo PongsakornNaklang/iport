@@ -4,6 +4,7 @@ import { usePlayer } from '../../../../core/player/player';
 import { useInput, useOS, useTitle } from '../core';
 import { ListView, type Row } from '../ListView';
 import { playList, songMenu } from './Music';
+import { t as tx } from '../i18n';
 
 const CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 '.split('');
 const SHOWN = 11;
@@ -20,7 +21,7 @@ export function SearchScreen() {
   const [ci, setCi] = useState(0);
   const [browse, setBrowse] = useState(false);
   const results = useMemo(() => searchLibrary(tracks, q, 300), [tracks, q]);
-  useTitle(browse ? 'Search Results' : 'Search');
+  useTitle(tx(browse ? 'Search Results' : 'Search'));
 
   const rows = useMemo<Row[]>(() => {
     const ids = results.map((t) => t.id);
@@ -104,9 +105,9 @@ export function SearchScreen() {
             </div>
           ))
         ) : (
-          <div className="cl-search-hint">Turn the wheel to choose letters, press the center button to enter.</div>
+          <div className="cl-search-hint">{tx('Turn the wheel to choose letters, press the center button to enter.')}</div>
         )}
-        {q && !results.length && <div className="cl-search-hint">No results</div>}
+        {q && !results.length && <div className="cl-search-hint">{tx('No results')}</div>}
       </div>
       <div className="cl-search-strip">{strip}</div>
     </div>

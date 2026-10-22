@@ -5,6 +5,7 @@ import { formatTime } from '../../../../core/util/format';
 import { useOS } from '../core';
 import { ListView, type Row } from '../ListView';
 import { playList, songMenu } from './Music';
+import { locale, t as tx } from '../i18n';
 
 export function PodcastsScreen() {
   const os = useOS();
@@ -20,7 +21,7 @@ export function PodcastsScreen() {
       })),
     [tracks, os],
   );
-  return <ListView rows={rows} empty="No Podcasts" />;
+  return <ListView rows={rows} empty={tx('No Podcasts')} />;
 }
 
 function EpisodesScreen({ show }: { show: string }) {
@@ -33,17 +34,17 @@ function EpisodesScreen({ show }: { show: string }) {
     return ids.map((id, i) => {
       const t = tracks[id];
       const left = t.duration ? Math.max(0, t.duration - (t.bookmark ?? 0)) : 0;
-      const date = t.pubDate ? new Date(t.pubDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : '';
+      const date = t.pubDate ? new Date(t.pubDate).toLocaleDateString(locale(), { month: 'short', day: 'numeric' }) : '';
       return {
         key: id,
         label: t.title,
         dot: !t.playCount,
         speaker: id === current,
-        detail: t.bookmark && left ? `${formatTime(left)} left` : date,
+        detail: t.bookmark && left ? tx('{t} left', { t: formatTime(left) }) : date,
         onSelect: () => playList(os, ids, i),
         onHold: () => songMenu(os, id),
       };
     });
   }, [tracks, show, current, os]);
-  return <ListView rows={rows} empty="No Episodes" />;
+  return <ListView rows={rows} empty={tx('No Episodes')} />;
 }

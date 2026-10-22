@@ -11,6 +11,7 @@ import { clamp, CONTRAST_DEFAULT, useInput, useOS } from '../core';
 import { ChoiceList, cycleRow, TextScreen, toggleRow } from '../common';
 import { LockGlyph } from '../glyphs';
 import { ListView, type Row } from '../ListView';
+import { LANGUAGES, locale, t } from '../i18n';
 
 const SHUFFLE: { value: ShuffleMode; label: string }[] = [
   { value: 'off', label: 'Off' },
@@ -46,86 +47,96 @@ const SHAKE = [
   { value: 'shuffle', label: 'Shuffle' },
   { value: 'off', label: 'Off' },
 ];
-const LANGUAGES = ['English', 'ไทย', 'Deutsch', 'Español', 'Français', 'Italiano', '日本語', '한국어', 'Nederlands', 'Português', 'Русский', '简体中文', '繁體中文', 'Svenska', 'Türkçe'];
 
 export function SettingsMenu() {
   const os = useOS();
   const s = useSettings();
-  const push = (title: string, el: React.ReactElement) => os.nav.push({ title, el });
+  const push = (title: string, el: React.ReactElement) => os.nav.push({ title: t(title), el });
   const [shake, setShake] = useDeviceSetting<string>(os.modelId, 'shake', 'shuffle');
   const rows: Row[] = [
-    { key: 'about', label: 'About', chevron: true, onSelect: () => push('About', <AboutScreen />) },
+    { key: 'about', label: t('About'), chevron: true, onSelect: () => push('About', <AboutScreen />) },
     cycleRow('Shuffle', s.shuffle, SHUFFLE, (v) => player.setShuffle(v)),
     cycleRow('Repeat', s.repeat, REPEAT, (v) => player.setRepeat(v)),
     // the nano 4G's motion sensor: shake to shuffle
     ...(os.caps.motion ? [cycleRow('Shake', shake, SHAKE, setShake)] : []),
-    { key: 'mainmenu', label: 'Main Menu', chevron: true, onSelect: () => push('Main Menu', <MenuToggles which="mainMenu" />) },
+    { key: 'mainmenu', label: t('Main Menu'), chevron: true, onSelect: () => push('Main Menu', <MenuToggles which="mainMenu" />) },
     // the Music menu became customisable with the classic
-    ...(os.caps.backlightItem ? [] : [{ key: 'musicmenu', label: 'Music Menu', chevron: true, onSelect: () => push('Music Menu', <MenuToggles which="musicMenu" />) }]),
-    { key: 'vlimit', label: 'Volume Limit', chevron: true, onSelect: () => push('Volume Limit', <LevelScreen kind="limit" />) },
+    ...(os.caps.backlightItem ? [] : [{ key: 'musicmenu', label: t('Music Menu'), chevron: true, onSelect: () => push('Music Menu', <MenuToggles which="musicMenu" />) }]),
+    { key: 'vlimit', label: t('Volume Limit'), chevron: true, onSelect: () => push('Volume Limit', <LevelScreen kind="limit" />) },
     {
       key: 'backlight',
-      label: 'Backlight',
-      detail: BACKLIGHT.find((b) => b.value === s.backlight)?.label.replace(' Seconds', ' Secs') ?? `${s.backlight}s`,
+      label: t('Backlight'),
+      detail: t(BACKLIGHT.find((b) => b.value === s.backlight)?.label ?? `${s.backlight} Seconds`).replace(' Seconds', ' Secs'),
       chevron: true,
       onSelect: () => push('Backlight', <ChoiceList choices={BACKLIGHT} value={s.backlight} onPick={(v) => s.set('backlight', v)} />),
     },
     os.caps.contrast
-      ? { key: 'contrast', label: 'Contrast', chevron: true, onSelect: () => push('Contrast', <LevelScreen kind="contrast" />) }
-      : { key: 'brightness', label: 'Brightness', chevron: true, onSelect: () => push('Brightness', <LevelScreen kind="brightness" />) },
+      ? { key: 'contrast', label: t('Contrast'), chevron: true, onSelect: () => push('Contrast', <LevelScreen kind="contrast" />) }
+      : { key: 'brightness', label: t('Brightness'), chevron: true, onSelect: () => push('Brightness', <LevelScreen kind="brightness" />) },
     ...(os.caps.backlightItem ? [] : [toggleRow('Audio Crossfade', s.crossfade, (v) => s.set('crossfade', v))]),
     toggleRow('Sound Check', s.soundCheck, (v) => s.set('soundCheck', v)),
     {
       key: 'eq',
-      label: 'EQ',
+      label: t('EQ'),
       detail: s.eq,
       chevron: true,
       onSelect: () => push('EQ', <ChoiceList choices={EQ_PRESET_NAMES.map((n) => ({ value: n, label: n }))} value={s.eq} onPick={(v) => s.set('eq', v)} />),
     },
     {
       key: 'audiobooks',
-      label: 'Audiobooks',
+      label: t('Audiobooks'),
       detail: AUDIOBOOKS.find((a) => a.value === s.audiobookSpeed)?.label,
       chevron: true,
       onSelect: () => push('Audiobooks', <ChoiceList choices={AUDIOBOOKS} value={s.audiobookSpeed} onPick={(v) => s.set('audiobookSpeed', v)} />),
     },
     {
       key: 'clicker',
-      label: 'Clicker',
+      label: t('Clicker'),
       detail: CLICKER.find((c) => c.value === s.clicker)?.label,
       chevron: true,
       onSelect: () => push('Clicker', <ChoiceList choices={CLICKER} value={s.clicker} onPick={(v) => s.set('clicker', v)} />),
     },
-    { key: 'datetime', label: 'Date & Time', chevron: true, onSelect: () => push('Date & Time', <DateTimeScreen />) },
+    { key: 'datetime', label: t('Date & Time'), chevron: true, onSelect: () => push('Date & Time', <DateTimeScreen />) },
     cycleRow(
       'Sort By',
       s.contactsSortBy,
       [
-        { value: 'first' as const, label: 'First' },
-        { value: 'last' as const, label: 'Last' },
+        { value: 'first' as const, label: t('First') },
+        { value: 'last' as const, label: t('Last') },
       ],
       (v) => s.set('contactsSortBy', v),
     ),
     {
       key: 'language',
-      label: 'Language',
+      label: t('Language'),
       chevron: true,
-      onSelect: () => push('Language', <ChoiceList choices={LANGUAGES.map((l) => ({ value: l, label: l }))} value={s.language} onPick={(v) => s.set('language', v)} />),
+      // each language under its own name; choosing one goes back to the Main Menu, in it (ClickWheelOS)
+      onSelect: () =>
+        push(
+          'Language',
+          <ChoiceList
+            raw
+            stay
+            choices={LANGUAGES.map((l) => ({ value: l, label: l }))}
+            value={s.language}
+            onPick={(v) => s.set('language', v)}
+          />,
+        ),
     },
-    { key: 'legal', label: 'Legal', chevron: true, onSelect: () => push('Legal', <TextScreen text={LEGAL} />) },
+    { key: 'legal', label: t('Legal'), chevron: true, onSelect: () => push('Legal', <TextScreen text={LEGAL} />) },
     {
       key: 'reset',
-      label: 'Reset Settings',
+      label: t('Reset Settings'),
       chevron: true,
       onSelect: () =>
         push(
           'Reset Settings',
           <ListView
             rows={[
-              { key: 'cancel', label: 'Cancel', onSelect: () => os.nav.pop() },
+              { key: 'cancel', label: t('Cancel'), onSelect: () => os.nav.pop() },
               {
                 key: 'reset',
-                label: 'Reset',
+                label: t('Reset'),
                 onSelect: () => {
                   useSettings.getState().reset();
                   os.nav.root();
@@ -152,8 +163,8 @@ function MenuToggles({ which }: { which: 'mainMenu' | 'musicMenu' }) {
     });
     const set = (k: string, v: boolean) => useSettings.getState().set(which, { ...useSettings.getState()[which], [k]: v });
     return [
-      ...keys.sort((a, b) => a.localeCompare(b)).map((k) => toggleRow(k, menu[k] ?? defaults[k], (v) => set(k, v))),
-      { key: '__reset', label: which === 'mainMenu' ? 'Reset Main Menu' : 'Reset Music Menu', onSelect: () => useSettings.getState().set(which, { ...defaults }) },
+      ...keys.sort((a, b) => t(a).localeCompare(t(b), locale())).map((k) => toggleRow(k, menu[k] ?? defaults[k], (v) => set(k, v))),
+      { key: '__reset', label: t(which === 'mainMenu' ? 'Reset Main Menu' : 'Reset Music Menu'), onSelect: () => useSettings.getState().set(which, { ...defaults }) },
     ];
   }, [menu, defaults, which, os]);
   return <ListView rows={rows} />;
@@ -195,15 +206,15 @@ function LevelScreen({ kind }: { kind: 'limit' | 'brightness' | 'contrast' }) {
   );
   return (
     <div className="cl-level">
-      <div className="cl-level-caption">{kind === 'limit' ? 'Set the maximum volume' : ''}</div>
+      <div className="cl-level-caption">{kind === 'limit' ? t('Set the maximum volume') : ''}</div>
       <div className="cl-level-row">
         {kind === 'limit' ? <LockGlyph size={13} /> : kind === 'contrast' ? half(false) : sun(false)}
         <div className="cl-bar cl-bar-big">
           <div className="cl-bar-fill" style={{ width: `${value * 100}%` }} />
         </div>
-        {kind === 'limit' ? <span className="cl-level-pct">{value >= 1 ? 'Off' : `${Math.round(value * 100)}%`}</span> : kind === 'contrast' ? half(true) : sun(true)}
+        {kind === 'limit' ? <span className="cl-level-pct">{value >= 1 ? t('Off') : `${Math.round(value * 100)}%`}</span> : kind === 'contrast' ? half(true) : sun(true)}
       </div>
-      <div className="cl-level-hint">Press center to confirm</div>
+      <div className="cl-level-hint">{t('Press center to confirm')}</div>
     </div>
   );
 }
@@ -216,21 +227,21 @@ function DateTimeScreen() {
   const rows: Row[] = [
     {
       key: 'set',
-      label: 'Set Date & Time',
+      label: t('Set Date & Time'),
       chevron: true,
       onSelect: () =>
         os.nav.push({
-          title: 'Date & Time',
+          title: t('Date & Time'),
           el: (
             <div className="cl-message">
               <b>{formatClock(now, s.use24h)}</b>
-              <span>{now.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</span>
-              <span>iPod sets its clock from your computer.</span>
+              <span>{now.toLocaleDateString(locale(), { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</span>
+              <span>{t('iPod sets its clock from your computer.')}</span>
             </div>
           ),
         }),
     },
-    { key: 'tz', label: 'Time Zone', detail: tz.split('/').pop()?.replace(/_/g, ' '), onSelect: () => os.hud('Set automatically') },
+    { key: 'tz', label: t('Time Zone'), detail: tz.split('/').pop()?.replace(/_/g, ' '), onSelect: () => os.hud('Set automatically') },
     toggleRow('24 Hour Clock', s.use24h, (v) => s.set('use24h', v)),
     toggleRow('Time in Title', s.timeInTitle, (v) => s.set('timeInTitle', v)),
   ];
@@ -284,7 +295,7 @@ function AboutScreen() {
       <div className="cl-about-lines">
         {lines.map(([k, v]) => (
           <div key={k}>
-            <span>{k}</span>
+            <span>{t(k)}</span>
             <span>{v}</span>
           </div>
         ))}

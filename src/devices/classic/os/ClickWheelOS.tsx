@@ -39,6 +39,7 @@ import { R } from './routes';
 import { AlarmRinging } from './screens/AlarmRinging';
 import { LockScreen } from './screens/ScreenLock';
 import './os.css';
+import { t, useLang } from './i18n';
 
 export interface ClickWheelOSProps {
   bus: WheelBus;
@@ -179,6 +180,14 @@ export function ClickWheelOS({
   powerRef.current = power;
   const backlightSec = useSettings((s) => s.backlight);
   const brightness = useSettings((s) => s.brightness);
+  // a new language redraws every screen in it (Settings ▸ Language goes back to the Main Menu)
+  const lang = useLang();
+  const langSeen = useRef(lang);
+  useEffect(() => {
+    if (langSeen.current === lang) return;
+    langSeen.current = lang;
+    nav.root();
+  }, [lang, nav]);
   const [contrast] = useDeviceSetting<number>(modelId, 'contrast', CONTRAST_DEFAULT);
   const [lit, setLit] = useState(true);
   const lastInput = useRef(Date.now());
@@ -356,7 +365,8 @@ export function ClickWheelOS({
       menu: (spec) => setMenuSpec(spec),
       hud: (text, icon) => {
         window.clearTimeout(hudTimer.current);
-        setHud((h) => ({ text, icon, serial: (h?.serial ?? 0) + 1 }));
+        // the system's own messages, in the chosen language
+        setHud((h) => ({ text: t(text), icon, serial: (h?.serial ?? 0) + 1 }));
         hudTimer.current = window.setTimeout(() => setHud(null), 1300);
       },
       lockScreen: () => setLocked(true),
@@ -481,13 +491,13 @@ export function ClickWheelOS({
         />
         <div className="cl-stack">
           {entries.map((e, i) => (
-            <ScreenHost key={e.id} id={e.id} active={e === top && !game && !locked && !ringing} className={cls(e, i)} padTop={(e.header ?? 'light') === 'light' ? hdr : 0}>
+            <ScreenHost key={`${e.id}:${lang}`} id={e.id} active={e === top && !game && !locked && !ringing} className={cls(e, i)} padTop={(e.header ?? 'light') === 'light' ? hdr : 0}>
               {e.el}
             </ScreenHost>
           ))}
         </div>
         {(!game || ringing) && (
-          <StatusBar title={ringing ? 'Alarm' : top.title} style={ringing ? 'light' : headerStyle} hold={hold} height={hdr} z={ringing ? 29 : undefined} />
+          <StatusBar title={ringing ? t('Alarm') : top.title} style={ringing ? 'light' : headerStyle} hold={hold} height={hdr} z={ringing ? 29 : undefined} />
         )}
         {menuSpec && <ContextMenu spec={menuSpec} onClose={() => setMenuSpec(null)} />}
         {game && <GameHost id={game} width={width} height={height} color={color} onExit={() => setGame(null)} />}
@@ -565,11 +575,11 @@ function GameHost({ id, width, height, color, onExit }: { id: string; width: num
   return (
     <div className="cl-game" style={{ width, height }}>
       {Comp ? (
-        <Suspense fallback={<div className="cl-game-loading">Loading…</div>}>
+        <Suspense fallback={<div className="cl-game-loading">{t('Loading…')}</div>}>
           <Comp bus={gameBus} width={width} height={height} onExit={exit} color={color} />
         </Suspense>
       ) : (
-        <div className="cl-game-loading">Game not found</div>
+        <div className="cl-game-loading">{t('Game not found')}</div>
       )}
     </div>
   );
