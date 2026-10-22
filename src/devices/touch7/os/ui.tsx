@@ -607,6 +607,7 @@ export function SearchField({
         <input
           ref={ref}
           value={value}
+          enterKeyHint="search"
           placeholder={placeholder}
           onChange={(e) => onChange(e.target.value)}
           onKeyDown={() => clicks && playTap()}

@@ -137,6 +137,7 @@ export default function Safari() {
               <input
                 ref={input}
                 value={text}
+                enterKeyHint="go"
                 autoFocus
                 placeholder="Search or enter website name"
                 onChange={(e) => setText(e.target.value)}

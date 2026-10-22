@@ -1,7 +1,7 @@
 /**
  * The 320×568 screen: every layer of the simulated iOS lives here.
  */
-import { useRef, type CSSProperties } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import type { Appearance } from '../../types';
 import { MediaLayer } from '../../../core/player/MediaLayer';
 import { useSettings } from '../../../core/settings/store';
@@ -14,6 +14,7 @@ import { ControlCenter } from './ControlCenter';
 import { claim, localPoint } from './gesture';
 import { Glyph } from './glyphs';
 import { HomeScreen } from './HomeScreen';
+import { isTextField, Keyboard } from './Keyboard';
 import { LockScreen, NotificationCenter } from './LockScreen';
 import { useMediaSlots } from './media';
 import { AlarmOverlay, AlertOverlay, BannerOverlay, BootOverlay, ContextMenuOverlay, PowerOverlay, ShotOverlay, SiriOverlay, SpotlightOverlay, ToastOverlay, VolumeHUD } from './Overlays';
@@ -33,10 +34,42 @@ export function Screen({ appearance }: { appearance: Appearance }) {
   const brightness = useSettings((s) => s.brightness);
   const ref = useRef<HTMLDivElement>(null);
 
+  // ---------------------------------------------------------------- the keyboard
+  // up while a text field on the screen has the focus
+  const [field, setField] = useState<HTMLInputElement | HTMLTextAreaElement | null>(null);
+  useEffect(() => {
+    const root = ref.current;
+    if (!root) return;
+    const onIn = (e: FocusEvent) => {
+      if (!isTextField(e.target)) return;
+      // the phone's own keyboard stays down: this one types
+      e.target.inputMode = 'none';
+      setField(e.target);
+    };
+    const onOut = (e: FocusEvent) => {
+      if (isTextField(e.relatedTarget) && root.contains(e.relatedTarget as Node)) return;
+      setField((f) => (f === e.target ? null : f));
+    };
+    root.addEventListener('focusin', onIn);
+    root.addEventListener('focusout', onOut);
+    return () => {
+      root.removeEventListener('focusin', onIn);
+      root.removeEventListener('focusout', onOut);
+    };
+  }, []);
+  // the screen going dark or another app puts it away
+  const app = useOS((s) => s.app);
+  useEffect(() => {
+    const a = document.activeElement;
+    if (a instanceof HTMLElement && ref.current?.contains(a)) a.blur();
+  }, [screenOn, app]);
+
   // ---------------------------------------------------------------- edge gestures
   const edge = useRef<{ id: number; kind: 'cc' | 'nc'; y0: number; k: number; on: boolean; t: number; p: number; v: number } | null>(null);
   const onDown = (e: React.PointerEvent) => {
     edge.current = null;
+    // set before the focus, so a phone doesn't bring up its own keyboard
+    if (isTextField(e.target)) e.target.inputMode = 'none';
     if (e.button !== 0) return;
     const st = useOS.getState();
     if (!st.screenOn || st.overlay || st.videoOpen || st.passcode || st.alert || st.menu) return;
@@ -105,7 +138,7 @@ export function Screen({ appearance }: { appearance: Appearance }) {
   return (
     <div
       ref={ref}
-      className={`t7-screen ${dark ? 't7-dark' : 't7-light'} ${landscape ? 'is-landscape' : ''}`}
+      className={`t7-screen ${dark ? 't7-dark' : 't7-light'} ${landscape ? 'is-landscape' : ''} ${field ? 'kb-open' : ''} ${field instanceof HTMLTextAreaElement ? 'kb-inset' : ''}`}
       data-control=""
       onPointerDownCapture={onDown}
       onPointerMoveCapture={onMove}
@@ -127,6 +160,7 @@ export function Screen({ appearance }: { appearance: Appearance }) {
       <StatusBar dark={dark} />
       <ContextMenuOverlay />
       <AlertOverlay />
+      <Keyboard field={field} />
       <BannerOverlay />
       <VolumeHUD />
       <ToastOverlay />

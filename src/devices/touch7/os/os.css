@@ -2005,3 +2005,148 @@
 .t7-spot-bar .t7-search-cancel {
   display: none;
 }
+
+/* ------------------------------------------------------------------ keyboard */
+.t7-kb {
+  --kb-key: #fff;
+  --kb-fn: #abb1ba;
+  --kb-ink: #000;
+  --kb-shadow: #898a8d;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 705;
+  padding: 0 3px 4px;
+  background: rgba(209, 212, 218, 0.94);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  transform: translateY(100%);
+  transition: transform 280ms var(--t7-ease);
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.t7-dark .t7-kb {
+  --kb-key: #6b6b6e;
+  --kb-fn: #464648;
+  --kb-ink: #fff;
+  --kb-shadow: #1e1e1f;
+  background: rgba(43, 43, 46, 0.94);
+}
+.t7-kb.on {
+  transform: none;
+}
+.t7-kb-qt {
+  display: flex;
+  height: 38px;
+  align-items: center;
+  margin: 0 -3px 6px;
+}
+.t7-kb-qt span {
+  flex: 1;
+  text-align: center;
+  font-size: 16px;
+  color: var(--kb-ink);
+}
+.t7-kb-qt span + span {
+  border-left: 1px solid rgba(128, 128, 128, 0.3);
+  height: 22px;
+  line-height: 22px;
+}
+.t7-kb-row {
+  display: flex;
+  gap: 6px;
+  height: 42px;
+  margin-bottom: 11px;
+}
+.t7-kb-row2 {
+  padding: 0 16px;
+}
+.t7-kb-bottom {
+  margin-bottom: 0;
+}
+.t7-kb-key {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  border-radius: 5px;
+  padding: 0;
+  background: var(--kb-key);
+  color: var(--kb-ink);
+  box-shadow: 0 1px 0 var(--kb-shadow);
+  font: inherit;
+  font-size: 22px;
+  font-weight: 300;
+  display: grid;
+  place-items: center;
+}
+.t7-kb-key:active {
+  background: var(--kb-fn);
+}
+.t7-kb-fn {
+  background: var(--kb-fn);
+  font-size: 15px;
+  font-weight: 400;
+}
+.t7-kb-fn:active {
+  background: var(--kb-key);
+}
+.t7-kb-shift,
+.t7-kb-del,
+.t7-kb-sym {
+  flex: 0 0 42px;
+}
+.t7-kb-shift.on {
+  background: var(--kb-key);
+}
+.t7-kb-mid {
+  flex: 1;
+  display: flex;
+  gap: 6px;
+  padding: 0 8px;
+}
+.t7-kb-mid-wide {
+  padding: 0 4px;
+}
+.t7-kb-mid-wide .t7-kb-key {
+  flex: 0 0 auto;
+  width: calc((100% - 24px) / 5);
+}
+.t7-kb-123,
+.t7-kb-return {
+  flex: 0 0 78px;
+}
+.t7-kb-space {
+  flex: 1;
+  font-size: 15px;
+  font-weight: 400;
+}
+.t7-kb-return.blue {
+  background: #007aff;
+  color: #fff;
+}
+/* the key under the finger, bigger above it */
+.t7-kb-pop {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 46px;
+  height: 92px;
+  margin-left: -23px;
+  border-radius: 10px;
+  background: var(--kb-key);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  font-size: 34px;
+  padding-top: 8px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  pointer-events: none;
+  z-index: 2;
+}
+/* a long text (Notes) stays above the keyboard */
+.t7-screen.kb-inset .t7-app {
+  bottom: 251px;
+}

@@ -93,6 +93,12 @@ The running app shows its version and build in the Help panel (?).
     unlocks (passcode first) and opens its app.
   - Pull down on the Home Screen for Spotlight: Siri Suggestions, then
     apps, songs, contacts and notes as you type.
+  - The iOS keyboard: it slides up under any text field and types into
+    it, with Shift (twice for caps lock), numbers and symbols, delete
+    (hold to repeat), a double space for a full stop, the key popping up
+    under the finger and the QuickType bar. Return reads "search" or "go"
+    where it should. A computer's keyboard still works, and on a phone its
+    own keyboard stays down.
 - Settings that did nothing now work:
   - Audio Crossfade (iPod classic, nano 4G): the end of a song fades out
     over four seconds and the next fades in.
