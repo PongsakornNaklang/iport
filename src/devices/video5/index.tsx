@@ -28,6 +28,7 @@ const SPEC: ClickWheelSpec = {
   jack: { side: 'top', x: 144 },
   holdX: -105,
   holdLen: 67,
+  edgeMarks: true,
   modelNo: 'A1136',
   caps: { coverFlow: false, genius: false, splitMenu: false },
 };

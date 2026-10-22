@@ -26,6 +26,7 @@ const SPEC: ClickWheelSpec = {
   jack: { side: 'top', x: 144 },
   holdX: -103,
   holdLen: 69,
+  edgeMarks: true,
   modelNo: 'A1238\u00a0\u00a0EMC No.: 2173',
 };
 

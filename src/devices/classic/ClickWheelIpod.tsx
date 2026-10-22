@@ -32,6 +32,8 @@ export interface ClickWheelSpec {
   jack: { side: 'top' | 'bottom'; x: number };
   /** Hold switch x from the centre (px), on the top edge */
   holdX: number;
+  /** "HOLD" printed beside the Hold switch and a headphones icon beside the jack (classic, 5th generation) */
+  edgeMarks?: boolean;
   /** Hold switch slot length (px, default 44) */
   holdLen?: number;
   /** model number on the back ("A1238", and anything after it on that line) */
@@ -282,7 +284,24 @@ export function ClickWheelIpod({ model, appearance, spec }: DeviceProps & { spec
               <div className="cl-hold-orange" />
             </div>
           </EdgePlane>
-          {/* ---- the headphone jack (EarPods plug in here): bottom on the classic, top on the 5th generation ---- */}
+          {/* ---- printed on the top edge: HOLD to the right of the switch, headphones to the left of the jack ---- */}
+          {spec.edgeMarks && (
+            <>
+              <EdgePlane x={holdX + holdLen / 2 + 17} y={-H / 2 + holdSlot.inset} z={holdSlot.z} w={26} h={10} side="top" tilt={holdSlot.tilt}>
+                <div className="cl-edge-mark cl-edge-hold">HOLD</div>
+              </EdgePlane>
+              {jackTop && (
+                <EdgePlane x={spec.jack.x - 26} y={-H / 2 + port.inset} z={port.z} w={14} h={14} side="top" tilt={port.tilt}>
+                  <svg className="cl-edge-mark" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M4 15v-3a8 8 0 0 1 16 0v3" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+                    <rect x="3" y="14" width="5" height="7" rx="1.6" fill="currentColor" />
+                    <rect x="16" y="14" width="5" height="7" rx="1.6" fill="currentColor" />
+                  </svg>
+                </EdgePlane>
+              )}
+            </>
+          )}
+          {/* ---- the headphone jack (EarPods plug in here) ---- */}
           <EdgePlane
             x={spec.jack.x}
             y={jackTop ? -H / 2 + port.inset : H / 2 - port.inset}
