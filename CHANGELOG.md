@@ -62,11 +62,15 @@ The running app shows its version and build in the Help panel (?).
   others) slide their white thumb like the panel tabs.
 
 ### Fixed
-- An iPod Sock covers the headphone jack on the iPod touch, nano and
-  classic (it's on the bottom, inside the sock): the EarPods come out when
-  you put one on, can't be plugged in while it's on, and the music plays
-  on. They plug back in when the sock comes off. The shuffle's jack is on
-  top, outside the sock, and still works.
+- An iPod Sock covers the headphone jack on the iPod touch and the nanos
+  (it's on the bottom, inside the sock): the EarPods come out when you put
+  one on, can't be plugged in while it's on, and the music plays on. They
+  plug back in when the sock comes off. The shuffle, classic, iPod video and
+  mini have their jack on top, outside the sock, and it still works.
+- With an iPod Sock on, the controls work as they would through the fabric:
+  the Click Wheel's buttons still press, but the wheel can't be turned, and
+  the part of a touch screen inside the sock doesn't respond. A short hint
+  says to take the sock off. The keyboard still does everything.
 - Smoother on phones: the EarPods no longer measure the iPod and redraw
   their canvases every frame when nothing moves, and a still iPod costs the
   stage nothing a frame. In the chooser the iPods' own screen animations pause.

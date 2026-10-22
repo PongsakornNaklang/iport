@@ -6,7 +6,7 @@
  */
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { Box3D, Device3D, EdgeDecal, Slab3D, type EdgeSlice } from '../../shell/Device3D';
-import { BodyExtras } from '../../shell/bodySlot';
+import { BodyExtras, SockScreenGuard } from '../../shell/bodySlot';
 import { Decals } from '../../shell/decals/Decals';
 import { isTypingTarget } from '../../shell/keyboard';
 import { player, usePlayer } from '../../core/player/player';
@@ -329,6 +329,7 @@ export default function IpodNano7({ appearance }: DeviceProps) {
           <div className="n7-screen-window" style={SCREEN}>
             <Screen wallpaper={wallpaper} />
           </div>
+          <SockScreenGuard area={SCREEN} height={H} />
           <HomeButton color={home} dark={darkGlass} />
           <div className={`n7-glare ${asleep ? 'n7-glare-strong' : ''}`} />
           <Decals decals={appearance.decals} side="front" />

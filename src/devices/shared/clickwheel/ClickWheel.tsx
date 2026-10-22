@@ -22,6 +22,8 @@ export interface ClickWheelProps {
   labelFont?: string;
   style?: CSSProperties;
   className?: string;
+  /** set when the wheel can't be turned (inside a sock): presses still work, a turn calls this instead */
+  onBlockedTurn?: () => void;
 }
 
 function zoneOf(angleDeg: number): Exclude<WheelButton, 'select'> {
@@ -67,6 +69,7 @@ export function ClickWheel({
   labelFont,
   style,
   className,
+  onBlockedTurn,
 }: ClickWheelProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [pressed, setPressed] = useState<WheelButton | null>(null);
@@ -81,6 +84,9 @@ export function ClickWheel({
     stepTimes: [] as number[],
     wheelAcc: 0,
   });
+
+  const blocked = useRef(onBlockedTurn);
+  blocked.current = onBlockedTurn;
 
   const center = () => {
     const r = ref.current!.getBoundingClientRect();
@@ -144,10 +150,11 @@ export function ClickWheel({
       bus.cancel(s.zone!);
       setPressed(null);
       s.acc = s.total;
+      if (blocked.current) blocked.current();
     } else if (s.scrolling) {
       s.acc += d;
     }
-    if (s.scrolling) {
+    if (s.scrolling && !blocked.current) {
       while (Math.abs(s.acc) >= STEP_DEG) {
         const dir = Math.sign(s.acc);
         s.acc -= dir * STEP_DEG;
@@ -173,6 +180,7 @@ export function ClickWheel({
     const onWheel = (e: globalThis.WheelEvent) => {
       e.preventDefault();
       e.stopPropagation();
+      if (blocked.current) return blocked.current();
       const s = g.current;
       const unit = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? 400 : 1;
       s.wheelAcc += (e.deltaY + e.deltaX) * unit;

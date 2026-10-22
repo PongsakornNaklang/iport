@@ -7,7 +7,7 @@
  */
 import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { Box3D, Device3D, type EdgeSlice } from '../../shell/Device3D';
-import { BodyExtras } from '../../shell/bodySlot';
+import { BodyExtras, sockHint, useSockMouth } from '../../shell/bodySlot';
 import { Decals } from '../../shell/decals/Decals';
 import { isTypingTarget } from '../../shell/keyboard';
 import { useSettings } from '../../core/settings/store';
@@ -100,6 +100,8 @@ function steelColor(u: number, material: string, back: string): string {
   return `linear-gradient(90deg, ${dk} 0%, ${c} 14%, ${c} 86%, ${dk} 100%)`;
 }
 
+const turnBlocked = () => sockHint('Take off the sock to turn the wheel');
+
 export function ClickWheelIpod({ model, appearance, spec }: DeviceProps & { spec: ClickWheelSpec }) {
   const FRONT_T = spec.frontT;
   const L = model.clickWheel ?? CLASSIC_LAYOUT;
@@ -123,6 +125,9 @@ export function ClickWheelIpod({ model, appearance, spec }: DeviceProps & { spec
   const material = String(appearance.options.backMaterial ?? 'chrome');
   const theme = (String(appearance.options.theme ?? 'classic') as ThemeName) || 'classic';
   const bus = useMemo(() => new WheelBus(), []);
+  // inside a sock the buttons press through the fabric, but the wheel can't be turned
+  const mouth = useSockMouth();
+  const wheelCovered = mouth != null && WHEEL.cy - H / 2 > mouth;
   const [hold, setHold] = useState(false);
   const clicker = useSettings((s) => s.clicker) !== 'off';
   useWheelKeyboard(bus, true, clicker);
@@ -246,6 +251,7 @@ export function ClickWheelIpod({ model, appearance, spec }: DeviceProps & { spec
               labelColor={colors.labels ?? '#aeb0b4'}
               centerColor={colors.center ?? '#d9dadc'}
               clicker={clicker}
+              onBlockedTurn={wheelCovered ? turnBlocked : undefined}
               style={{ position: 'absolute', left: 2, top: 2 }}
             />
           </div>

@@ -4,7 +4,7 @@
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Box3D, Device3D, EdgeDecal } from '../../shell/Device3D';
-import { BodyExtras } from '../../shell/bodySlot';
+import { BodyExtras, SockScreenGuard } from '../../shell/bodySlot';
 import { Decals } from '../../shell/decals/Decals';
 import { isTypingTarget } from '../../shell/keyboard';
 import { player } from '../../core/player/player';
@@ -260,6 +260,11 @@ export default function IpodTouch({ model, appearance }: DeviceProps) {
                 <Screen appearance={appearance} />
               </div>
             </div>
+            <SockScreenGuard
+              area={{ left: (width - SCREEN_W) / 2 - FRONT_INSET, top: (height - SCREEN_H) / 2 - FRONT_INSET, width: SCREEN_W, height: SCREEN_H }}
+              height={height}
+              top={FRONT_INSET}
+            />
             <button
               className={`t7-homebtn ${home.pressed ? 'pressed' : ''}`}
               data-control=""

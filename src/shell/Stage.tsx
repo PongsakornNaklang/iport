@@ -451,12 +451,13 @@ export function Stage() {
     useStage.getState().setZoom(z * (e.deltaY > 0 ? 0.94 : 1.06));
   };
 
-  // A sock covers everything below its opening: a jack down there can't be reached.
-  const jackCovered = useMemo(() => {
-    if (!cover || cover.choice.kind !== 'sock' || !model.jack) return false;
-    const sock = coverGeometry(cover.fit, 'sock', cover.pxPerMm, cover.size).sock;
-    return !!sock && model.jack.y > sock.mouth;
-  }, [cover, model]);
+  // A sock covers everything below its opening: a jack down there can't be reached,
+  // and the controls in there work only as they would through fabric (see bodySlot).
+  const sockMouth = useMemo(() => {
+    if (!cover || cover.choice.kind !== 'sock') return null;
+    return coverGeometry(cover.fit, 'sock', cover.pxPerMm, cover.size).sock?.mouth ?? null;
+  }, [cover]);
+  const jackCovered = sockMouth != null && !!model.jack && model.jack.y > sockMouth;
   useEarPods({ wrap: wrapRef, back: backCanvas, front: frontCanvas, markers: jackRef, model, enabled: scene.earpods !== false && !jackCovered });
 
   const Device = useMemo(() => deviceComponent(model), [model]);
@@ -470,8 +471,9 @@ export function Stage() {
         </>
       ),
       after: cover && <Cover info={cover} after />,
+      sockMouth,
     }),
-    [cover, model],
+    [cover, model, sockMouth],
   );
   const scale = fit * zoom;
   const shiftX = (inset.left - inset.right - bars.right) / 2;
