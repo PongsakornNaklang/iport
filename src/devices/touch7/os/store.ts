@@ -6,10 +6,12 @@
 import { useEffect } from 'react';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { playLock } from '../../../core/sound/click';
+import { playLock, playTone } from '../../../core/sound/click';
 import { useSettings } from '../../../core/settings/store';
 
-export type Overlay = null | 'cc' | 'nc' | 'switcher' | 'siri';
+export type Overlay = null | 'cc' | 'nc' | 'switcher' | 'siri' | 'spotlight';
+/** running · "slide to power off" showing · switched off · starting up */
+export type Power = 'on' | 'menu' | 'off' | 'boot';
 
 export interface Notif {
   id: string;
@@ -70,6 +72,11 @@ export interface OSState {
   shutterSerial: number;
   /** pending deep link for an app, e.g. { app:'clock', tab:'timer' } */
   intent: { app: string; data: string; serial: number } | null;
+  power: Power;
+  /** a notification shown as a banner at the top while the iPod is in use */
+  banner: Notif | null;
+  /** the last screenshot: shown small in the corner for a moment */
+  shot: { url: string; serial: number } | null;
 }
 
 export const useOS = create<OSState>(() => ({
@@ -94,6 +101,9 @@ export const useOS = create<OSState>(() => ({
   toast: null,
   shutterSerial: 0,
   intent: null,
+  power: 'on',
+  banner: null,
+  shot: null,
 }));
 
 const S = useOS.setState;
@@ -205,14 +215,27 @@ export const prefs = () => usePrefs.getState();
 // ------------------------------------------------------------------ actions
 
 let notifSeq = 0;
+let openAfterUnlock: string | null = null;
+// the top and Home buttons, for holds and the screenshot chord
+let topHeld = false;
+let homeHeld = false;
+let topUsed = false;
+let homeUsed = false;
+let topTimer: number | undefined;
+
+function shotSound() {
+  playTone(2400, 30, { volume: 0.12, type: 'square' });
+  playTone(1200, 60, { volume: 0.08, delayMs: 40, type: 'triangle' });
+}
 
 export const os = {
   wake() {
-    if (G().screenOn) return;
+    if (G().screenOn || G().power !== 'on') return;
     S({ screenOn: true });
   },
   sleep() {
-    if (!G().screenOn) return;
+    if (G().power === 'menu') S({ power: 'on' });
+    if (!G().screenOn || G().power !== 'on') return;
     if (prefs().lockSound) playLock();
     S({ screenOn: false, locked: true, passcode: false, overlay: null, edgeDrag: null, menu: null, jiggle: false });
   },
@@ -231,6 +254,20 @@ export const os = {
   /** after a correct passcode */
   passcodeOK() {
     S({ locked: false, passcode: false });
+    if (openAfterUnlock) {
+      const id = openAfterUnlock;
+      openAfterUnlock = null;
+      os.openApp(id);
+    }
+  },
+  /** a notification tapped on the Lock Screen: unlock (passcode first), then open its app */
+  openFromLock(app: string) {
+    openAfterUnlock = app;
+    os.unlock();
+    if (!G().locked) {
+      openAfterUnlock = null;
+      os.openApp(app);
+    }
   },
   openApp(id: string, fromIcon = false) {
     const st = G();
@@ -274,7 +311,129 @@ export const os = {
   },
   notify(app: string, title: string, body: string) {
     const n: Notif = { id: `n${++notifSeq}_${Date.now()}`, app, title, body, time: Date.now() };
-    S({ notifications: [n, ...G().notifications].slice(0, 30) });
+    const st = G();
+    // in use: it drops down as a banner (not over the app it comes from)
+    const banner = st.screenOn && !st.locked && st.power === 'on' && st.app !== app ? n : st.banner;
+    S({ notifications: [n, ...st.notifications].slice(0, 30), banner });
+  },
+  dismissBanner() {
+    S({ banner: null });
+  },
+
+  // ---------------------------------------------------------------- top (Sleep/Wake) button
+  /**
+   * A press wakes the screen at once; a short press on a lit screen puts it
+   * to sleep when let go. Held for about two seconds it offers "slide to
+   * power off", and when the iPod is off it starts it up. Pressed together
+   * with Home it takes a screenshot.
+   */
+  topDown() {
+    topHeld = true;
+    const st = G();
+    if (homeHeld && st.power === 'on' && st.screenOn) {
+      topUsed = homeUsed = true;
+      void os.screenshot();
+      return;
+    }
+    topUsed = false;
+    window.clearTimeout(topTimer);
+    if (st.power === 'boot') {
+      topUsed = true;
+      return;
+    }
+    if (st.power === 'off') {
+      topUsed = true;
+      topTimer = window.setTimeout(() => os.boot(), 2000);
+      return;
+    }
+    if (!st.screenOn) {
+      os.wake();
+      topUsed = true;
+    }
+    topTimer = window.setTimeout(() => {
+      topUsed = true;
+      if (G().power === 'on') S({ power: 'menu', screenOn: true, overlay: null, menu: null, edgeDrag: null, jiggle: false, banner: null });
+    }, 2200);
+  },
+  topUp() {
+    topHeld = false;
+    window.clearTimeout(topTimer);
+    if (topUsed) return;
+    if (G().power === 'menu') S({ power: 'on' });
+    else if (G().power === 'on') os.sleep();
+  },
+  /** Home held down / let go (for the screenshot chord) */
+  homePressed(on: boolean) {
+    homeHeld = on;
+    if (on && topHeld && G().power === 'on' && G().screenOn) {
+      homeUsed = topUsed = true;
+      void os.screenshot();
+    }
+  },
+  /** true once: the Home press was part of a screenshot, so it does nothing else */
+  homeConsumed() {
+    const u = homeUsed;
+    homeUsed = false;
+    return u;
+  },
+  powerOff() {
+    S({
+      power: 'off',
+      screenOn: false,
+      locked: true,
+      passcode: false,
+      overlay: null,
+      menu: null,
+      alert: null,
+      app: null,
+      recents: [],
+      banner: null,
+      jiggle: false,
+      videoOpen: false,
+      landscape: false,
+    });
+  },
+  boot() {
+    S({ power: 'boot', screenOn: true });
+    window.setTimeout(() => S({ power: 'on', locked: true, homePage: 0 }), 3400);
+  },
+  /** Home + Sleep/Wake: the screen flashes and the picture goes to Photos ▸ Screenshots */
+  async screenshot() {
+    const el = document.querySelector<HTMLElement>('.stage-center:not(.ov-item) .t7-screen');
+    if (!el) return;
+    shotSound();
+    S({ shot: null });
+    try {
+      const { toCanvas } = await import('html-to-image');
+      // the 7th generation's screen: 640 × 1136
+      const canvas = await toCanvas(el, {
+        pixelRatio: 2,
+        skipFonts: true,
+        filter: (n) => !(n instanceof Element && (n.classList.contains('t7-shot') || n.classList.contains('t7-off') || n.classList.contains('t7-bright'))),
+      });
+      const blob = await new Promise<Blob | null>((r) => canvas.toBlob(r, 'image/png'));
+      if (!blob) return;
+      const [{ putBlob }, { useLibrary }, { uid }] = await Promise.all([import('../../../core/db'), import('../../../core/library/store'), import('../../../core/util/id')]);
+      const id = uid('ph');
+      const key = `photo:${id}`;
+      await putBlob(key, blob);
+      const d = new Date();
+      const pad = (n: number) => String(n).padStart(2, '0');
+      useLibrary.getState().addPhotos([
+        {
+          id,
+          name: `Screenshot ${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} at ${pad(d.getHours())}.${pad(d.getMinutes())}.${pad(d.getSeconds())}.png`,
+          blobKey: key,
+          width: canvas.width,
+          height: canvas.height,
+          addedAt: Date.now(),
+          album: 'Screenshots',
+        },
+      ]);
+      S({ shot: { url: URL.createObjectURL(blob), serial: (G().shot?.serial ?? 0) + 1 } });
+    } catch {
+      os.toast('Couldn’t take a screenshot', 'exclamationmark.triangle');
+    }
   },
   clearNotifications() {
     S({ notifications: [] });
@@ -302,6 +461,11 @@ export const os = {
   // ---------------------------------------------------------------- Home button
   homeClick() {
     const st = G();
+    if (st.power === 'menu') {
+      S({ power: 'on' });
+      return;
+    }
+    if (st.power !== 'on') return;
     if (!st.screenOn) {
       os.wake();
       return;
@@ -339,6 +503,7 @@ export const os = {
   },
   homeDouble() {
     const st = G();
+    if (st.power !== 'on') return;
     if (!st.screenOn || st.locked) return;
     if (st.overlay === 'switcher') {
       S({ overlay: null });
@@ -348,6 +513,7 @@ export const os = {
   },
   homeLong() {
     const st = G();
+    if (st.power !== 'on') return;
     if (!st.screenOn) S({ screenOn: true });
     S({ overlay: 'siri', menu: null, edgeDrag: null });
   },

@@ -128,7 +128,7 @@ export function LockScreen({ wall, dark }: { wall: string; dark: boolean }) {
         <div className="t7-lock-list">
           {hasTrack && <NowPlayingWidget />}
           {notifs.map((n) => (
-            <NotifCard key={n.id} n={n} />
+            <NotifCard key={n.id} n={n} onOpen={() => os.openFromLock(n.app)} />
           ))}
         </div>
         <div className="t7-lock-hint">Press home to unlock</div>
@@ -138,7 +138,7 @@ export function LockScreen({ wall, dark }: { wall: string; dark: boolean }) {
   );
 }
 
-function NotifCard({ n, onOpen }: { n: Notif; onOpen?: () => void }) {
+export function NotifCard({ n, onOpen }: { n: Notif; onOpen?: () => void }) {
   return (
     <div className="t7-notif" onClick={onOpen}>
       <AppIcon id={n.app} size={34} />

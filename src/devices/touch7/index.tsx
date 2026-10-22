@@ -39,6 +39,7 @@ function useHomeButton() {
 
   const down = () => {
     setPressed(true);
+    os.homePressed(true);
     longFired.current = false;
     window.clearTimeout(longTimer.current);
     longTimer.current = window.setTimeout(() => {
@@ -50,7 +51,10 @@ function useHomeButton() {
   };
   const up = () => {
     setPressed(false);
+    os.homePressed(false);
     window.clearTimeout(longTimer.current);
+    // part of a screenshot (Home + Sleep/Wake): nothing else
+    if (os.homeConsumed()) return;
     if (longFired.current) return;
     const st = useOS.getState();
     if (pending.current) {
@@ -71,6 +75,7 @@ function useHomeButton() {
   };
   const cancel = () => {
     setPressed(false);
+    os.homePressed(false);
     window.clearTimeout(longTimer.current);
   };
   useEffect(
@@ -117,7 +122,7 @@ export default function IpodTouch({ model, appearance }: DeviceProps) {
         e.preventDefault();
       } else if (k === 'l' || k === 'L') {
         if (e.repeat) return;
-        os.sleepWake();
+        os.topDown();
         flash('sleep');
       } else if (k === '+' || k === '=' || k === 'ArrowUp') {
         if (k === 'ArrowUp' && !e.shiftKey) return;
@@ -133,6 +138,7 @@ export default function IpodTouch({ model, appearance }: DeviceProps) {
       }
     };
     const onUp = (e: KeyboardEvent) => {
+      if (e.key === 'l' || e.key === 'L') os.topUp();
       if (e.key === 'h' || e.key === 'H') {
         if (hDown) {
           hDown = false;
@@ -337,9 +343,11 @@ export default function IpodTouch({ model, appearance }: DeviceProps) {
           onPointerDown={(e) => {
             if (e.button !== 0) return;
             e.stopPropagation();
+            e.currentTarget.setPointerCapture(e.pointerId);
             flash('sleep');
-            os.sleepWake();
+            os.topDown();
           }}
+          onPointerUp={() => os.topUp()}
         />
         {/* Volume + / − on the left edge */}
         <Box3D

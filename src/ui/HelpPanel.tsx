@@ -32,8 +32,8 @@ export default function HelpPanel({ onClose }: { onClose: () => void }) {
           <ul>
             <li>Your mouse is your finger: click to tap, drag to scroll and swipe.</li>
             <li>Press the <b>Home button</b> to go home, double-press for the app switcher, hold for Siri.</li>
-            <li>Swipe up from the bottom edge for Control Center, down from the top for notifications.</li>
-            <li>The real buttons work: Sleep/Wake on top, volume on the left side.</li>
+            <li>Swipe up from the bottom edge for Control Center, down from the top for notifications, down on the Home Screen to search.</li>
+            <li>The real buttons work: Sleep/Wake on top (hold it to power off or on), volume on the left side. Home and Sleep/Wake together take a screenshot.</li>
           </ul>
         )}
         {model.family === 'nano-touch' && (

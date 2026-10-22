@@ -16,7 +16,7 @@ import { Glyph } from './glyphs';
 import { HomeScreen } from './HomeScreen';
 import { LockScreen, NotificationCenter } from './LockScreen';
 import { useMediaSlots } from './media';
-import { AlarmOverlay, AlertOverlay, ContextMenuOverlay, SiriOverlay, ToastOverlay, VolumeHUD } from './Overlays';
+import { AlarmOverlay, AlertOverlay, BannerOverlay, BootOverlay, ContextMenuOverlay, PowerOverlay, ShotOverlay, SiriOverlay, SpotlightOverlay, ToastOverlay, VolumeHUD } from './Overlays';
 import { usePrefs, useBarOverrides, useOS } from './store';
 import { VideoPlayer } from '../apps/VideoPlayer';
 import { useAlarmState } from '../../../core/alarms';
@@ -121,15 +121,20 @@ export function Screen({ appearance }: { appearance: Appearance }) {
       <NotificationCenter wall={wall} dark={dark} />
       <ControlCenter dark={dark} />
       <LockScreen wall={wall} dark={dark} />
+      <SpotlightOverlay />
       <SiriOverlay />
       <AlarmOverlay wall={wall} dark={dark} />
       <StatusBar dark={dark} />
       <ContextMenuOverlay />
       <AlertOverlay />
+      <BannerOverlay />
       <VolumeHUD />
       <ToastOverlay />
+      <PowerOverlay />
+      <ShotOverlay />
       <TimerWatcher />
       <div className="t7-bright" style={{ opacity: dim }} />
+      <BootOverlay />
       <div className={`t7-off ${screenOn ? '' : 'on'}`} />
     </div>
   );

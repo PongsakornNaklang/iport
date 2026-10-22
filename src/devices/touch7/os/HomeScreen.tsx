@@ -142,6 +142,11 @@ export function HomeScreen({ wall, dark }: { wall: string; dark: boolean }) {
       if (Math.hypot(dx, dy) < 8) return;
       if (Math.abs(dx) < Math.abs(dy)) {
         pg.current = null;
+        // a pull down opens Spotlight
+        if (dy > 0 && !useOS.getState().jiggle) {
+          suppressNextClick();
+          os.setOverlay('spotlight');
+        }
         return;
       }
       if (!claim(e.pointerId, e.currentTarget)) {

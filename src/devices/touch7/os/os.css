@@ -1681,3 +1681,327 @@
     transform: rotate(360deg);
   }
 }
+
+/* ------------------------------------------------------------------ slide to power off */
+.t7-power {
+  position: absolute;
+  inset: 0;
+  z-index: 880;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.35);
+  -webkit-backdrop-filter: blur(18px) saturate(1.2);
+  backdrop-filter: blur(18px) saturate(1.2);
+  opacity: 0;
+  transition: opacity 280ms ease;
+}
+.t7-power.on {
+  opacity: 1;
+}
+.t7-power-track {
+  position: relative;
+  margin-top: 74px;
+  height: 60px;
+  border-radius: 30px;
+  background: rgba(255, 255, 255, 0.28);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  transition: opacity 300ms ease;
+}
+.t7-power.off .t7-power-track {
+  opacity: 0;
+}
+.t7-power-label {
+  position: absolute;
+  inset: 0 0 0 52px;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-size: 17px;
+  letter-spacing: -0.2px;
+  pointer-events: none;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.55) 0%, #fff 45%, rgba(255, 255, 255, 0.55) 90%) 0 0 / 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: t7-power-shimmer 2.4s linear infinite;
+}
+@keyframes t7-power-shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: 0 0;
+  }
+}
+.t7-power-knob {
+  position: absolute;
+  left: 4px;
+  top: 4px;
+  border-radius: 50%;
+  background: #fff;
+  color: #ff3b30;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+  transition: transform 300ms var(--t7-ease);
+  touch-action: none;
+  cursor: grab;
+}
+.t7-power-cancel {
+  margin-top: auto;
+  margin-bottom: 70px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  background: none;
+  color: #fff;
+  font: inherit;
+  font-size: 15px;
+}
+.t7-power-x {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.28);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+}
+.t7-power-spin {
+  position: absolute;
+  left: calc(50% - 14px);
+  top: calc(50% - 14px);
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.25);
+  border-top-color: #fff;
+  animation: t7-spin 0.9s linear infinite;
+}
+@keyframes t7-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+/* starting up: the Apple on black */
+.t7-boot {
+  position: absolute;
+  inset: 0;
+  z-index: 990;
+  background: #000;
+  display: grid;
+  place-items: center;
+  animation: t7-boot-in 700ms ease both;
+}
+@keyframes t7-boot-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* ------------------------------------------------------------------ banners */
+.t7-banner {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  top: 6px;
+  z-index: 740;
+  transform: translateY(-120%);
+  transition: transform 420ms var(--t7-ease);
+  touch-action: none;
+}
+.t7-banner.on {
+  transform: translateY(0);
+}
+.t7-banner .t7-notif {
+  animation: none;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18);
+  background: rgba(245, 245, 247, 0.86);
+}
+.t7-dark .t7-banner .t7-notif {
+  background: rgba(40, 40, 44, 0.86);
+}
+
+/* ------------------------------------------------------------------ screenshots */
+.t7-shot-flash {
+  position: absolute;
+  inset: 0;
+  z-index: 960;
+  background: #fff;
+  pointer-events: none;
+  animation: t7-shot-flash 520ms ease-out forwards;
+}
+@keyframes t7-shot-flash {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+.t7-shot-thumb {
+  position: absolute;
+  left: 14px;
+  bottom: 16px;
+  z-index: 950;
+  width: 84px;
+  padding: 0;
+  border: 3px solid #fff;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #000;
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.35);
+  animation: t7-shot-in 520ms var(--t7-ease) both;
+}
+.t7-shot-thumb img {
+  display: block;
+  width: 100%;
+}
+@keyframes t7-shot-in {
+  from {
+    transform: translate(-14px, 16px) scale(3.6);
+    transform-origin: 0 100%;
+    opacity: 0.6;
+  }
+}
+
+/* ------------------------------------------------------------------ Spotlight */
+.t7-spot {
+  position: absolute;
+  inset: 0;
+  z-index: 560;
+  display: flex;
+  flex-direction: column;
+  background: rgba(30, 30, 40, 0.38);
+  -webkit-backdrop-filter: blur(28px) saturate(1.4);
+  backdrop-filter: blur(28px) saturate(1.4);
+  color: #fff;
+  opacity: 0;
+  transform: translateY(-14px);
+  transition:
+    opacity 260ms ease,
+    transform 320ms var(--t7-ease);
+}
+.t7-spot.on {
+  opacity: 1;
+  transform: none;
+}
+.t7-spot-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 28px 10px 6px;
+}
+.t7-spot-bar .t7-search {
+  flex: 1;
+  padding: 0;
+}
+.t7-spot-bar .t7-search-box {
+  background: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.75);
+}
+.t7-spot-bar input {
+  color: #fff;
+}
+.t7-spot-bar input::placeholder {
+  color: rgba(255, 255, 255, 0.65);
+}
+.t7-spot-cancel {
+  border: 0;
+  background: none;
+  color: #fff;
+  font: inherit;
+  font-size: 16px;
+  padding: 4px 2px;
+}
+.t7-spot-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 12px 20px;
+}
+.t7-spot-h {
+  margin: 14px 4px 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.7);
+}
+.t7-spot-apps {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px 0;
+  padding: 12px 4px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.14);
+}
+.t7-spot-apps button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  border: 0;
+  background: none;
+  color: #fff;
+  font: inherit;
+  font-size: 11px;
+  min-width: 0;
+}
+.t7-spot-apps span {
+  max-width: 66px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.t7-spot-list {
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.14);
+  overflow: hidden;
+}
+.t7-spot-list button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 12px;
+  border: 0;
+  background: none;
+  color: #fff;
+  font: inherit;
+  text-align: left;
+}
+.t7-spot-list button + button {
+  border-top: 0.5px solid rgba(255, 255, 255, 0.18);
+}
+.t7-spot-txt {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.t7-spot-txt b,
+.t7-spot-txt small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.t7-spot-txt b {
+  font-size: 15px;
+  font-weight: 500;
+}
+.t7-spot-txt small {
+  font-size: 12.5px;
+  color: rgba(255, 255, 255, 0.7);
+}
+.t7-spot-none {
+  margin-top: 60px;
+  text-align: center;
+  font-size: 17px;
+  color: rgba(255, 255, 255, 0.7);
+}
+/* Spotlight has its own Cancel, which closes it */
+.t7-spot-bar .t7-search-cancel {
+  display: none;
+}

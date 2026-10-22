@@ -82,6 +82,17 @@ The running app shows its version and build in the Help panel (?).
   others) slide their white thumb like the panel tabs.
 
 ### Fixed
+- iPod touch:
+  - Hold Sleep/Wake for "slide to power off", with Cancel; switched off,
+    hold it again to start up (the Apple, then the Lock Screen).
+  - Home and Sleep/Wake together take a screenshot: the screen flashes, a
+    thumbnail shows in the corner and the picture (640 × 1136) goes to
+    Photos ▸ Screenshots.
+  - Notifications drop down as a banner while you use the iPod: tap to
+    open the app, swipe up to put it away. Tapping one on the Lock Screen
+    unlocks (passcode first) and opens its app.
+  - Pull down on the Home Screen for Spotlight: Siri Suggestions, then
+    apps, songs, contacts and notes as you type.
 - Settings that did nothing now work:
   - Audio Crossfade (iPod classic, nano 4G): the end of a song fades out
     over four seconds and the next fades in.
