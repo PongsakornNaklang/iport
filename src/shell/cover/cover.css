@@ -86,8 +86,8 @@
   background-size: var(--cv-stitch);
   box-shadow: 0 calc(var(--mm) * 0.3) calc(var(--mm) * 0.6) rgba(0, 0, 0, 0.12);
 }
-/* a sock is a few pieces (see Cover.tsx) */
-.cv-piece {
+/* the toe's sections bend at these (Cover.tsx) */
+.cv-hinge {
   position: absolute;
   left: 0;
   top: 0;

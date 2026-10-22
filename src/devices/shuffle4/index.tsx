@@ -204,6 +204,7 @@ export default function IpodShuffle({ model, appearance }: DeviceProps) {
           />
         </Device3D>
       </div>
+      <BodyExtras after />
       <CaptionBubble device={rootRef} />
     </div>
   );

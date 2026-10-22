@@ -12,12 +12,14 @@
  * the iPod's outline (beside or below it), where its planes would cut it, so
  * those are painted after the body instead (`after`).
  */
-import { useCallback, useMemo, type CSSProperties } from 'react';
+import { useCallback, useEffect, useMemo, useRef, type CSSProperties } from 'react';
 import type { CoverChoice, CoverFit } from '../../devices/types';
 import { APPLE_LOGO } from '../../core/util/appleLogo';
 import { Device3D, type EdgeSlice } from '../Device3D';
 import type { Facet } from '../edgeShell';
-import { coverGeometry, holeMask, holesOnFacet, roundedInset, type CoverGeometry, type SockGeometry, type SockPiece } from './geometry';
+import { coverGeometry, holeMask, holesOnFacet, roundedInset, type CoverGeometry, type SockGeometry } from './geometry';
+import { girth, sockMesh, type SockFacet } from './sockMesh';
+import { liveOrientation } from '../stageStore';
 import './cover.css';
 
 export interface CoverInfo {
@@ -27,13 +29,6 @@ export interface CoverInfo {
   size: { width: number; height: number; depth: number };
 }
 
-/**
- * Rib knit, like Apple's socks: a raised column of knitted Vs, then a sunken
- * purl rib. Tiled at 3 × 2 mm.
- */
-const KNIT =
-  "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='8' viewBox='0 0 10 8'%3E%3Crect x='6.2' width='3.8' height='8' fill='rgba(0,0,0,0.18)'/%3E%3Cg stroke='rgba(0,0,0,0.2)' stroke-width='0.45' fill='rgba(255,255,255,0.17)'%3E%3Cellipse cx='1.9' cy='4' rx='1.55' ry='4.6' transform='rotate(-20 1.9 4)'/%3E%3Cellipse cx='4.4' cy='4' rx='1.55' ry='4.6' transform='rotate(20 4.4 4)'/%3E%3C/g%3E%3C/svg%3E\")";
-const STITCH_MM = [3, 2];
 /** Fabric and silicone are soft: their sides need fewer, longer pieces than metal. */
 const SOFT = { bandPx: 9, curveTol: 0.5 };
 
@@ -133,39 +128,119 @@ function CaseBack({ g, fit }: { g: CoverGeometry; fit: CoverFit }) {
 
 // ------------------------------------------------------------------ socks
 
-/** Fabric is soft and plain: no cut-outs, fewer pieces. */
-const SLEEVE_DETAIL = { ...SOFT, open: 'top' as const };
+/**
+ * Apple's rib knit: wide raised ribs (lit in the middle, shaded into the
+ * groove between them), each made of fine knitted Vs. One tile is 5 mm of
+ * rib and groove by two rows of stitches (1.2 mm).
+ */
+const RIB = (() => {
+  const v = (cx: number, y: number) =>
+    `<ellipse cx='${cx - 2}' cy='${y}' rx='2.1' ry='3.5' transform='rotate(-30 ${cx - 2} ${y})'/>` +
+    `<ellipse cx='${cx + 2}' cy='${y}' rx='2.1' ry='3.5' transform='rotate(30 ${cx + 2} ${y})'/>`;
+  const stitches = [5.5, 14, 22.5, 31].flatMap((cx) => [v(cx, 3), v(cx, 9)]).join('');
+  const svg =
+    `<svg xmlns='http://www.w3.org/2000/svg' width='50' height='12' viewBox='0 0 50 12'>` +
+    `<defs><linearGradient id='r' x1='0' x2='1'>` +
+    `<stop offset='0' stop-color='#000' stop-opacity='.14'/><stop offset='.1' stop-color='#fff' stop-opacity='.05'/>` +
+    `<stop offset='.32' stop-color='#fff' stop-opacity='.14'/><stop offset='.56' stop-color='#fff' stop-opacity='.04'/>` +
+    `<stop offset='.7' stop-color='#000' stop-opacity='.1'/><stop offset='.8' stop-color='#000' stop-opacity='.22'/>` +
+    `<stop offset='.9' stop-color='#000' stop-opacity='.22'/><stop offset='1' stop-color='#000' stop-opacity='.14'/></linearGradient></defs>` +
+    `<rect width='50' height='12' fill='url(#r)'/>` +
+    `<g fill='#fff' fill-opacity='.16' stroke='#000' stroke-opacity='.2' stroke-width='.55'>${stitches}</g>` +
+    `<g fill='#000' fill-opacity='.12'><ellipse cx='40' cy='3' rx='2.6' ry='1.4'/><ellipse cx='46' cy='9' rx='2.6' ry='1.4'/></g>` +
+    `</svg>`;
+  return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
+})();
+/** a little unevenness, as yarn has */
+const YARN = (() => {
+  const svg =
+    `<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.55' numOctaves='2' seed='3'/>` +
+    `<feColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -0.9 0.55'/></filter><rect width='80' height='80' filter='url(#n)'/></svg>`;
+  return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
+})();
+const RIB_MM = [5, 1.2];
+
+/** px the toe's sections reach up into the section above, to fill the gap a bend opens */
+const COLLAR = (d: number) => Math.min(6, d * 0.4);
 
 function Sock({ s, color, pxPerMm, after }: { s: SockGeometry; color: string; pxPerMm: number; after: boolean }) {
-  const cuffColor = mix(color, '#fff', 30);
+  const cuff = mix(color, '#fff', 34);
+  // The rows, cut at the hinges: [0] hangs on the iPod, the others bend.
+  const sections = useMemo(() => {
+    const relaxed = girth(s.rows[s.hinges[s.hinges.length - 1]]);
+    const cuts = [0, ...s.hinges, s.rows.length - 1];
+    return cuts.slice(0, -1).map((from, k) => {
+      const facets = sockMesh(s.rows.slice(from, cuts[k + 1] + 1), relaxed, 4, from);
+      if (k > 0) {
+        // a collar just inside the section above, hidden until the toe bends
+        const h = s.rows[from];
+        const inside = { ...h, w: h.w - 1.2, d: Math.max(0.5, h.d - 1.2), r: Math.max(0, h.r - 0.6) };
+        facets.push(...sockMesh([{ ...inside, y: h.y - COLLAR(h.d) }, inside], relaxed, 4, 100 + k * 10));
+      }
+      return { y: s.rows[from].y, facets };
+    });
+  }, [s]);
+  const hinges = useRef<(HTMLDivElement | null)[]>([]);
+  useSway(after, hinges);
   const vars = {
     ['--cv' as string]: color,
-    ['--cv-cuff' as string]: cuffColor,
-    ['--cv-tag' as string]: mix(color, '#fff', 58),
+    ['--cv-cuff' as string]: cuff,
     ['--mm' as string]: `${pxPerMm}px`,
-    ['--cv-knit' as string]: KNIT,
-    ['--cv-stitch' as string]: `${STITCH_MM[0] * pxPerMm}px ${STITCH_MM[1] * pxPerMm}px`,
   } as CSSProperties;
+  const facet = (fa: SockFacet) => {
+    const shade =
+      fa.light > 0.55 ? `rgba(255,255,255,${((fa.light - 0.55) * 0.35).toFixed(3)})` : `rgba(0,0,0,${Math.min(0.45, (0.55 - fa.light) * 0.3).toFixed(3)})`;
+    const base = s.cuffEnd <= fa.top ? color : s.cuffEnd >= fa.top + fa.h ? cuff : `linear-gradient(180deg, ${cuff} ${(s.cuffEnd - fa.top).toFixed(2)}px, ${color} 0)`;
+    const size = `${(RIB_MM[0] * pxPerMm * fa.stretch).toFixed(2)}px ${RIB_MM[1] * pxPerMm}px`;
+    return (
+      <div
+        key={fa.key}
+        className="d3-facet"
+        style={{
+          width: fa.w,
+          height: fa.h,
+          transform: fa.matrix,
+          background: `linear-gradient(${shade}, ${shade}), ${YARN} ${fa.bx.toFixed(1)}px ${fa.by.toFixed(1)}px / 80px 80px, ${RIB} ${fa.bx.toFixed(2)}px ${fa.by.toFixed(2)}px / ${size}, ${base}`,
+        }}
+      />
+    );
+  };
   if (!after) {
-    // the sleeve, around the iPod: painted before it
+    // beside the iPod: painted before it (see the top of this file)
     return (
       <div className="cv cv-sock" style={vars} aria-hidden="true">
-        <SockPart p={s.sleeve} color={color} cuff={s.cuff} cuffColor={cuffColor} />
+        {sections[0].facets.filter((fa) => fa.row < s.sleeve).map(facet)}
       </div>
     );
   }
+  // each bending section hangs inside the one above, from its hinge
+  const nest = (k: number): React.ReactNode =>
+    k >= sections.length ? null : (
+      <div
+        className="cv-hinge"
+        ref={(n) => {
+          hinges.current[k - 1] = n;
+        }}
+        style={{ transformOrigin: `0 ${sections[k].y}px 0` }}
+      >
+        {sections[k].facets.map(facet)}
+        {nest(k + 1)}
+      </div>
+    );
+  const top = s.rows[0];
   return (
     <div className="cv cv-sock" style={vars} aria-hidden="true">
-      <SockPart p={s.toe} color={color} />
+      {sections[0].facets.filter((fa) => fa.row >= s.sleeve).map(facet)}
+      {nest(1)}
       {/* the folded edge of the opening, seen from above */}
       <div
         className="cv-ring cv-sock-rim"
         style={{
-          width: s.sleeve.w,
-          height: s.sleeve.d,
-          borderRadius: s.sleeve.round,
+          width: top.w,
+          height: top.d,
+          borderRadius: top.r,
           borderWidth: 1.4 * pxPerMm,
-          transform: `translate3d(${-s.sleeve.w / 2}px, ${s.mouth - s.sleeve.d / 2}px, 0) rotateX(90deg)`,
+          transform: `translate3d(${-top.w / 2}px, ${s.mouth - top.d / 2}px, 0) rotateX(90deg)`,
         }}
       />
       <div className="cv-sock-tag" style={{ left: s.tag.x, top: s.tag.y, width: s.tag.w, height: s.tag.h }}>
@@ -177,46 +252,46 @@ function Sock({ s, color, pxPerMm, after }: { s: SockGeometry; color: string; px
   );
 }
 
-/** One rounded piece of a sock: the sleeve (open at the top, with the cuff) or the toe. */
-function SockPart({ p, color, cuff, cuffColor }: { p: SockPiece; color: string; cuff?: number; cuffColor?: string }) {
-  const edge = useMemo(() => {
-    // the cuff, then the body color, laid out down the piece; shaded lighter
-    // at the top left and darker towards the back
-    // (soft-edged: each band lays it out from its own inset, which would show as steps)
-    const soft = p.round * 0.6;
-    const base = cuff && cuffColor ? `linear-gradient(180deg, ${cuffColor} ${cuff - soft}px, ${color} ${cuff + soft}px)` : color;
-    const tones = Array.from({ length: 5 }, (_, i) => {
-      const dark = (0.04 + i * 0.035).toFixed(3);
-      return `linear-gradient(150deg, rgba(255,255,255,0.12), rgba(0,0,0,${dark}) 55%, rgba(0,0,0,${(+dark + 0.12).toFixed(3)})), ${base}`;
-    });
-    return (u: number): EdgeSlice => ({ inset: roundedInset(u, p.d, p.round), color: tones[Math.min(4, Math.floor(u * 5))] });
-  }, [p, color, cuff, cuffColor]);
-  const open = !!cuff;
-  // with the top open, the faces run right up to the opening
-  const faceStyle: CSSProperties = { background: 'none', ...(open ? { top: 0 } : null) };
-  const face = (back: boolean) => (
-    <div className={`cv-fill cv-knit ${back ? 'cv-knit-back' : ''}`}>
-      {open && <div className="cv-cuff" style={{ height: cuff }} />}
-      <div className="cv-fold" />
-    </div>
-  );
-  return (
-    <div className="cv-piece" style={{ transform: `translate3d(${-p.w / 2}px, ${p.cy - p.h / 2}px, 0)` }}>
-      <Device3D
-        width={p.w}
-        height={p.h}
-        depth={p.d}
-        radius={p.radius}
-        edge={edge}
-        hollow
-        detail={open ? SLEEVE_DETAIL : SOFT}
-        frontInset={p.round}
-        backInset={p.round}
-        frontStyle={faceStyle}
-        backStyle={faceStyle}
-        front={face(false)}
-        back={face(true)}
-      />
-    </div>
-  );
+/**
+ * The empty toe is soft: it sags towards the ground as the iPod tilts and
+ * swings a little when it moves, springing back, then settles. The bend is
+ * shared between the hinges, so it curves rather than folding in one place.
+ * It only bends forwards and back: a flat strip of fabric hardly bends
+ * within its own plane.
+ */
+function useSway(on: boolean, hinges: React.RefObject<(HTMLDivElement | null)[]>) {
+  useEffect(() => {
+    if (!on) return;
+    const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    const st = { x: 0, vx: 0, last: performance.now(), shown: '' };
+    const LIMIT = 70;
+    const GIVE = 0.6; // how far it goes towards hanging straight down
+    let raf = 0;
+    const loop = (now: number) => {
+      raf = requestAnimationFrame(loop);
+      const dt = Math.min(0.05, (now - st.last) / 1000);
+      st.last = now;
+      // which way is down, in the iPod's own axes (the stage turns it rotateX(rx) rotateY(ry))
+      const rx = (liveOrientation.rx * Math.PI) / 180;
+      const ry = (liveOrientation.ry * Math.PI) / 180;
+      const g = [Math.sin(ry) * Math.sin(rx), Math.cos(rx), -Math.cos(ry) * Math.sin(rx)];
+      const deg = (a: number) => Math.max(-LIMIT, Math.min(LIMIT, (a * 180) / Math.PI));
+      const tx = deg(Math.atan2(g[2], Math.max(0.05, g[1]))) * GIVE;
+      if (reduce) st.x = tx;
+      else {
+        // a damped spring towards hanging
+        const k = 70;
+        const c = 7;
+        st.vx += (k * (tx - st.x) - c * st.vx) * dt;
+        st.x += st.vx * dt;
+      }
+      const n = Math.max(1, hinges.current.length);
+      const t = `rotateX(${(st.x / n).toFixed(2)}deg)`;
+      if (t === st.shown) return;
+      st.shown = t;
+      for (const h of hinges.current) if (h) h.style.transform = t;
+    };
+    raf = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(raf);
+  }, [on, hinges]);
 }

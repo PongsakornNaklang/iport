@@ -141,7 +141,8 @@ export const MODELS: DeviceModel[] = [
     ],
     engravable: true,
     jack: { x: -92, y: -160.4, z: 15.5, ny: -1, pxPerMm: 10 },
-    // No sock yet: around the shuffle's body and clip it renders very slowly.
+    // socks only: a case would cover the clip
+    cover: { radius: 26, cases: false, holes: [] },
     load: () => import('./shuffle4'),
   },
   {

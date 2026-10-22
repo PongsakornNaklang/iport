@@ -34,24 +34,33 @@ describe('cover geometry', () => {
     }
   });
 
-  it('puts the iPod in a sock pulled a third of the way out, with the toe below', () => {
+  it('puts the iPod in a one-piece sock, pulled a third of the way out', () => {
     for (const m of fitted) {
       const g = coverGeometry(m.cover!, 'sock', m.jack!.pxPerMm, m.size);
       const s = g.sock!;
       const H = m.size.height;
-      // opening a third of the way down, sleeve to just past the bottom
+      const rows = s.rows;
+      // the opening a third of the way down; the sleeve runs past the iPod's bottom
       expect(s.mouth).toBeGreaterThan(-H / 2 + H * 0.25);
       expect(s.mouth).toBeLessThan(0);
-      expect(s.sleeve.cy + s.sleeve.h / 2).toBeGreaterThan(H / 2);
-      // a narrower, flatter toe hanging below, tucked into the sleeve
-      expect(s.toe.w).toBeLessThan(s.sleeve.w);
-      expect(s.toe.d).toBeLessThan(s.sleeve.d);
-      expect(s.toe.cy - s.toe.h / 2).toBeLessThan(s.sleeve.cy + s.sleeve.h / 2);
-      // the sleeve holds the iPod: its rounded edge clears the body at the faces
-      const u = (s.sleeve.d / 2 - m.size.depth / 2) / s.sleeve.d;
-      expect(roundedInset(u, s.sleeve.d, s.sleeve.round)).toBeLessThan(g.t);
-      // the stage makes room for all of it
-      expect(g.bounds.height / 2).toBeGreaterThanOrEqual(s.toe.cy + s.toe.h / 2);
+      expect(rows[0].y).toBe(s.mouth);
+      expect(rows[s.sleeve].y).toBeGreaterThan(H / 2);
+      // the sleeve holds the iPod
+      expect(rows[0].w).toBeGreaterThan(m.size.width);
+      expect(rows[0].d).toBeGreaterThan(m.size.depth);
+      // one piece: rows go down, never wider than the sleeve, and close in a flat seam
+      for (let i = 1; i < rows.length; i++) {
+        expect(rows[i].y).toBeGreaterThan(rows[i - 1].y);
+        expect(rows[i].w).toBeLessThanOrEqual(rows[0].w + 1e-9);
+        expect(rows[i].d).toBeLessThanOrEqual(rows[i - 1].d + 1e-9);
+      }
+      expect(rows[rows.length - 1].d).toBeLessThan(rows[0].d * 0.05);
+      // the cuff is the top part; the stage makes room for the whole sock
+      expect(s.cuffEnd).toBeGreaterThan(s.mouth);
+      expect(s.cuffEnd).toBeLessThan(rows[s.sleeve].y);
+      expect(g.bounds.height / 2).toBeGreaterThanOrEqual(rows[rows.length - 1].y);
+      // the toe bends below the narrowing
+      for (const h of s.hinges) expect(rows[h].y).toBeGreaterThan(rows[s.sleeve].y);
     }
   });
 

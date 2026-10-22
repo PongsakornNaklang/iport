@@ -17,10 +17,12 @@ The running app shows its version and build in the Help panel (?).
 ### Added
 - Cases and iPod Socks, under Customize → Design. Silicone and leather cases
   fit the iPod touch, nano and classic, with cut-outs for the buttons, ports
-  and the touch's camera. iPod Socks fit the same three, in the six colors
-  of Apple's 2004 set or any color you pick, and look like Apple's: rib knit,
-  a lighter cuff, the woven Apple tag, and the iPod pulled a third of the
-  way out of the top with the empty toe hanging below. The buttons and
+  and the touch's camera. iPod Socks fit every model, in the six colors of
+  Apple's 2004 set or any color you pick. Like Apple's, each is one knitted
+  piece: wide rib knit that spreads where it stretches over the iPod, a
+  lighter cuff, the woven Apple tag, the iPod pulled a third of the way out
+  of the top, and the empty toe narrowing to a flat seam. The toe is soft:
+  it sags as you tilt the iPod and swings when you move it. The buttons and
   screen still work through either. Presets and share links keep the case.
 - A clear case (clear, smoke, ice blue or rose) for the iPod touch, nano and
   classic: the iPod shows through it.

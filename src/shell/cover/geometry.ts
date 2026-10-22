@@ -1,11 +1,11 @@
 /**
  * The shape of a case or an iPod Sock around a body, in device px.
  *
- * Socks are three pieces, like Apple's: a sleeve around the iPod, open at
- * the top with the iPod pulled a third of the way out; a ribbed cuff at the
- * opening (part of the sleeve's faces); and below, an empty toe, narrower
- * and flatter than the sleeve. A small woven Apple tag sticks out of the
- * left seam.
+ * Socks are one knitted piece, like Apple's (see sockMesh.ts): a sleeve
+ * around the iPod, open at the top with the iPod pulled a third of the way
+ * out and a lighter ribbed cuff at the opening; below the iPod the empty
+ * fabric narrows and flattens down to a flat seam at the toe. A small woven
+ * Apple tag sticks out of the left seam.
  *
  * A cover is a hollow rounded box around the device box (`DeviceModel.size`):
  * `w × h × d`, centred at (cx, cy, cz) relative to its centre (+z towards
@@ -17,7 +17,8 @@
  *  - Socks are described by `sock` (the top-level box is their sleeve).
  */
 import type { CoverFit, CoverKind } from '../../devices/types';
-import type { CornerRadii, Facet, V3 } from '../edgeShell';
+import type { Facet, V3 } from '../edgeShell';
+import type { SockRow } from './sockMesh';
 
 export interface CoverHole {
   /** centre on the cover's outer box, shell coordinates (origin top-left, z = 0 mid-depth) */
@@ -50,23 +51,20 @@ export interface CoverGeometry {
   sock?: SockGeometry;
 }
 
-/** A rounded box: size, centre y relative to the body, corners, edge rounding. */
-export interface SockPiece {
-  w: number;
-  h: number;
-  d: number;
-  cy: number;
-  radius: CornerRadii;
-  round: number;
-}
-
 export interface SockGeometry {
-  sleeve: SockPiece;
-  toe: SockPiece;
+  /** cross-sections from the opening down to the toe (see sockMesh.ts) */
+  rows: SockRow[];
+  /** rows[0..sleeve] run beside the iPod; the rest hang below it */
+  sleeve: number;
+  /**
+   * Where the empty toe bends (row indices, top first): it hangs from the
+   * first, and bends again at each of the others.
+   */
+  hinges: number[];
   /** y of the opening, relative to the body centre */
   mouth: number;
-  /** height of the ribbed cuff at the opening */
-  cuff: number;
+  /** y where the lighter cuff ends */
+  cuffEnd: number;
   /** the Apple tag: its rectangle in the body's x/y, at mid-depth */
   tag: { x: number; y: number; w: number; h: number };
 }
@@ -84,53 +82,64 @@ const MM = {
 /** how much of the iPod is pulled out of its sock */
 const SOCK_EXPOSED = 0.36;
 
-const corners = (top: number, bottom: number): CornerRadii => ({ x: [top, top, bottom, bottom], y: [top, top, bottom, bottom] });
+const smooth = (k: number) => k * k * (3 - 2 * k);
 
 export function coverGeometry(fit: CoverFit, kind: Exclude<CoverKind, 'none'>, pxPerMm: number, size: { width: number; height: number; depth: number }): CoverGeometry {
   const box = { w: size.width, h: size.height, d: size.depth };
   if (kind === 'sock') {
     const t = MM.sockWall * pxPerMm;
-    const mouth = -box.h / 2 + box.h * SOCK_EXPOSED;
-    const bottom = box.h / 2 + t;
-    const sr = fit.radius + t + 0.5 * pxPerMm;
+    const H = box.h;
+    const mouth = -H / 2 + H * SOCK_EXPOSED;
     const sw = box.w + 2 * t;
     const sd = box.d + 2 * t;
-    const sleeve: SockPiece = {
-      w: sw,
-      h: bottom - mouth,
-      d: sd,
-      cy: (mouth + bottom) / 2,
-      radius: corners(0, sr),
-      // soft and plump: the edge rounds over most of the depth, but stays
-      // well inside the corner radius (the corners would pinch to points)
-      round: Math.min(t * 3.2, sd * 0.48, sr * 0.6),
-    };
-    // the empty toe hangs below, tucked 2 px into the sleeve
-    const tw = sw * 0.74;
-    const th = box.h * 0.3;
-    const td = sd * 0.5;
-    const tr = Math.min(tw * 0.42, th * 0.6);
-    const toe: SockPiece = { w: tw, h: th, d: td, cy: bottom - 2 + th / 2, radius: corners(2, tr), round: Math.min(td * 0.48, tr * 0.6, t * 3.2) };
-    const toeEnd = toe.cy + th / 2;
+    // soft and plump: the sides round over most of the depth
+    const round = Math.min(t * 3.2, sd * 0.48);
+    const row = (y: number, w: number, d: number): SockRow => ({ y, w, d, r: Math.min(round, d / 2, w / 2) });
+    // beside the iPod: one straight run (the cuff colour changes within it)
+    const rows: SockRow[] = [row(mouth, sw, sd), row(H / 2 + t, sw, sd)];
+    let y = H / 2 + t;
+    // the empty fabric narrows and flattens…
+    const narrow = 0.17 * H;
+    const tw = sw * 0.8;
+    const td = sd * 0.3;
+    const steps = 10; // fine enough that each piece is nearly a rectangle (sockMesh.ts)
+    for (let i = 1; i <= steps; i++) {
+      const k = smooth(i / steps);
+      rows.push(row(y + narrow * (i / steps), sw + (tw - sw) * k, sd + (td - sd) * k));
+    }
+    y += narrow;
+    // …hangs straight…
+    const hang = 0.1 * H;
+    rows.push(row(y + hang * 0.5, tw, td * 0.9), row(y + hang, tw, td * 0.8));
+    y += hang;
+    // …and closes in a flat seam
+    const end = 0.045 * H;
+    for (let i = 1; i <= 6; i++) {
+      const k = i / 6;
+      rows.push(row(y + end * k, tw, Math.max(1, td * 0.8 * Math.sqrt(Math.max(0, 1 - k * k)))));
+    }
+    const toeEnd = y + end;
     const tagW = MM.tagW * pxPerMm;
     const g: CoverGeometry = {
       w: sw,
-      h: sleeve.h,
+      h: H / 2 + t - mouth,
       d: sd,
       cx: 0,
-      cy: sleeve.cy,
+      cy: (mouth + H / 2 + t) / 2,
       cz: 0,
       t,
-      radius: sr,
-      round: sleeve.round,
+      radius: fit.radius + t,
+      round,
       lip: 0,
       holes: [],
-      bounds: { width: sw + 2 * tagW, height: 2 * Math.max(box.h / 2, toeEnd), depth: sd },
+      bounds: { width: sw + 2 * tagW, height: 2 * Math.max(H / 2, toeEnd), depth: sd },
       sock: {
-        sleeve,
-        toe,
+        rows,
+        sleeve: 1,
+        // the narrowing ends at rows[11]; the toe bends there and at the next two rows
+        hinges: [11, 12, 13],
         mouth,
-        cuff: 0.17 * (sleeve.h + th),
+        cuffEnd: mouth + 0.24 * (toeEnd - mouth),
         tag: { x: -sw / 2 - tagW, y: mouth + 1.5 * pxPerMm, w: tagW + 2, h: MM.tagH * pxPerMm },
       },
     };
