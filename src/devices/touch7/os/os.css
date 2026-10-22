@@ -2150,3 +2150,39 @@
 .t7-screen.kb-inset .t7-app {
   bottom: 251px;
 }
+.t7-kb-globe {
+  flex: 0 0 40px;
+}
+.t7-kb-globe + .t7-kb-space {
+  margin-left: 0;
+}
+.t7-kb-123 {
+  flex-basis: 40px;
+}
+/* Thai: four rows of twelve narrow keys */
+.t7-kb-th .t7-kb-row {
+  gap: 4px;
+  height: 38px;
+  margin-bottom: 9px;
+}
+.t7-kb-th .t7-kb-bottom {
+  margin-bottom: 0;
+}
+.t7-kb-th .t7-kb-row .t7-kb-key {
+  font-size: 19px;
+}
+.t7-kb-th .t7-kb-row .t7-kb-fn,
+.t7-kb-th .t7-kb-space {
+  font-size: 14px;
+}
+.t7-kb-th .t7-kb-row11 {
+  padding: 0 12px;
+}
+.t7-kb-th .t7-kb-shift,
+.t7-kb-th .t7-kb-del {
+  flex-basis: 34px;
+}
+.t7-kb-th .t7-kb-mid {
+  gap: 4px;
+  padding: 0 2px;
+}

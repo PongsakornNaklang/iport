@@ -98,7 +98,9 @@ The running app shows its version and build in the Help panel (?).
     (hold to repeat), a double space for a full stop, the key popping up
     under the finger and the QuickType bar. Return reads "search" or "go"
     where it should. A computer's keyboard still works, and on a phone its
-    own keyboard stays down.
+    own keyboard stays down. The globe key switches to the Thai keyboard
+    (Kedmanee in four rows, Shift for its second page), and it remembers
+    which one you used.
 - Settings that did nothing now work:
   - Audio Crossfade (iPod classic, nano 4G): the end of a song fades out
     over four seconds and the next fades in.

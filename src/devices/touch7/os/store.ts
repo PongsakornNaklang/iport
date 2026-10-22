@@ -141,6 +141,8 @@ export interface Prefs {
   autoLock: number;
   batteryPercent: boolean;
   keyboardClicks: boolean;
+  /** the keyboard's language (the globe key switches) */
+  kbLang: 'en' | 'th';
   lockSound: boolean;
   musicTab: string;
   /** Library categories hidden with Edit */
@@ -166,6 +168,7 @@ const DEFAULT_PREFS: Prefs = {
   autoLock: 0,
   batteryPercent: false,
   keyboardClicks: true,
+  kbLang: 'en',
   lockSound: true,
   musicTab: 'library',
   musicHidden: ['genres', 'compilations', 'composers'],

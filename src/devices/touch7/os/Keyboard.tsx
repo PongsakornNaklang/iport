@@ -3,7 +3,8 @@
  * focus, and types into that field: letters (Shift once for a capital,
  * twice for caps lock), numbers and symbols, delete (hold to repeat),
  * space and return, with the key popping up under the finger and the
- * QuickType bar above. A computer's own keyboard keeps working too.
+ * QuickType bar above. The globe key switches to Thai (Kedmanee, in four
+ * rows, Shift for its second page). A computer's own keyboard keeps working.
  *
  * The keys never take the focus, so the field keeps its caret. Typed text
  * goes in with setRangeText plus an input event, which React sees as typing.
@@ -20,6 +21,23 @@ const ROWS: Record<Layer, string[][]> = {
   '123': [['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'], ['-', '/', ':', ';', '(', ')', '$', '&', '@', '"'], ['.', ',', '?', '!', "'"]],
   '#+=': [['[', ']', '{', '}', '#', '%', '^', '*', '+', '='], ['_', '\\', '|', '~', '<', '>', '€', '£', '¥', '•'], ['.', ',', '?', '!', "'"]],
 };
+
+/** iOS's Thai keyboard: Kedmanee in four rows of twelve; Shift shows the second page */
+const TH = [
+  ['ๅ', '/', '_', 'ภ', 'ถ', 'ุ', 'ึ', 'ค', 'ต', 'จ', 'ข', 'ช'],
+  ['ๆ', 'ไ', 'ำ', 'พ', 'ะ', 'ั', 'ี', 'ร', 'น', 'ย', 'บ', 'ล'],
+  ['ฟ', 'ห', 'ก', 'ด', 'เ', '้', '่', 'า', 'ส', 'ว', 'ง'],
+  ['ผ', 'ป', 'แ', 'อ', 'ิ', 'ื', 'ท', 'ม', 'ใ', 'ฝ'],
+];
+const TH_SHIFT = [
+  ['+', '๑', '๒', '๓', '๔', 'ู', '฿', '๕', '๖', '๗', '๘', '๙'],
+  ['๐', '"', 'ฎ', 'ฑ', 'ธ', 'ํ', '๊', 'ณ', 'ฯ', 'ญ', 'ฐ', ','],
+  ['ฤ', 'ฆ', 'ฏ', 'โ', 'ฌ', '็', '๋', 'ษ', 'ศ', 'ซ', '.'],
+  ['(', ')', 'ฉ', 'ฮ', 'ฺ', '์', '?', 'ฒ', 'ฬ', 'ฦ'],
+];
+/** Thai vowel and tone marks sit on a dotted circle on their keys */
+const MARK = /^[\u0E31\u0E34-\u0E3A\u0E47-\u0E4E]$/u;
+const keyLabel = (k: string) => (MARK.test(k) ? `\u25CC${k}` : k);
 
 /** what a field counts as for typing */
 export function isTextField(el: EventTarget | null): el is Field {
@@ -52,11 +70,13 @@ function backspace(el: Field) {
 function currentWord(el: Field | null): string {
   if (!el) return '';
   const before = el.value.slice(0, el.selectionStart ?? el.value.length);
-  return before.match(/[\p{L}\p{N}']+$/u)?.[0] ?? '';
+  return before.match(/[\p{L}\p{M}\p{N}']+$/u)?.[0] ?? '';
 }
 
 export function Keyboard({ field }: { field: Field | null }) {
   const clicks = usePrefs((s) => s.keyboardClicks);
+  const lang = usePrefs((s) => s.kbLang);
+  const thai = lang === 'th';
   const [layer, setLayer] = useState<Layer>('abc');
   const [shift, setShift] = useState<'off' | 'once' | 'lock'>('once');
   const [pop, setPop] = useState<string | null>(null);
@@ -71,8 +91,8 @@ export function Keyboard({ field }: { field: Field | null }) {
   useEffect(() => {
     if (!field) return;
     setLayer('abc');
-    setShift(field.value.length === 0 && field.type !== 'email' && field.type !== 'url' ? 'once' : 'off');
-  }, [field]);
+    setShift(!thai && field.value.length === 0 && field.type !== 'email' && field.type !== 'url' ? 'once' : 'off');
+  }, [field]); // eslint-disable-line react-hooks/exhaustive-deps
   // keep the QuickType word current while typing on a real keyboard too
   useEffect(() => {
     if (!field) return;
@@ -89,7 +109,7 @@ export function Keyboard({ field }: { field: Field | null }) {
   const tap = () => clicks && playTap();
   const type = (k: string) => {
     if (!el) return;
-    const ch = layer === 'abc' && shift !== 'off' ? k.toUpperCase() : k;
+    const ch = layer === 'abc' && shift !== 'off' && !thai ? k.toUpperCase() : k;
     insert(el, ch);
     if (shift === 'once') setShift('off');
     // after a sentence ends, a capital again
@@ -101,12 +121,15 @@ export function Keyboard({ field }: { field: Field | null }) {
     const v = el.value;
     const at = el.selectionStart ?? v.length;
     if (v[at - 1] === ' ' && /[\p{L}\p{N}]/u.test(v[at - 2] ?? '')) {
-      el.setRangeText('. ', at - 1, at, 'end');
-      el.dispatchEvent(new Event('input', { bubbles: true }));
-      setShift('once');
+      if (thai) insert(el, ' ');
+      else {
+        el.setRangeText('. ', at - 1, at, 'end');
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+        setShift('once');
+      }
     } else {
       insert(el, ' ');
-      if (/[.!?]$/.test(v.slice(0, at))) setShift('once');
+      if (!thai && /[.!?]$/.test(v.slice(0, at))) setShift('once');
     }
     if (layer !== 'abc') setLayer('abc');
   };
@@ -114,7 +137,7 @@ export function Keyboard({ field }: { field: Field | null }) {
     if (!el) return;
     if (el instanceof HTMLTextAreaElement) {
       insert(el, '\n');
-      setShift('once');
+      if (!thai) setShift('once');
       return;
     }
     el.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', bubbles: true }));
@@ -136,7 +159,8 @@ export function Keyboard({ field }: { field: Field | null }) {
   }
   const pressShift = () => {
     const now = performance.now();
-    if (now - lastShift.current < 320) setShift('lock');
+    if (thai) setShift((s) => (s === 'off' ? 'once' : 'off'));
+    else if (now - lastShift.current < 320) setShift('lock');
     else setShift((s) => (s === 'off' ? 'once' : 'off'));
     lastShift.current = now;
   };
@@ -144,7 +168,7 @@ export function Keyboard({ field }: { field: Field | null }) {
   /** keys never take the focus away from the field */
   const hold = (e: React.PointerEvent) => e.preventDefault();
   const letterKey = (k: string) => {
-    const label = layer === 'abc' && shift !== 'off' ? k.toUpperCase() : k;
+    const label = keyLabel(layer === 'abc' && shift !== 'off' && !thai ? k.toUpperCase() : k);
     return (
       <button
         key={k}
@@ -166,19 +190,24 @@ export function Keyboard({ field }: { field: Field | null }) {
     );
   };
 
-  const rows = ROWS[layer];
+  const rows = layer === 'abc' && thai ? (shift !== 'off' ? TH_SHIFT : TH) : ROWS[layer];
+  const head = rows.slice(0, -1);
+  const last = rows[rows.length - 1];
   const search = el instanceof HTMLInputElement && (el.type === 'search' || el.enterKeyHint === 'search');
   const go = el instanceof HTMLInputElement && (el.type === 'url' || el.enterKeyHint === 'go');
   const word = currentWord(el);
   return (
-    <div className={`t7-kb ${field ? 'on' : ''}`} onPointerDown={hold} onContextMenu={(e) => e.preventDefault()}>
+    <div className={`t7-kb ${field ? 'on' : ''} ${rows.length > 3 ? 't7-kb-th' : ''}`} onPointerDown={hold} onContextMenu={(e) => e.preventDefault()}>
       <div className="t7-kb-qt">
         <span />
         <span className="t7-kb-qt-word">{word ? `“${word}”` : ''}</span>
         <span />
       </div>
-      <div className="t7-kb-row">{rows[0].map(letterKey)}</div>
-      <div className="t7-kb-row t7-kb-row2">{rows[1].map(letterKey)}</div>
+      {head.map((r, i) => (
+        <div key={i} className={`t7-kb-row ${i === 1 && r.length === 9 ? 't7-kb-row2' : ''} ${r.length === 11 ? 't7-kb-row11' : ''}`}>
+          {r.map(letterKey)}
+        </div>
+      ))}
       <div className="t7-kb-row">
         {layer === 'abc' ? (
           <button
@@ -207,7 +236,7 @@ export function Keyboard({ field }: { field: Field | null }) {
             {layer === '123' ? '#+=' : '123'}
           </button>
         )}
-        <div className={`t7-kb-mid ${layer === 'abc' ? '' : 't7-kb-mid-wide'}`}>{rows[2].map(letterKey)}</div>
+        <div className={`t7-kb-mid ${layer === 'abc' ? '' : 't7-kb-mid-wide'}`}>{last.map(letterKey)}</div>
         <button
           className="t7-kb-key t7-kb-fn t7-kb-del"
           aria-label="delete"
@@ -234,7 +263,23 @@ export function Keyboard({ field }: { field: Field | null }) {
             setLayer(layer === 'abc' ? '123' : 'abc');
           }}
         >
-          {layer === 'abc' ? '123' : 'ABC'}
+          {layer === 'abc' ? '123' : thai ? 'กขค' : 'ABC'}
+        </button>
+        <button
+          className="t7-kb-key t7-kb-fn t7-kb-globe"
+          aria-label="Next keyboard"
+          onPointerDown={(e) => {
+            hold(e);
+            tap();
+            usePrefs.getState().set('kbLang', thai ? 'en' : 'th');
+            setLayer('abc');
+            setShift('off');
+          }}
+        >
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+            <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeWidth="1.5" />
+            <path d="M3 12h18M12 3c3 3.2 3 14.8 0 18M12 3c-3 3.2-3 14.8 0 18" fill="none" stroke="currentColor" strokeWidth="1.5" />
+          </svg>
         </button>
         <button
           className="t7-kb-key t7-kb-space"
@@ -244,7 +289,7 @@ export function Keyboard({ field }: { field: Field | null }) {
           }}
           onPointerUp={space}
         >
-          space
+          {thai ? 'เว้นวรรค' : 'space'}
         </button>
         <button
           className={`t7-kb-key t7-kb-fn t7-kb-return ${search || go ? 'blue' : ''}`}
