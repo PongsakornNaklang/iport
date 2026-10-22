@@ -58,8 +58,10 @@
   top: 0;
   transform-style: preserve-3d;
 }
-/* pulling it off (sockPull.ts): the toe's extra length starts empty */
+/* pulling it down or pushing it up (sockPull.ts): the toe's extra length starts empty */
 .cv-pull-shift,
+.cv-pull-toe,
+.cv-pull-below,
 .cv-group,
 .cv-pull-fill {
   position: absolute;

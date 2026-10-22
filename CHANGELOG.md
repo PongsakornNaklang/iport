@@ -62,8 +62,9 @@ The running app shows its version and build in the Help panel (?).
   opening slides down the iPod, the part still on it gathers towards the
   bottom, and the fabric that comes off narrows right below the iPod and
   makes the toe longer. Let go far enough down (or flick it) and it slides
-  off; otherwise it springs back. Dragging it any other way still turns the iPod. Put it back on
-  in Customize, or undo.
+  off; otherwise it springs back. Push it up and the toe widens around the
+  iPod, until the whole sock is on it. Dragging it sideways still turns the
+  iPod. Put it back on in Customize, or undo.
 - The Library's small tab switches (Songs & Videos / Playlists and the
   others) slide their white thumb like the panel tabs.
 

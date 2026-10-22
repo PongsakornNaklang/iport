@@ -274,7 +274,7 @@ function Sock({ s, color, pxPerMm, after }: { s: SockGeometry; color: string; px
             {filler.facets.map(facet)}
           </div>
         )}
-        <div className={k === 1 ? 'cv-pull-shift' : 'cv-group'}>
+        <div className={k === 1 ? 'cv-pull-toe' : 'cv-group'}>
           {sections[k].facets.map(facet)}
           {nest(k + 1)}
         </div>
@@ -283,8 +283,11 @@ function Sock({ s, color, pxPerMm, after }: { s: SockGeometry; color: string; px
   const top = s.rows[0];
   return (
     <div className="cv cv-sock" style={vars} aria-hidden="true">
-      {sections[0].facets.filter((fa) => fa.row >= s.sleeve).map(facet)}
-      {nest(1)}
+      {/* below the iPod: pushed up, it gets shorter (scaled about the iPod's bottom) */}
+      <div className="cv-pull-below" style={{ transformOrigin: `0 ${s.rows[s.sleeve].y}px 0` }}>
+        {sections[0].facets.filter((fa) => fa.row >= s.sleeve).map(facet)}
+        {nest(1)}
+      </div>
       <div className="cv-pull-shift">
         {/* the folded edge of the opening, seen from above */}
         <div

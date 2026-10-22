@@ -24,7 +24,7 @@ export interface ClickWheelProps {
   className?: string;
   /** set when the wheel can't be turned (inside a sock): presses still work, a turn calls this instead */
   onBlockedTurn?: () => void;
-  /** while blocked, a drag down hands the pointer over to this (pulling the sock off) */
+  /** while blocked, a drag up or down hands the pointer over to this (moving the sock) */
   onPullDown?: (pointerId: number, y0: number) => void;
 }
 
@@ -144,10 +144,10 @@ export function ClickWheel({
     const s = g.current;
     if (!s.active || e.pointerId !== s.pointerId) return;
     if (blocked.current && pullDown.current && !s.scrolling) {
-      // inside a sock: a drag down grabs the sock instead
+      // inside a sock: a drag up or down grabs the sock instead
       const mx = e.clientX - s.downX;
       const my = e.clientY - s.downY;
-      if (Math.hypot(mx, my) > 8 && my > 1.5 * Math.abs(mx)) {
+      if (Math.hypot(mx, my) > 8 && Math.abs(my) > 1.5 * Math.abs(mx)) {
         if (s.zone) bus.cancel(s.zone);
         s.active = false;
         s.zone = null;

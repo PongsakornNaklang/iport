@@ -373,7 +373,7 @@ export function Stage() {
     if (t.closest('[data-no-stage]')) return;
     if (e.button !== 0 && e.button !== 2) return;
     const s = st.current;
-    // on the sock: a drag down pulls it off, any other drag turns the iPod
+    // on the sock: a drag up or down moves it along the iPod, a sideways one turns the iPod
     s.maybePull = !force && sockMouthRef.current != null && onSock(rotRef.current, e.clientX, e.clientY) ? { id: e.pointerId, x: e.clientX, y: e.clientY } : null;
     s.dragging = true;
     s.tween = null;
@@ -405,7 +405,7 @@ export function Stage() {
       const my = e.clientY - mp.y;
       if (Math.hypot(mx, my) < 8) return; // not sure yet
       s.maybePull = null;
-      if (my > 1.5 * Math.abs(mx)) {
+      if (Math.abs(my) > 1.5 * Math.abs(mx)) {
         s.dragging = false;
         s.vx = s.vy = 0;
         try {
@@ -485,7 +485,15 @@ export function Stage() {
   const sockMouthRef = useRef(sockMouth);
   sockMouthRef.current = sockMouth;
   const scaleRef = useRef(1);
-  const pullSock = useSockPull(rotRef, scaleRef, model.size.height, sock ? sock.rows[sock.sleeve].y - sock.mouth : 1);
+  const sockSpan = useMemo(
+    () => ({
+      height: model.size.height,
+      sleeve: sock ? sock.rows[sock.sleeve].y - sock.mouth : 1,
+      below: sock ? sock.rows[sock.rows.length - 1].y - sock.rows[sock.sleeve].y : 1,
+    }),
+    [model, sock],
+  );
+  const pullSock = useSockPull(rotRef, scaleRef, sockSpan);
   useEarPods({ wrap: wrapRef, back: backCanvas, front: frontCanvas, markers: jackRef, model, enabled: scene.earpods !== false && !jackCovered });
 
   const Device = useMemo(() => deviceComponent(model), [model]);
