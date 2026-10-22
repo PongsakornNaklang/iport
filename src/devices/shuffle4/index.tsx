@@ -2,11 +2,12 @@ import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type 
 import { createPortal } from 'react-dom';
 import { Box3D, Device3D, type CornerRadii, type EdgeSlice } from '../../shell/Device3D';
 import { BodyExtras } from '../../shell/bodySlot';
+import { BackDecals } from '../../shell/decals/BackDecals';
 import { isTypingTarget } from '../../shell/keyboard';
 import { usePlaylists } from '../../core/library/selectors';
 import { useSettings } from '../../core/settings/store';
 import { useBattery } from '../../core/util/hooks';
-import type { DeviceProps } from '../types';
+import type { Decal, DeviceProps } from '../types';
 import { ShuffleBrain, useS4, type SwitchPos, type Zone } from './brain';
 import './shuffle4.css';
 
@@ -198,12 +199,14 @@ export default function IpodShuffle({ model, appearance }: DeviceProps) {
             H={H}
             open={clipOpen}
             engraving={appearance.engraving}
+            decals={appearance.decals}
             onDown={(e) => {
               if (e.button === 0) clipDown.current = { x: e.clientX, y: e.clientY, t: performance.now() };
             }}
           />
         </Device3D>
       </div>
+      <BodyExtras after />
       <CaptionBubble device={rootRef} />
     </div>
   );
@@ -464,11 +467,13 @@ function Clip({
   H,
   open,
   engraving,
+  decals,
   onDown,
 }: {
   H: number;
   open: boolean;
   engraving: [string, string];
+  decals?: Decal[];
   onDown: (e: React.PointerEvent) => void;
 }) {
   const hingeY = -H / 2 + HINGE_DROP;
@@ -513,6 +518,11 @@ function Clip({
                     ))}
                   </div>
                 )}
+                <BackDecals
+                  decals={decals}
+                  ink="color-mix(in srgb, var(--s4-body) 28%, #b9b9bb)"
+                  shadow="0 -0.5px 0 rgba(0,0,0,0.18), 0 0.6px 0 rgba(255,255,255,0.3)"
+                />
               </div>
             }
           />

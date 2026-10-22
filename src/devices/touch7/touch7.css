@@ -66,6 +66,14 @@
   background: #030303;
   box-shadow: none;
 }
+/* the pointer is a fingertip everywhere on the screen, as on the nano */
+.t7-screen-wrap,
+.t7-screen-wrap * {
+  cursor:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='22' height='22'><circle cx='11' cy='11' r='9' fill='rgba(255,255,255,0.28)' stroke='rgba(0,0,0,0.35)' stroke-width='1'/></svg>")
+      11 11,
+    pointer !important;
+}
 .t7-screen-wrap {
   position: absolute;
   left: 5px;

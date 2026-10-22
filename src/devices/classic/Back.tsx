@@ -1,4 +1,6 @@
 import type { CSSProperties } from 'react';
+import { BackDecals } from '../../shell/decals/BackDecals';
+import type { Decal } from '../types';
 import { APPLE_PATH } from './os/glyphs';
 import { shade } from './color';
 
@@ -11,12 +13,14 @@ export function ClassicBack({
   material,
   color,
   engraving,
+  decals,
   capacity,
   model,
 }: {
   material: string;
   color: string;
   engraving: [string, string];
+  decals?: Decal[];
   capacity: string;
   model: string;
 }) {
@@ -47,6 +51,11 @@ export function ClassicBack({
           ))}
         </div>
       )}
+      <BackDecals
+        decals={decals}
+        ink={material === 'painted' ? 'rgba(255,255,255,0.6)' : 'rgba(30,32,38,0.6)'}
+        shadow={material === 'painted' ? '0 -1px 0 rgba(0,0,0,0.2)' : '0 1px 0 rgba(255,255,255,0.6), 0 -0.5px 0 rgba(0,0,0,0.25)'}
+      />
       <div className="cl-back-print">
         <div>Designed by Apple in California. Assembled in China.</div>
         <div>

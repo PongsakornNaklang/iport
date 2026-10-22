@@ -156,6 +156,7 @@ export default function IpodClassic({ model, appearance }: DeviceProps) {
       depth={D}
       radius={RADIUS}
       under={<BodyExtras />}
+      over={<BodyExtras after />}
       edge={edge}
       breaks={[FRONT_T * 0.2, FRONT_T, FRONT_T + SEAM_T]}
       backInset={backInset}
@@ -184,7 +185,7 @@ export default function IpodClassic({ model, appearance }: DeviceProps) {
           </div>
         </div>
       }
-      back={<ClassicBack material={material} color={backColor} engraving={appearance.engraving} capacity={info.capacity} model={info.model} />}
+      back={<ClassicBack material={material} color={backColor} engraving={appearance.engraving} decals={appearance.decals} capacity={info.capacity} model={info.model} />}
       decals={
         <>
           {/* ---- top edge: Hold switch slot ---- */}

@@ -52,6 +52,8 @@ export interface Device3DProps {
   decals?: ReactNode;
   /** Painted first of all: a case or sock around the body (see shell/cover). */
   under?: ReactNode;
+  /** Painted last of all (parts of a sock beyond the body, see shell/cover). */
+  over?: ReactNode;
   /**
    * A shell with nothing inside it (a case): no solid lining behind the
    * sides, which would hide what is inside.
@@ -80,6 +82,7 @@ export function Device3D({
   children,
   decals,
   under,
+  over,
   hollow = false,
   facetMask,
   detail,
@@ -137,6 +140,7 @@ export function Device3D({
         {front}
       </div>
       {children}
+      {over}
     </div>
   );
 }

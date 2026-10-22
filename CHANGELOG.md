@@ -14,15 +14,34 @@ The running app shows its version and build in the Help panel (?).
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-10-22
+
 ### Added
 - Cases and iPod Socks, under Customize → Design. Silicone and leather cases
   fit the iPod touch, nano and classic, with cut-outs for the buttons, ports
-  and the touch's camera. iPod Socks fit the same three, in the six colors
-  of Apple's 2004 set or any color you pick; the iPod's end shows through the
-  sock's opening. The buttons and screen still work through either. Presets
-  and share links keep the case.
+  and the touch's camera. iPod Socks fit every model, in the six colors of
+  Apple's 2004 set or any color you pick. Like Apple's, each is one knitted
+  piece: wide rib knit that spreads where it stretches over the iPod, a
+  lighter cuff, the woven Apple tag, the iPod pulled a third of the way out
+  of the top, and the empty toe narrowing to a flat seam. The toe is soft:
+  it sags as you tilt the iPod and swings when you move it. The buttons and
+  screen still work through either. Presets and share links keep the case.
+- Stickers and engraved text anywhere on the back, under Customize →
+  Design: a set of stickers or your own picture (die-cut, with a white
+  border), and lines of text in four fonts, engraved the way each iPod
+  engraves. Drag them around right on the iPod's back; scroll over one to
+  resize it, Shift-scroll to turn it. They show through a clear case.
+- A clear case (clear, smoke, ice blue or rose) for the iPod touch, nano and
+  classic: the iPod shows through it.
 
 ### Changed
+- iPod touch: over the screen the pointer is a fingertip circle, as on the
+  nano.
+- With a mouse, the view controls wait off the right edge of the window and
+  slide in when the pointer comes near it (a thin grip marks the spot), so
+  the iPod gets the whole window.
+- The EarPods cable is shaded as round matte rubber instead of a white line
+  with a grey outline.
 - Panel tabs (Customize, Library) have a white thumb that slides to the
   chosen tab, and clicking a tab no longer leaves a focus ring on it.
 - Scrollbars in panels and menus are thin and light instead of the system's
@@ -32,6 +51,8 @@ The running app shows its version and build in the Help panel (?).
   for the iPod and its EarPods cable. Phones keep them along the bottom.
 
 ### Fixed
+- iPod touch: app cards in the app switcher have all four corners rounded
+  (the tab bar at the bottom of some apps showed square corners).
 - EarPods: in landscape (video on the iPod touch or nano) the plug stayed
   where the jack was before the iPod turned. It now follows the jack.
 - The sides of every iPod are now one continuous surface. Seen edge-on or
@@ -103,5 +124,6 @@ First release.
 - Apple-style minimal Liquid Glass interface on white; works on phones and
   installs as a web app.
 
-[Unreleased]: https://github.com/PongsakornNaklang/iport/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/PongsakornNaklang/iport/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/PongsakornNaklang/iport/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/PongsakornNaklang/iport/releases/tag/v1.0.0

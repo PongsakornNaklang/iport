@@ -1,7 +1,7 @@
 {
   "name": "iport",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.1.0",
   "type": "module",
   "description": "iPod simulator for the web — multiple models, real OS feel, 3D, customizable.",
   "author": "Pongsakorn Naklang",

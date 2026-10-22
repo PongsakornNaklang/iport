@@ -673,6 +673,52 @@ button {
     bottom: 32px;
   }
 }
+/*
+ * With a mouse, the pill waits off the right edge and slides in when the
+ * pointer comes near (ViewControls.tsx); a thin grip marks where it is.
+ * Next to an open side panel it stays out.
+ */
+@media (min-width: 721px) and (hover: hover) {
+  .view-controls.autohide {
+    transform: translate(calc(100% + 28px), -50%);
+    opacity: 0;
+    pointer-events: none;
+    transition:
+      transform 420ms var(--ease),
+      opacity 260ms var(--ease),
+      right 520ms var(--ease);
+  }
+  .view-controls.autohide.peek,
+  .view-controls.autohide:has(:focus-visible),
+  .app:has(.panel.right) .view-controls.autohide {
+    transform: translateY(-50%);
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .vc-grip {
+    position: absolute;
+    right: 5px;
+    top: calc(50% + var(--topbar-h) / 2);
+    z-index: 9;
+    width: 4px;
+    height: 44px;
+    margin-top: -22px;
+    border-radius: 2px;
+    background: rgba(0, 0, 0, 0.16);
+    pointer-events: none;
+    transition: opacity 260ms var(--ease);
+  }
+  .vc-grip.peek,
+  .app:has(.panel.right) .vc-grip,
+  .app:has(.view-controls :focus-visible) .vc-grip {
+    opacity: 0;
+  }
+}
+@media not ((min-width: 721px) and (hover: hover)) {
+  .vc-grip {
+    display: none;
+  }
+}
 
 .hint {
   position: absolute;

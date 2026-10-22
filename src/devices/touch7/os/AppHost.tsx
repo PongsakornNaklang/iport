@@ -163,7 +163,8 @@ const AppFrame = memo(function AppFrame({
         if (n && n !== host) setHost(n);
       }}
       className={`t7-frame ${visible ? '' : 'is-hidden'} ${switcher ? 'as-card' : ''} ${instant ? 'instant' : ''} ${closing ? 'closing' : ''}`}
-      style={{ zIndex: fg && !switcher ? 50 : z, transform, borderRadius: radius }}
+      // clip-path as well: a blurred bar (backdrop-filter) escapes a rounded overflow clip
+      style={{ zIndex: fg && !switcher ? 50 : z, transform, borderRadius: radius, clipPath: `inset(0 round ${radius}px)` }}
     >
       <AppContent id={id} active={active} host={host} bg={bg} />
       {zoomIcon && (

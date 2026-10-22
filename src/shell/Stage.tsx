@@ -26,7 +26,9 @@ const TOP_BAR = 64;
 const BOTTOM_BAR = 76;
 const SIDE_BAR = 68;
 const WIDE = 720;
-const barsFor = (width: number) => (width > WIDE ? { bottom: 28, right: SIDE_BAR } : { bottom: BOTTOM_BAR, right: 0 });
+/** with a mouse the side controls hide off the edge until wanted (ViewControls.tsx), so they need no room */
+const hoverable = () => typeof window !== 'undefined' && !!window.matchMedia?.('(hover: hover)').matches;
+const barsFor = (width: number) => (width > WIDE ? { bottom: 28, right: hoverable() ? 0 : SIDE_BAR } : { bottom: BOTTOM_BAR, right: 0 });
 
 
 /**
@@ -61,15 +63,15 @@ export function Stage() {
   const cover = useMemo<CoverInfo | null>(() => {
     const fit = model.cover;
     if (!fit || coverKind === 'none' || (coverKind !== 'sock' && !fit.cases)) return null;
-    return { fit, choice: { kind: coverKind, color: coverColor }, pxPerMm: model.jack?.pxPerMm ?? 6.4, size: model.size, jackNy: model.jack?.ny };
+    return { fit, choice: { kind: coverKind, color: coverColor }, pxPerMm: model.jack?.pxPerMm ?? 6.4, size: model.size };
   }, [model, coverKind, coverColor]);
   const outer = useMemo(() => {
     if (!cover || cover.choice.kind === 'none') return model.size;
-    const g = coverGeometry(cover.fit, cover.choice.kind, cover.pxPerMm, cover.size, cover.jackNy);
+    const b = coverGeometry(cover.fit, cover.choice.kind, cover.pxPerMm, cover.size).bounds;
     return {
-      width: Math.max(model.size.width, g.w),
-      height: Math.max(model.size.height, g.h + 2 * Math.abs(g.cy)),
-      depth: Math.max(model.size.depth, g.d),
+      width: Math.max(model.size.width, b.width),
+      height: Math.max(model.size.height, b.height),
+      depth: Math.max(model.size.depth, b.depth),
     };
   }, [cover, model]);
 
@@ -264,12 +266,15 @@ export function Stage() {
   const Device = useMemo(() => deviceComponent(model), [model]);
   // inside the device's own 3D root, so they turn with it (see bodySlot)
   const bodyExtras = useMemo(
-    () => (
-      <>
-        {cover && <Cover info={cover} />}
-        <JackMarkers model={model} markerRef={jackRef} />
-      </>
-    ),
+    () => ({
+      before: (
+        <>
+          {cover && <Cover info={cover} />}
+          <JackMarkers model={model} markerRef={jackRef} />
+        </>
+      ),
+      after: cover && <Cover info={cover} after />,
+    }),
     [cover, model],
   );
   const scale = fit * zoom;

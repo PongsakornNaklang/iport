@@ -31,9 +31,34 @@ export interface Appearance {
   finishId?: string;
   /** what the iPod is wearing: a case or an iPod Sock */
   cover?: CoverChoice;
+  /** stickers and engraved text on the back */
+  decals?: Decal[];
 }
 
-export type CoverKind = 'none' | 'silicone' | 'leather' | 'sock';
+/**
+ * A sticker or a line of engraved text on the back. Positions are fractions
+ * of the back as you look at it (0,0 top left, 1,1 bottom right), so the
+ * same design fits every model.
+ */
+export interface Decal {
+  id: string;
+  kind: 'sticker' | 'text';
+  x: number;
+  y: number;
+  /** sticker: width as a fraction of the back's width; text: letter height, likewise */
+  size: number;
+  /** degrees, clockwise */
+  rotate: number;
+  /** sticker: an emoji, or an image (data URL) */
+  emoji?: string;
+  image?: string;
+  text?: string;
+  font?: DecalFont;
+}
+
+export type DecalFont = 'helvetica' | 'serif' | 'script' | 'mono';
+
+export type CoverKind = 'none' | 'silicone' | 'leather' | 'clear' | 'sock';
 
 export interface CoverChoice {
   kind: CoverKind;

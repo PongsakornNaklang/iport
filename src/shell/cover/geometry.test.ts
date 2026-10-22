@@ -6,11 +6,10 @@ import { coverGeometry, holeMask, holesOnFacet, roundedInset } from './geometry'
 const fitted = MODELS.filter((m) => m.cover && m.jack);
 
 describe('cover geometry', () => {
-  it('leaves room for the iPod inside every cover', () => {
-    for (const m of fitted) {
-      for (const kind of ['silicone', 'leather', 'sock'] as const) {
-        if (kind !== 'sock' && !m.cover!.cases) continue;
-        const g = coverGeometry(m.cover!, kind, m.jack!.pxPerMm, m.size, m.jack!.ny);
+  it('leaves room for the iPod inside every case', () => {
+    for (const m of fitted.filter((x) => x.cover!.cases)) {
+      for (const kind of ['silicone', 'leather', 'clear'] as const) {
+        const g = coverGeometry(m.cover!, kind, m.jack!.pxPerMm, m.size);
         expect(g.w).toBeGreaterThan(m.size.width);
         expect(g.h).toBeGreaterThan(m.size.height);
         expect(g.d).toBeGreaterThan(m.size.depth);
@@ -24,7 +23,7 @@ describe('cover geometry', () => {
 
   it('cuts every case hole into the facets of the wall it is on', () => {
     for (const m of fitted.filter((x) => x.cover!.cases)) {
-      const g = coverGeometry(m.cover!, 'silicone', m.jack!.pxPerMm, m.size, m.jack!.ny);
+      const g = coverGeometry(m.cover!, 'silicone', m.jack!.pxPerMm, m.size);
       const facets = buildShell(g.w, g.h, g.d, g.radius, (u) => ({ inset: roundedInset(u, g.d, g.round), color: '#000' }));
       for (const hole of g.holes) {
         const hit = facets.filter((fa) => holesOnFacet(fa, [hole]).length > 0);
@@ -35,14 +34,34 @@ describe('cover geometry', () => {
     }
   });
 
-  it('opens a sock at its headphone end', () => {
-    const touch = fitted.find((m) => m.id === 'touch7')!;
-    const g = coverGeometry(touch.cover!, 'sock', touch.jack!.pxPerMm, touch.size, 1);
-    expect(g.mouth).toBe('bottom');
-    expect(g.holes).toHaveLength(1);
-    expect(g.holes[0].n).toEqual([0, 1, 0]);
-    // the slack is at the closed end
-    expect(g.cy).toBeLessThan(0);
+  it('puts the iPod in a one-piece sock, pulled a third of the way out', () => {
+    for (const m of fitted) {
+      const g = coverGeometry(m.cover!, 'sock', m.jack!.pxPerMm, m.size);
+      const s = g.sock!;
+      const H = m.size.height;
+      const rows = s.rows;
+      // the opening a third of the way down; the sleeve runs past the iPod's bottom
+      expect(s.mouth).toBeGreaterThan(-H / 2 + H * 0.25);
+      expect(s.mouth).toBeLessThan(0);
+      expect(rows[0].y).toBe(s.mouth);
+      expect(rows[s.sleeve].y).toBeGreaterThan(H / 2);
+      // the sleeve holds the iPod
+      expect(rows[0].w).toBeGreaterThan(m.size.width);
+      expect(rows[0].d).toBeGreaterThan(m.size.depth);
+      // one piece: rows go down, never wider than the sleeve, and close in a flat seam
+      for (let i = 1; i < rows.length; i++) {
+        expect(rows[i].y).toBeGreaterThan(rows[i - 1].y);
+        expect(rows[i].w).toBeLessThanOrEqual(rows[0].w + 1e-9);
+        expect(rows[i].d).toBeLessThanOrEqual(rows[i - 1].d + 1e-9);
+      }
+      expect(rows[rows.length - 1].d).toBeLessThan(rows[0].d * 0.05);
+      // the cuff is the top part; the stage makes room for the whole sock
+      expect(s.cuffEnd).toBeGreaterThan(s.mouth);
+      expect(s.cuffEnd).toBeLessThan(rows[s.sleeve].y);
+      expect(g.bounds.height / 2).toBeGreaterThanOrEqual(rows[rows.length - 1].y);
+      // the toe bends below the narrowing
+      for (const h of s.hinges) expect(rows[h].y).toBeGreaterThan(rows[s.sleeve].y);
+    }
   });
 
   it('draws holes as cut-outs in an otherwise full mask', () => {

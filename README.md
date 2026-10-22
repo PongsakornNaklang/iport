@@ -47,15 +47,17 @@ just like a real iPod.
 ### Real 3D
 
 Drag the background to spin the iPod, scroll to zoom, or use Front, Back, Side
-and 360° on the right edge of the window (along the bottom on phones).
+and 360°: move the pointer to the right edge of the window and they slide in
+(along the bottom on phones).
 
 ![iPod classic seen at an angle, showing its thickness and edges](docs/screenshots/classic-side.png)
 
 ### Make it yours
 
 Every colored part, the materials, wallpapers, screen theme, engraving on the
-back and the backdrop. Put it in a silicone or leather case, or in one of
-Apple's knitted iPod Socks. Save a design as a preset, share it as a link, or export
+back and the backdrop. Put it in a silicone, leather or clear case, or in one
+of Apple's knitted iPod Socks, and cover the back in stickers and engraved
+text wherever you like. Save a design as a preset, share it as a link, or export
 all your presets to a file.
 
 ![The Customize panel next to an iPod classic](docs/screenshots/customize.png)

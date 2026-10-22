@@ -1,0 +1,51 @@
+/* Stickers and engraved text on the back (BackDecals.tsx) */
+.dc-layer {
+  position: absolute;
+  inset: 0;
+  container-type: inline-size;
+  pointer-events: none;
+}
+.dc-mark {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1px;
+  height: 1px;
+  visibility: hidden;
+}
+.dc-decal {
+  position: absolute;
+  pointer-events: auto;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.dc-decal:active {
+  cursor: grabbing;
+}
+.dc-decal.on {
+  outline: 1.5px dashed rgba(0, 122, 255, 0.85);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+/* a die-cut vinyl sticker: white border, a little lift, a soft sheen */
+.dc-sticker svg,
+.dc-sticker img {
+  display: block;
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(1.5px 0 0 #fff) drop-shadow(-1.5px 0 0 #fff) drop-shadow(0 1.5px 0 #fff) drop-shadow(0 -1.5px 0 #fff)
+    drop-shadow(0 1px 1.5px rgba(0, 0, 0, 0.28));
+}
+.dc-sticker img {
+  border-radius: 6%;
+}
+/* engraved: the device's own engraving ink, cut into the surface */
+.dc-text {
+  white-space: pre;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  color: var(--dc-ink);
+  text-shadow: var(--dc-shadow);
+}

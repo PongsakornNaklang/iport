@@ -139,6 +139,8 @@ const FACE_GAP = 0.08;
 export interface ShellDetail {
   bandPx?: number;
   curveTol?: number;
+  /** leave the top wall (and its corners) out: an open top, like a sock's mouth */
+  open?: 'top';
 }
 
 export function makeBands(edge: (t: number) => ShellSlice, depth: number, breaks: number[] = [], detail: ShellDetail = {}): Band[] {
@@ -345,13 +347,15 @@ export function buildShell(
 
     // straight walls (each runs between its corners whatever the inset)
     const none = () => 0;
-    add('top', [rx[0], b.ia], [W - rx[1], b.ia], [rx[0], b.ib], [W - rx[1], b.ib], [0, -1], (i) => [W / 2, i], none);
+    const openTop = detail?.open === 'top';
+    if (!openTop) add('top', [rx[0], b.ia], [W - rx[1], b.ia], [rx[0], b.ib], [W - rx[1], b.ib], [0, -1], (i) => [W / 2, i], none);
     add('right', [W - b.ia, ry[1]], [W - b.ia, H - ry[2]], [W - b.ib, ry[1]], [W - b.ib, H - ry[2]], [1, 0], (i) => [W - i, H / 2], none);
     add('bottom', [W - rx[2], H - b.ia], [rx[3], H - b.ia], [W - rx[2], H - b.ib], [rx[3], H - b.ib], [0, 1], (i) => [W / 2, H - i], none);
     add('left', [b.ia, H - ry[3]], [b.ia, ry[0]], [b.ib, H - ry[3]], [b.ib, ry[0]], [-1, 0], (i) => [i, H / 2], none);
 
     // rounded corners
     corners.forEach(({ c, a0, rx: cx, ry: cy, K }, ci) => {
+      if (openTop && ci < 2) return;
       const halfStep = Math.PI / 4 / K;
       // the corner's outline at inset i, at angle t
       const p = (i: number, t: number): V2 => [c[0] + Math.max(0, cx - i) * Math.cos(t), c[1] + Math.max(0, cy - i) * Math.sin(t)];

@@ -439,7 +439,8 @@
   transform-origin: 50% 50%;
   transition:
     transform 420ms var(--t7-ease),
-    border-radius 420ms var(--t7-ease);
+    border-radius 420ms var(--t7-ease),
+    clip-path 420ms var(--t7-ease);
   background: #000;
   will-change: transform;
 }
