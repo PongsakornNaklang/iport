@@ -17,8 +17,8 @@ music (or stream from YouTube, SoundCloud and free sources), spin it around in
 | iPod shuffle (4th generation) | 2010 | Clickable control pad, three-way switch, status light, VoiceOver with spoken playlists |
 | iPod classic (6th generation, 160GB) | 2009 | Click Wheel, Cover Flow, Now Playing with Genius and lyrics, On-The-Go, Extras, full Settings, five games |
 | iPod (5th generation, "iPod video", 30GB) | 2005 | Glossy white or black front (and the U2 Special Edition), headphone jack on top, the Click Wheel software from before Cover Flow and Genius |
-| iPod nano (4th generation, "chromatic", 8GB) | 2008 | Nine colours of curved aluminium, a tall 240 × 320 screen, Cover Flow and Genius |
-| iPod mini (2nd generation, 6GB) | 2005 | Anodized aluminium with coloured Click Wheel labels and end caps, a grey-blue monochrome screen, music only |
+| iPod nano (4th generation, "chromatic", 8GB) | 2008 | Nine colours of curved aluminium, a tall 240 × 320 screen, Cover Flow and Genius; turns on its side for Cover Flow, video and photos, shake to shuffle |
+| iPod mini (2nd generation, 6GB) | 2005 | Anodized aluminium with coloured Click Wheel labels and end caps, a grey-blue monochrome screen (Contrast, no artwork), music only |
 
 ### iPod classic
 

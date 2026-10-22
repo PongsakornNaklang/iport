@@ -37,6 +37,19 @@ The running app shows its version and build in the Help panel (?).
   right, its Hold switch top left; the 5th generation's jack is 8.1 mm from
   the right; the iPod classic's jack is on top too, 8.1 mm from the right,
   as in Apple's 80GB and 160GB drawings). Case holes moved to match.
+- Each Click Wheel iPod runs its own software, not the classic's:
+  - iPod mini: no album art anywhere on its grey screen, Now Playing as
+    text, Contrast instead of Brightness, Backlight at the end of the main
+    menu, Podcasts in the Music menu, and its four games (Brick, Music Quiz,
+    Parachute, Solitaire); no stopwatch, screen lock or voice memos.
+  - iPod (5th generation): starts up with a black Apple on white, Backlight
+    in the main menu, Podcasts in the Music menu, the same four games.
+  - iPod nano (4th generation): Now Playing laid out for its tall screen
+    (artwork on top); it turns itself on its side for Cover Flow, videos and
+    photos; shake it (a phone shaken, or the iPod dragged quickly back and
+    forth) to shuffle the songs, which Settings ▸ Shake can turn off;
+    Klondike and Vortex.
+  - iPod classic: Klondike, Music Quiz and Vortex.
 - The model chooser is a carousel on every screen: on a computer about five
   iPods across, with arrows, page dots, the wheel or a drag to move along.
   Only the iPod in the middle and its neighbours are live 3D; the rest are

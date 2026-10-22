@@ -33,7 +33,7 @@ import { SettingsMenu } from './screens/Settings';
 
 export const R = {
   music: (): ScreenSpec => ({ title: 'Music', el: <MusicMenu /> }),
-  coverFlow: (): ScreenSpec => ({ title: 'Cover Flow', el: <CoverFlow />, header: 'dark', kind: 'coverflow' }),
+  coverFlow: (): ScreenSpec => ({ title: 'Cover Flow', el: <CoverFlow />, header: 'dark', kind: 'coverflow', landscape: true }),
   geniusMixes: (): ScreenSpec => ({ title: 'Genius Mixes', el: <GeniusMixesScreen /> }),
   genius: (seedId: string): ScreenSpec => ({ title: 'Genius', el: <GeniusScreen seedId={seedId} /> }),
   playlists: (): ScreenSpec => ({ title: 'Playlists', el: <PlaylistsScreen /> }),

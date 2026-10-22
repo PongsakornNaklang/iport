@@ -32,7 +32,16 @@ const SPEC: ClickWheelSpec = {
   wordmark: 'iPod',
   frontCurve: true,
   capacityBadge: true,
-  caps: { splitMenu: false },
+  // software 1.0.4: Klondike and Vortex (and Maze, which tilts the iPod: not here
+  // yet); the motion sensor shuffles on a shake and shows Cover Flow sideways
+  caps: {
+    splitMenu: false,
+    gameList: [
+      { id: 'solitaire', name: 'Klondike' },
+      { id: 'vortex', name: 'Vortex' },
+    ],
+    motion: true,
+  },
 };
 
 export default function IpodNano4(props: DeviceProps) {

@@ -9,6 +9,7 @@
  */
 import type { DeviceProps } from '../types';
 import { ClickWheelIpod, type ClickWheelSpec } from '../classic/ClickWheelIpod';
+import { EARLY_GAMES } from '../classic/os/core';
 
 const SPEC: ClickWheelSpec = {
   info: (finishId) => ({
@@ -30,7 +31,11 @@ const SPEC: ClickWheelSpec = {
   holdLen: 67,
   edgeMarks: true,
   modelNo: 'A1136',
-  caps: { coverFlow: false, genius: false, splitMenu: false },
+  // software 1.3: Podcasts in the Music menu, Backlight in the main menu, four
+  // games; recording needs a microphone accessory
+  caps: { coverFlow: false, genius: false, splitMenu: false, voiceMemos: false, backlightItem: true, gameList: EARLY_GAMES },
+  // the 5th generation started up with a black Apple on a white screen
+  bootStyle: 'light',
 };
 
 export default function IpodVideo(props: DeviceProps) {

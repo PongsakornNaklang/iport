@@ -3,11 +3,11 @@ import { allTracks, songs, useTracks } from '../../../../core/library/selectors'
 import { useLibrary } from '../../../../core/library/store';
 import { EQ_PRESET_NAMES } from '../../../../core/player/eq';
 import { player } from '../../../../core/player/player';
-import { DEFAULT_MAIN_MENU, DEFAULT_MUSIC_MENU, useSettings, type AudiobookSpeed, type ClickerMode } from '../../../../core/settings/store';
+import { DEFAULT_MAIN_MENU, DEFAULT_MUSIC_MENU, useDeviceSetting, useSettings, type AudiobookSpeed, type ClickerMode } from '../../../../core/settings/store';
 import type { RepeatMode, ShuffleMode } from '../../../../core/types';
 import { formatBytes, formatClock } from '../../../../core/util/format';
 import { useNow } from '../../../../core/util/hooks';
-import { clamp, useInput, useOS } from '../core';
+import { clamp, CONTRAST_DEFAULT, useInput, useOS } from '../core';
 import { ChoiceList, cycleRow, TextScreen, toggleRow } from '../common';
 import { LockGlyph } from '../glyphs';
 import { ListView, type Row } from '../ListView';
@@ -42,18 +42,26 @@ const AUDIOBOOKS: { value: AudiobookSpeed; label: string }[] = [
   { value: 'normal', label: 'Normal' },
   { value: 'faster', label: 'Faster' },
 ];
+const SHAKE = [
+  { value: 'shuffle', label: 'Shuffle' },
+  { value: 'off', label: 'Off' },
+];
 const LANGUAGES = ['English', 'ไทย', 'Deutsch', 'Español', 'Français', 'Italiano', '日本語', '한국어', 'Nederlands', 'Português', 'Русский', '简体中文', '繁體中文', 'Svenska', 'Türkçe'];
 
 export function SettingsMenu() {
   const os = useOS();
   const s = useSettings();
   const push = (title: string, el: React.ReactElement) => os.nav.push({ title, el });
+  const [shake, setShake] = useDeviceSetting<string>(os.modelId, 'shake', 'shuffle');
   const rows: Row[] = [
     { key: 'about', label: 'About', chevron: true, onSelect: () => push('About', <AboutScreen />) },
     cycleRow('Shuffle', s.shuffle, SHUFFLE, (v) => player.setShuffle(v)),
     cycleRow('Repeat', s.repeat, REPEAT, (v) => player.setRepeat(v)),
+    // the nano 4G's motion sensor: shake to shuffle
+    ...(os.caps.motion ? [cycleRow('Shake', shake, SHAKE, setShake)] : []),
     { key: 'mainmenu', label: 'Main Menu', chevron: true, onSelect: () => push('Main Menu', <MenuToggles which="mainMenu" />) },
-    { key: 'musicmenu', label: 'Music Menu', chevron: true, onSelect: () => push('Music Menu', <MenuToggles which="musicMenu" />) },
+    // the Music menu became customisable with the classic
+    ...(os.caps.backlightItem ? [] : [{ key: 'musicmenu', label: 'Music Menu', chevron: true, onSelect: () => push('Music Menu', <MenuToggles which="musicMenu" />) }]),
     { key: 'vlimit', label: 'Volume Limit', chevron: true, onSelect: () => push('Volume Limit', <LevelScreen kind="limit" />) },
     {
       key: 'backlight',
@@ -62,8 +70,10 @@ export function SettingsMenu() {
       chevron: true,
       onSelect: () => push('Backlight', <ChoiceList choices={BACKLIGHT} value={s.backlight} onPick={(v) => s.set('backlight', v)} />),
     },
-    { key: 'brightness', label: 'Brightness', chevron: true, onSelect: () => push('Brightness', <LevelScreen kind="brightness" />) },
-    toggleRow('Audio Crossfade', s.crossfade, (v) => s.set('crossfade', v)),
+    os.caps.contrast
+      ? { key: 'contrast', label: 'Contrast', chevron: true, onSelect: () => push('Contrast', <LevelScreen kind="contrast" />) }
+      : { key: 'brightness', label: 'Brightness', chevron: true, onSelect: () => push('Brightness', <LevelScreen kind="brightness" />) },
+    ...(os.caps.backlightItem ? [] : [toggleRow('Audio Crossfade', s.crossfade, (v) => s.set('crossfade', v))]),
     toggleRow('Sound Check', s.soundCheck, (v) => s.set('soundCheck', v)),
     {
       key: 'eq',
@@ -149,14 +159,17 @@ function MenuToggles({ which }: { which: 'mainMenu' | 'musicMenu' }) {
   return <ListView rows={rows} />;
 }
 
-/** Volume Limit / Brightness: a bar adjusted with the wheel. */
-function LevelScreen({ kind }: { kind: 'limit' | 'brightness' }) {
+/** Volume Limit / Brightness / Contrast (the mini's grey LCD): a bar adjusted with the wheel. */
+function LevelScreen({ kind }: { kind: 'limit' | 'brightness' | 'contrast' }) {
   const os = useOS();
-  const value = useSettings((s) => (kind === 'limit' ? s.volumeLimit : s.brightness));
+  const shared = useSettings((s) => (kind === 'limit' ? s.volumeLimit : s.brightness));
+  const [contrast, setContrast] = useDeviceSetting<number>(os.modelId, 'contrast', CONTRAST_DEFAULT);
+  const value = kind === 'contrast' ? contrast : shared;
   useInput((e) => {
     if (e.type === 'scroll') {
-      const v = clamp(value + e.steps / 32, kind === 'brightness' ? 0.15 : 0.05, 1);
-      useSettings.getState().set(kind === 'limit' ? 'volumeLimit' : 'brightness', v);
+      const v = clamp(value + e.steps / 32, kind === 'limit' ? 0.05 : 0.15, 1);
+      if (kind === 'contrast') setContrast(v);
+      else useSettings.getState().set(kind === 'limit' ? 'volumeLimit' : 'brightness', v);
       return true;
     }
     if (e.type === 'click' && e.button === 'select') {
@@ -173,15 +186,22 @@ function LevelScreen({ kind }: { kind: 'limit' | 'brightness' }) {
       ))}
     </svg>
   );
+  // contrast: a circle, half dark
+  const half = (big: boolean) => (
+    <svg width={big ? 18 : 12} height={big ? 18 : 12} viewBox="-10 -10 20 20" aria-hidden>
+      <circle r="8" fill="none" stroke="#333" strokeWidth="1.6" />
+      <path d="M0 -8a8 8 0 0 1 0 16z" fill="#333" />
+    </svg>
+  );
   return (
     <div className="cl-level">
       <div className="cl-level-caption">{kind === 'limit' ? 'Set the maximum volume' : ''}</div>
       <div className="cl-level-row">
-        {kind === 'limit' ? <LockGlyph size={13} /> : sun(false)}
+        {kind === 'limit' ? <LockGlyph size={13} /> : kind === 'contrast' ? half(false) : sun(false)}
         <div className="cl-bar cl-bar-big">
           <div className="cl-bar-fill" style={{ width: `${value * 100}%` }} />
         </div>
-        {kind === 'limit' ? <span className="cl-level-pct">{value >= 1 ? 'Off' : `${Math.round(value * 100)}%`}</span> : sun(true)}
+        {kind === 'limit' ? <span className="cl-level-pct">{value >= 1 ? 'Off' : `${Math.round(value * 100)}%`}</span> : kind === 'contrast' ? half(true) : sun(true)}
       </div>
       <div className="cl-level-hint">Press center to confirm</div>
     </div>

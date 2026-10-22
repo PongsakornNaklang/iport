@@ -118,6 +118,8 @@ export function MusicMenu() {
       { label: 'Albums', go: () => os.nav.push(R.albums()) },
       { label: 'Compilations', go: () => os.nav.push(R.compilations()) },
       { label: 'Songs', go: () => os.nav.push(R.songs()) },
+      // the iPods before the classic kept Podcasts here, not in the main menu
+      { label: 'Podcasts', go: () => os.nav.push(R.podcasts()), cap: os.caps.podcasts && os.caps.backlightItem },
       { label: 'Genres', go: () => os.nav.push(R.genres()) },
       { label: 'Composers', go: () => os.nav.push(R.composers()) },
       { label: 'Audiobooks', go: () => os.nav.push(R.audiobooks()) },

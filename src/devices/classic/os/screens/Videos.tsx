@@ -10,7 +10,7 @@ import { ListView, type Row } from '../ListView';
 import { NowPlaying } from './NowPlaying';
 
 export function videoNowPlaying(): ScreenSpec {
-  return { title: 'Now Playing', el: <NowPlaying video />, kind: 'nowplaying', header: 'hidden' };
+  return { title: 'Now Playing', el: <NowPlaying video />, kind: 'nowplaying', header: 'hidden', landscape: true };
 }
 
 export function playVideos(os: OSApi, ids: string[], i: number) {

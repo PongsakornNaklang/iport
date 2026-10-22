@@ -34,8 +34,8 @@ export function ExtrasMenu() {
       ['Contacts', EX.contacts],
       ['Games', EX.games, os.caps.games],
       ['Notes', EX.notes],
-      ['Screen Lock', EX.screenLock],
-      ['Stopwatch', EX.stopwatch],
+      ['Screen Lock', EX.screenLock, os.caps.screenLock],
+      ['Stopwatch', EX.stopwatch, os.caps.stopwatch],
       ['Voice Memos', EX.voiceMemos, os.caps.voiceMemos],
     ];
     return items.filter(([, , cap]) => cap !== false).map(([label, spec]) => ({ key: label, label, chevron: true, onSelect: () => os.nav.push(spec()) }));
@@ -45,7 +45,11 @@ export function ExtrasMenu() {
 
 function GamesScreen() {
   const os = useOS();
-  const rows = useMemo<Row[]>(() => GAMES.map((g) => ({ key: g.id, label: g.name, onSelect: () => os.runGame(g.id) })), [os]);
+  // the games this iPod came with, under the names it used
+  const rows = useMemo<Row[]>(
+    () => os.caps.gameList.filter((g) => GAMES.some((x) => x.id === g.id)).map((g) => ({ key: g.id, label: g.name, onSelect: () => os.runGame(g.id) })),
+    [os],
+  );
   return <ListView rows={rows} empty="No Games" />;
 }
 

@@ -45,6 +45,16 @@ export interface OSCaps {
   voiceMemos: boolean;
   podcasts: boolean;
   search: boolean;
+  stopwatch: boolean;
+  screenLock: boolean;
+  /** "Backlight" at the end of the main menu (the iPods before the classic) */
+  backlightItem: boolean;
+  /** Settings has Contrast (a grey LCD) rather than Brightness */
+  contrast: boolean;
+  /** the games in Extras ▸ Games, by id, with the name this iPod used */
+  gameList: { id: string; name: string }[];
+  /** a motion sensor (nano 4G): shake to shuffle, turn it sideways for Cover Flow */
+  motion: boolean;
 }
 
 export const FULL_CAPS: OSCaps = {
@@ -57,7 +67,29 @@ export const FULL_CAPS: OSCaps = {
   voiceMemos: true,
   podcasts: true,
   search: true,
+  stopwatch: true,
+  screenLock: true,
+  backlightItem: false,
+  contrast: false,
+  // iPod classic: iQuiz, Klondike and Vortex (Music Quiz stands in for iQuiz)
+  gameList: [
+    { id: 'solitaire', name: 'Klondike' },
+    { id: 'musicquiz', name: 'Music Quiz' },
+    { id: 'vortex', name: 'Vortex' },
+  ],
+  motion: false,
 };
+
+/** Contrast (a grey LCD's setting, 0..1) as it comes */
+export const CONTRAST_DEFAULT = 0.5;
+
+/** the four games of the iPods before the classic (5th generation, mini) */
+export const EARLY_GAMES: OSCaps['gameList'] = [
+  { id: 'brick', name: 'Brick' },
+  { id: 'musicquiz', name: 'Music Quiz' },
+  { id: 'parachute', name: 'Parachute' },
+  { id: 'solitaire', name: 'Solitaire' },
+];
 
 export interface DeviceInfo {
   /** product name, "iPod classic" */
@@ -83,6 +115,8 @@ export interface ScreenSpec {
   header?: HeaderStyle;
   /** identifies special screens ('main', 'nowplaying'…) */
   kind?: string;
+  /** shown sideways on an iPod with a motion sensor (nano 4G: Cover Flow, video, photos) */
+  landscape?: boolean;
 }
 
 export interface Entry extends ScreenSpec {
@@ -138,6 +172,8 @@ export interface OSApi {
   menu(spec: ContextMenuSpec): void;
   hud(text: string, icon?: ReactNode): void;
   lockScreen(): void;
+  /** turn the backlight on or off (the main menu's Backlight item) */
+  toggleBacklight(): void;
   /** Run a game full screen (the OS hands it a private WheelBus). */
   runGame(id: string): void;
 }

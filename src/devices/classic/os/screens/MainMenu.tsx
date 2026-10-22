@@ -48,7 +48,8 @@ export function MainMenu() {
     if (caps.search && on('Search')) add('Search', 'music', () => nav.push(R.search()));
     if (caps.video && on('Videos', true)) add('Videos', 'videos', () => nav.push(R.videos()));
     if (caps.photos && on('Photos', true)) add('Photos', 'photos', () => nav.push(R.photos()));
-    if (caps.podcasts && on('Podcasts', true)) add('Podcasts', 'podcasts', () => nav.push(R.podcasts()));
+    // before the classic, Podcasts lived in the Music menu
+    if (caps.podcasts && !caps.backlightItem && on('Podcasts', true)) add('Podcasts', 'podcasts', () => nav.push(R.podcasts()));
     if (on('iTunes U')) add('iTunes U', 'podcasts', () => nav.push({ title: 'iTunes U', el: <ListView rows={[]} empty="No iTunes U" /> }));
     if (on('Radio')) add('Radio', 'music', () => nav.push({ title: 'Radio', el: <RadioScreen /> }));
     if (on('Extras', true)) add('Extras', 'extras', () => nav.push(R.extras()));
@@ -68,6 +69,7 @@ export function MainMenu() {
         },
         false,
       );
+    if (caps.backlightItem) add('Backlight', 'settings', () => os.toggleBacklight(), false);
     if (hasNP && on('Now Playing', true)) add('Now Playing', 'nowplaying', () => nav.nowPlaying());
     return list;
   }, [mm, caps, nav, os, hasNP]);

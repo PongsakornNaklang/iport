@@ -9,6 +9,7 @@
  */
 import type { DeviceProps } from '../types';
 import { ClickWheelIpod, type ClickWheelSpec } from '../classic/ClickWheelIpod';
+import { EARLY_GAMES } from '../classic/os/core';
 
 const SPEC: ClickWheelSpec = {
   info: () => ({
@@ -32,7 +33,24 @@ const SPEC: ClickWheelSpec = {
   wordmark: 'iPod',
   mono: true,
   endCaps: true,
-  caps: { video: false, photos: false, coverFlow: false, genius: false, splitMenu: false, search: false },
+  // software 1.4.1: music only, Podcasts in the Music menu, Backlight in the main
+  // menu, Contrast for the grey LCD, four games; no stopwatch, screen lock or recording
+  caps: {
+    video: false,
+    photos: false,
+    coverFlow: false,
+    genius: false,
+    splitMenu: false,
+    search: false,
+    voiceMemos: false,
+    stopwatch: false,
+    screenLock: false,
+    backlightItem: true,
+    contrast: true,
+    gameList: EARLY_GAMES,
+  },
+  // a dark Apple on the grey LCD
+  bootStyle: 'light',
 };
 
 export default function IpodMini(props: DeviceProps) {

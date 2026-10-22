@@ -5,7 +5,7 @@
  * much of the edge the front covers, where the headphone jack is, what
  * the back says and what the software can do.
  */
-import { useContext, useEffect, useMemo, useState, type CSSProperties } from 'react';
+import { useContext, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { Box3D, Device3D, type EdgeSlice } from '../../shell/Device3D';
 import { BodyExtras, BodySlotContext, sockHint, useSockMouth } from '../../shell/bodySlot';
 import { Decals } from '../../shell/decals/Decals';
@@ -39,6 +39,8 @@ export interface ClickWheelSpec {
   /** model number on the back ("A1238", and anything after it on that line) */
   modelNo: string;
   caps?: Partial<OSCaps>;
+  /** the start-up screen: an Apple on black (default) or on white */
+  bootStyle?: 'dark' | 'light';
   /**
    * The body. 'steel': a front plate on a mirror steel back that curves in
    * (classic, 5th generation). 'aluminium': one anodized piece whose sides
@@ -130,6 +132,16 @@ export function ClickWheelIpod({ model, appearance, spec }: DeviceProps & { spec
   const wheelCovered = mouth != null && WHEEL.cy - H / 2 > mouth;
   const pullSock = useContext(BodySlotContext).pullSock;
   const [hold, setHold] = useState(false);
+  // nano 4G: turned sideways for Cover Flow, video and photos (the OS asks)
+  const [sideways, setSideways] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const [fitSideways, setFitSideways] = useState(1);
+  useEffect(() => {
+    if (!sideways || !rootRef.current) return;
+    // on a narrow screen the iPod lying down must still fit
+    const r = rootRef.current.getBoundingClientRect();
+    setFitSideways(Math.min(1, (window.innerWidth * 0.94) / Math.max(1, r.height)));
+  }, [sideways]);
   const clicker = useSettings((s) => s.clicker) !== 'off';
   useWheelKeyboard(bus, true, clicker);
 
@@ -210,155 +222,169 @@ export function ClickWheelIpod({ model, appearance, spec }: DeviceProps & { spec
   const steelKnob = alu ? '#c9cbcf' : material === 'painted' ? shade(backColor, 0.05) : '#b6b9be';
 
   return (
-    <Device3D
-      width={W}
-      height={H}
-      depth={D}
-      radius={RADIUS}
-      under={<BodyExtras />}
-      over={<BodyExtras after />}
-      edge={edge}
-      breaks={alu ? undefined : [FRONT_T * 0.2, FRONT_T, FRONT_T + SEAM_T]}
-      backInset={backInset}
-      frontInset={frontInset}
-      frontStyle={frontStyle}
-      className="cl-device"
-      front={
-        <div className={`cl-front ${gloss ? 'cl-front-gloss' : ''} ${luminance(front) < 0.3 ? 'cl-front-dark' : ''}`}>
-          <div className="cl-front-sheen" />
-          {spec.frontCurve && <div className="cl-front-curve" />}
-          <div className="cl-window" style={{ left: winLeft, top: WINDOW.top - frontInset, width: WINDOW.w, height: WINDOW.h }}>
-            <div className="cl-lcd" style={{ left: (WINDOW.w - LCD.w) / 2, top: (WINDOW.h - LCD.h) / 2, width: LCD.w, height: LCD.h }}>
-              <ClickWheelOS
+    <div
+      ref={rootRef}
+      className="cl-root"
+      style={{ width: W, height: H, transform: sideways ? `rotate(-90deg) scale(${fitSideways})` : undefined }}
+    >
+      <Device3D
+        width={W}
+        height={H}
+        depth={D}
+        radius={RADIUS}
+        under={<BodyExtras />}
+        over={<BodyExtras after />}
+        edge={edge}
+        breaks={alu ? undefined : [FRONT_T * 0.2, FRONT_T, FRONT_T + SEAM_T]}
+        backInset={backInset}
+        frontInset={frontInset}
+        frontStyle={frontStyle}
+        className="cl-device"
+        front={
+          <div className={`cl-front ${gloss ? 'cl-front-gloss' : ''} ${luminance(front) < 0.3 ? 'cl-front-dark' : ''}`}>
+            <div className="cl-front-sheen" />
+            {spec.frontCurve && <div className="cl-front-curve" />}
+            <div className="cl-window" style={{ left: winLeft, top: WINDOW.top - frontInset, width: WINDOW.w, height: WINDOW.h }}>
+              <div className="cl-lcd" style={{ left: (WINDOW.w - LCD.w) / 2, top: (WINDOW.h - LCD.h) / 2, width: LCD.w, height: LCD.h }}>
+                <div
+                  className="cl-lcd-turn"
+                  // the picture stays upright: turned back the other way, a landscape screen
+                  style={sideways ? { width: LCD.h, height: LCD.w, transform: `translateX(${LCD.w}px) rotate(90deg)` } : { width: LCD.w, height: LCD.h }}
+                >
+                  <ClickWheelOS
+                    bus={bus}
+                    width={sideways ? LCD.h : LCD.w}
+                    height={sideways ? LCD.w : LCD.h}
+                    color={!spec.mono}
+                    theme={theme}
+                    hold={hold}
+                    modelId={model.id}
+                    info={info}
+                    caps={spec.caps}
+                    bootStyle={spec.bootStyle}
+                    onLandscape={spec.caps?.motion ? setSideways : undefined}
+                  />
+                </div>
+              </div>
+              <div className="cl-glass" />
+            </div>
+            <div className="cl-wheel-well" style={{ left: wheelLeft - 2, top: wheelTop - 2, width: WHEEL.size + 4, height: WHEEL.size + 4 }}>
+              <ClickWheel
                 bus={bus}
-                width={LCD.w}
-                height={LCD.h}
-                color={!spec.mono}
-                theme={theme}
-                hold={hold}
-                modelId={model.id}
-                info={info}
-                caps={spec.caps}
+                size={WHEEL.size}
+                centerSize={WHEEL.center}
+                wheelColor={colors.wheel ?? '#f6f6f6'}
+                labelColor={colors.labels ?? '#aeb0b4'}
+                centerColor={colors.center ?? '#d9dadc'}
+                clicker={clicker}
+                onBlockedTurn={wheelCovered ? turnBlocked : undefined}
+                onPullDown={pullSock}
+                style={{ position: 'absolute', left: 2, top: 2 }}
               />
             </div>
-            <div className="cl-glass" />
+            <Decals decals={appearance.decals} side="front" />
           </div>
-          <div className="cl-wheel-well" style={{ left: wheelLeft - 2, top: wheelTop - 2, width: WHEEL.size + 4, height: WHEEL.size + 4 }}>
-            <ClickWheel
-              bus={bus}
-              size={WHEEL.size}
-              centerSize={WHEEL.center}
-              wheelColor={colors.wheel ?? '#f6f6f6'}
-              labelColor={colors.labels ?? '#aeb0b4'}
-              centerColor={colors.center ?? '#d9dadc'}
-              clicker={clicker}
-              onBlockedTurn={wheelCovered ? turnBlocked : undefined}
-              onPullDown={pullSock}
-              style={{ position: 'absolute', left: 2, top: 2 }}
+        }
+        back={
+          alu ? (
+            <AluminiumBack
+              color={colors.back ?? front}
+              wordmark={spec.wordmark ?? 'iPod'}
+              engraving={appearance.engraving}
+              decals={appearance.decals}
+              capacity={info.capacity}
+              model={info.model}
+              modelNo={spec.modelNo}
+              badge={spec.capacityBadge}
             />
-          </div>
-          <Decals decals={appearance.decals} side="front" />
-        </div>
-      }
-      back={
-        alu ? (
-          <AluminiumBack
-            color={colors.back ?? front}
-            wordmark={spec.wordmark ?? 'iPod'}
+          ) : (
+            <ClassicBack
+            material={material}
+            color={backColor}
             engraving={appearance.engraving}
             decals={appearance.decals}
             capacity={info.capacity}
             model={info.model}
             modelNo={spec.modelNo}
-            badge={spec.capacityBadge}
-          />
-        ) : (
-          <ClassicBack
-          material={material}
-          color={backColor}
-          engraving={appearance.engraving}
-          decals={appearance.decals}
-          capacity={info.capacity}
-          model={info.model}
-          modelNo={spec.modelNo}
-          />
-        )
-      }
-      decals={
-        <>
-          {/* ---- top edge: Hold switch slot ---- */}
-          <EdgePlane x={holdX} y={-H / 2 + holdSlot.inset} z={holdSlot.z} w={holdLen} h={13} side="top" tilt={holdSlot.tilt}>
-            <div className={`cl-hold-slot ${hold ? 'on' : ''}`}>
-              <div className="cl-hold-orange" />
-            </div>
-          </EdgePlane>
-          {/* ---- printed on the top edge: HOLD to the right of the switch, headphones to the left of the jack ---- */}
-          {spec.edgeMarks && (
-            <>
-              <EdgePlane x={holdX + holdLen / 2 + 17} y={-H / 2 + holdSlot.inset} z={holdSlot.z} w={26} h={10} side="top" tilt={holdSlot.tilt}>
-                <div className="cl-edge-mark cl-edge-hold">HOLD</div>
-              </EdgePlane>
-              {jackTop && (
-                <EdgePlane x={spec.jack.x - 26} y={-H / 2 + port.inset} z={port.z} w={14} h={14} side="top" tilt={port.tilt}>
-                  <svg className="cl-edge-mark" viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M4 15v-3a8 8 0 0 1 16 0v3" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
-                    <rect x="3" y="14" width="5" height="7" rx="1.6" fill="currentColor" />
-                    <rect x="16" y="14" width="5" height="7" rx="1.6" fill="currentColor" />
-                  </svg>
+            />
+          )
+        }
+        decals={
+          <>
+            {/* ---- top edge: Hold switch slot ---- */}
+            <EdgePlane x={holdX} y={-H / 2 + holdSlot.inset} z={holdSlot.z} w={holdLen} h={13} side="top" tilt={holdSlot.tilt}>
+              <div className={`cl-hold-slot ${hold ? 'on' : ''}`}>
+                <div className="cl-hold-orange" />
+              </div>
+            </EdgePlane>
+            {/* ---- printed on the top edge: HOLD to the right of the switch, headphones to the left of the jack ---- */}
+            {spec.edgeMarks && (
+              <>
+                <EdgePlane x={holdX + holdLen / 2 + 17} y={-H / 2 + holdSlot.inset} z={holdSlot.z} w={26} h={10} side="top" tilt={holdSlot.tilt}>
+                  <div className="cl-edge-mark cl-edge-hold">HOLD</div>
                 </EdgePlane>
-              )}
-            </>
-          )}
-          {/* ---- the headphone jack (EarPods plug in here) ---- */}
-          <EdgePlane
-            x={spec.jack.x}
-            y={jackTop ? -H / 2 + port.inset : H / 2 - port.inset}
-            z={port.z}
-            w={30}
-            h={30}
-            side={jackTop ? 'top' : 'bottom'}
-            tilt={port.tilt}
-          >
-            <div className="cl-jack" />
-          </EdgePlane>
-          {/* ---- the mini's plastic end caps ---- */}
-          {spec.endCaps &&
-            (['top', 'bottom'] as const).map((side) => (
-              <EdgePlane key={side} x={0} y={side === 'top' ? -H / 2 - 0.2 : H / 2 + 0.2} z={0} w={W - 2 * RADIUS * 0.6} h={D * 0.72} side={side}>
-                <div className="cl-endcap" style={{ ['--cap' as string]: colors.caps ?? shade(front, -0.05) } as CSSProperties} />
-              </EdgePlane>
-            ))}
-          {/* ---- bottom edge: dock connector ---- */}
-          <EdgePlane x={L.dockX ?? 0} y={H / 2 - port.inset} z={port.z} w={L.dockW} h={20} side="bottom" tilt={port.tilt}>
-            <div className="cl-dock">
-              <div className="cl-dock-pins" />
-            </div>
-          </EdgePlane>
-        </>
-      }
-    >
-      <Box3D
-        x={knobX}
-        y={-H / 2 + insetAt(holdT) - 1.1}
-        z={zAt(holdT)}
-        w={Math.round(holdLen * 0.45)}
-        h={3}
-        d={9}
-        rotate={`rotateX(${holdSlot.tilt.toFixed(2)}deg)`}
-        color={shade(steelKnob, -0.15)}
-        faces={{
-          top: `repeating-linear-gradient(90deg, ${shade(steelKnob, 0.1)} 0 2px, ${shade(steelKnob, -0.08)} 2px 3.5px)`,
-          front: shade(steelKnob, -0.05),
-        }}
-        radius={1}
-        title={hold ? 'Hold is on (H)' : 'Hold switch (H)'}
-        onClick={(e) => {
-          e.stopPropagation();
-          setHold((h) => !h);
-        }}
-        className="cl-hold-knob"
-      />
-    </Device3D>
+                {jackTop && (
+                  <EdgePlane x={spec.jack.x - 26} y={-H / 2 + port.inset} z={port.z} w={14} h={14} side="top" tilt={port.tilt}>
+                    <svg className="cl-edge-mark" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M4 15v-3a8 8 0 0 1 16 0v3" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+                      <rect x="3" y="14" width="5" height="7" rx="1.6" fill="currentColor" />
+                      <rect x="16" y="14" width="5" height="7" rx="1.6" fill="currentColor" />
+                    </svg>
+                  </EdgePlane>
+                )}
+              </>
+            )}
+            {/* ---- the headphone jack (EarPods plug in here) ---- */}
+            <EdgePlane
+              x={spec.jack.x}
+              y={jackTop ? -H / 2 + port.inset : H / 2 - port.inset}
+              z={port.z}
+              w={30}
+              h={30}
+              side={jackTop ? 'top' : 'bottom'}
+              tilt={port.tilt}
+            >
+              <div className="cl-jack" />
+            </EdgePlane>
+            {/* ---- the mini's plastic end caps ---- */}
+            {spec.endCaps &&
+              (['top', 'bottom'] as const).map((side) => (
+                <EdgePlane key={side} x={0} y={side === 'top' ? -H / 2 - 0.2 : H / 2 + 0.2} z={0} w={W - 2 * RADIUS * 0.6} h={D * 0.72} side={side}>
+                  <div className="cl-endcap" style={{ ['--cap' as string]: colors.caps ?? shade(front, -0.05) } as CSSProperties} />
+                </EdgePlane>
+              ))}
+            {/* ---- bottom edge: dock connector ---- */}
+            <EdgePlane x={L.dockX ?? 0} y={H / 2 - port.inset} z={port.z} w={L.dockW} h={20} side="bottom" tilt={port.tilt}>
+              <div className="cl-dock">
+                <div className="cl-dock-pins" />
+              </div>
+            </EdgePlane>
+          </>
+        }
+      >
+        <Box3D
+          x={knobX}
+          y={-H / 2 + insetAt(holdT) - 1.1}
+          z={zAt(holdT)}
+          w={Math.round(holdLen * 0.45)}
+          h={3}
+          d={9}
+          rotate={`rotateX(${holdSlot.tilt.toFixed(2)}deg)`}
+          color={shade(steelKnob, -0.15)}
+          faces={{
+            top: `repeating-linear-gradient(90deg, ${shade(steelKnob, 0.1)} 0 2px, ${shade(steelKnob, -0.08)} 2px 3.5px)`,
+            front: shade(steelKnob, -0.05),
+          }}
+          radius={1}
+          title={hold ? 'Hold is on (H)' : 'Hold switch (H)'}
+          onClick={(e) => {
+            e.stopPropagation();
+            setHold((h) => !h);
+          }}
+          className="cl-hold-knob"
+        />
+      </Device3D>
+    </div>
   );
 }
 
