@@ -14,77 +14,37 @@ The running app shows its version and build in the Help panel (?).
 
 ## [Unreleased]
 
-### Added
-- A fifth iPod: the iPod (5th generation, 2005), "iPod video". Glossy white
-  or black polycarbonate front, or the U2 Special Edition with its red
-  Click Wheel; the stainless steel back; Hold switch and headphone jack on
-  top, so the EarPods plug in there (an iPod Sock leaves them free); the
-  Click Wheel software from before Cover Flow and Genius, with the plain
-  full-width main menu. Cases, socks, stickers and engraving all fit it.
-- iPod nano (4th generation, 2008), the "nano-chromatic": one piece of
-  curved anodized aluminium in nine colours, a tall 240 × 320 screen, the
-  Hold switch on top and the headphone jack beside the dock connector.
-- iPod mini (2nd generation, 2005): a tube of anodized aluminium with
-  rounded sides and end caps in silver, pink, blue, green (and the first
-  generation's gold), Click Wheel labels in the body's colour, the
-  grey-blue monochrome screen and music-only menus; headphone jack and
-  Hold switch on top.
-- The iPod nano (4th generation), iPod mini, iPod (5th generation) and the
-  front of the iPod classic follow Apple's dimensional drawings: screen and
-  Click Wheel sizes and positions, and which side each port is on (the
-  nano's jack is on the bottom right beside an off-centre dock connector,
-  its Hold switch top left; the mini's jack and remote connector are top
-  right, its Hold switch top left; the 5th generation's jack is 8.1 mm from
-  the right; the iPod classic's jack is on top too, 8.1 mm from the right,
-  as in Apple's 80GB and 160GB drawings). Case holes moved to match.
-- Each Click Wheel iPod runs its own software, not the classic's:
-  - iPod mini: no album art anywhere on its grey screen, Now Playing as
-    text, Contrast instead of Brightness, Backlight at the end of the main
-    menu, Podcasts in the Music menu, and its four games (Brick, Music Quiz,
-    Parachute, Solitaire); no stopwatch, screen lock or voice memos.
-  - iPod (5th generation): starts up with a black Apple on white, Backlight
-    in the main menu, Podcasts in the Music menu, the same four games.
-  - iPod nano (4th generation): Now Playing laid out for its tall screen
-    (artwork on top); it turns itself on its side for Cover Flow, videos and
-    photos; shake it (a phone shaken, or the iPod dragged quickly back and
-    forth) to shuffle the songs, which Settings ▸ Shake can turn off;
-    Klondike and Vortex.
-  - iPod classic: Klondike, Music Quiz and Vortex.
-- The model chooser is a carousel on every screen: on a computer about five
-  iPods across, with arrows, page dots, the wheel or a drag to move along.
-  Only the iPod in the middle and its neighbours are live 3D; the rest are
-  pictures, so it stays light with seven iPods.
+## [1.3.0] - 2026-10-22
 
+### Added
+- Three more iPods, each with its own Click Wheel software:
+  - iPod (5th generation, 2005), "iPod video": glossy white or black
+    polycarbonate front, or the U2 Special Edition with its red Click
+    Wheel; the stainless steel back; Hold switch and headphone jack on top.
+    It starts up with a black Apple on white, has Backlight in the main
+    menu, Podcasts in the Music menu, the software from before Cover Flow
+    and Genius, and Brick, Music Quiz, Parachute and Solitaire.
+  - iPod nano (4th generation, 2008), the "nano-chromatic": one piece of
+    curved anodized aluminium in nine colours and a tall 240 × 320 screen.
+    Now Playing is laid out for it (artwork on top); it turns on its side
+    for Cover Flow, videos and photos; shake it (a phone shaken, or the
+    iPod dragged quickly back and forth) to shuffle, which Settings ▸ Shake
+    can turn off. Klondike and Vortex.
+  - iPod mini (2nd generation, 2005): a tube of anodized aluminium in
+    silver, pink, blue, green (and the first generation's gold), Click
+    Wheel labels in the body's colour and end caps that follow its rounded
+    ends. The grey-blue monochrome screen shows no artwork, has Contrast
+    instead of Brightness, music-only menus and Backlight at the end of
+    the main menu; Brick, Music Quiz, Parachute and Solitaire. No
+    stopwatch, screen lock or voice memos.
 - Landscape, with the view controls (or T): the iPod lies on its side and
   stands back up. It all still works the way it would in your hand: the top
   of a turned Click Wheel is Forward, swipes on a touch screen go along the
   iPod, and the iPod touch turns a playing video with it.
-
 - Click Wheel iPods: Settings ▸ Language works. ไทย, 日本語, Deutsch, Español
   and Français translate the menus, settings, messages and dates (your
   music, contacts and notes keep their names); choosing one goes back to
   the Main Menu in it, as on the real iPod.
-
-### Changed
-- The nano 4G (Cover Flow, video, photos), the nano 7G (Rotate for Video)
-  and the iPod touch (video) now lie down on the stage the same way the
-  Landscape button does, fit the screen better on their side, and stand
-  back up as they were when they're done.
-- A new model chooser: click the iPod's name and every iPod floats up on
-  the stage, live and 3D, in your colors and at their real sizes. Point at
-  one to lift it, click to pick it, and it flies to the middle. ← → (and
-  ↑ ↓ on phones) move between them, Enter picks, Esc keeps the one you have.
-- Changing iPods turns the old one away and the new one in.
-- Shift ← → steps to the previous or next iPod at any time.
-- On phones the chooser is a carousel: one iPod big in the middle, its
-  neighbours peeking in at the edges; swipe to move, tap the middle to pick.
-- The model button is a round icon at the right of the top bar; the other
-  controls step aside while you choose.
-
-- On phones the view bar folds into one round button in the corner (front,
-  back, side, spin, save image), giving the iPod the bottom of the screen.
-  Zoom with two fingers; double-tap empty space to face front at 100%.
-
 - Pull an iPod Sock off: grab it and drag down. It moves like fabric: the
   opening slides down the iPod, the part still on it gathers towards the
   bottom, and the fabric that comes off narrows right below the iPod and
@@ -92,16 +52,27 @@ The running app shows its version and build in the Help panel (?).
   off; otherwise it springs back. Push it up and the toe widens around the
   iPod, until the whole sock is on it. Dragging it sideways still turns the
   iPod. Put it back on in Customize, or undo.
-- The Library's small tab switches (Songs & Videos / Playlists and the
-  others) slide their white thumb like the panel tabs.
-
-### Removed
-- Save image (the camera button with the view controls).
-
-### Fixed
-- The iPod mini's end caps no longer stick out past its rounded ends:
-  they follow the curve of the tube.
 - iPod touch:
+  - Messages: start a conversation with a contact (suggested as you type)
+    or any name or number, and they read it, type for a moment and answer,
+    in Thai or English like you wrote. Delivered and Read, the typing
+    bubble, bubbles with tails, timestamps, unread dots, search and Edit to
+    delete. An answer that comes while you're elsewhere arrives as a
+    notification that opens the conversation. Kept on the iPod.
+  - The iOS keyboard: it slides up under any text field and types into it,
+    with Shift (twice for caps lock), numbers and symbols, delete (hold to
+    repeat), a double space for a full stop, the key popping up under the
+    finger and the QuickType bar. Return reads "search" or "go" where it
+    should. A computer's keyboard still works, and on a phone its own
+    keyboard stays down. The globe key switches to the Thai keyboard
+    (Kedmanee in four rows, Shift for its second page), and it remembers
+    which one you used.
+  - Home Screen folders: while the icons jiggle, hold an app over another
+    to put them in a folder, named for their kind (Utilities,
+    Productivity…), or over a folder to add it. Tap a folder to open it;
+    rename it while editing; drag an app out to put it back. A folder left
+    with one app turns back into that app. While you drag, the other icons
+    make room once you pause, as on iOS.
   - Hold Sleep/Wake for "slide to power off", with Cancel; switched off,
     hold it again to start up (the Apple, then the Lock Screen).
   - Home and Sleep/Wake together take a screenshot: the screen flashes, a
@@ -112,46 +83,63 @@ The running app shows its version and build in the Help panel (?).
     unlocks (passcode first) and opens its app.
   - Pull down on the Home Screen for Spotlight: Siri Suggestions, then
     apps, songs, contacts and notes as you type.
-  - The iOS keyboard: it slides up under any text field and types into
-    it, with Shift (twice for caps lock), numbers and symbols, delete
-    (hold to repeat), a double space for a full stop, the key popping up
-    under the finger and the QuickType bar. Return reads "search" or "go"
-    where it should. A computer's keyboard still works, and on a phone its
-    own keyboard stays down. The globe key switches to the Thai keyboard
-    (Kedmanee in four rows, Shift for its second page), and it remembers
-    which one you used.
-  - Messages works: start a conversation with a contact (suggested as you
-    type) or any name or number, and they read it, type for a moment and
-    answer, in Thai or English like you wrote. Delivered and Read, the
-    typing bubble, bubbles with tails, timestamps, unread dots, search and
-    Edit to delete. An answer that comes while you're elsewhere arrives as
-    a notification that opens the conversation. Kept on the iPod.
-  - Home Screen folders: while the icons jiggle, hold an app over another
-    to put them in a folder, named for their kind (Utilities,
-    Productivity…), or over a folder to add it. Tap a folder to open it;
-    rename it while editing; drag an app out of it to put it back. A
-    folder left with one app turns back into that app. While you drag, the
-    other icons make room once you pause, as on iOS.
+- Shift ← → steps to the previous or next iPod at any time.
+
+### Changed
+- The model chooser is a carousel on every screen: click the iPod's name
+  and the iPods line up at their real sizes in your colours, about five
+  across on a computer, one big in the middle on a phone. Move with the
+  arrows, page dots, the wheel, ← → or a swipe; click the middle one (or
+  Enter) to pick it, Esc keeps the one you have. Only the middle iPod and
+  its neighbours are live 3D; the rest are pictures, so it stays light. The
+  model button is a round icon at the right of the top bar.
+- Changing iPods turns the old one away and the new one in.
+- The iPod classic, nano 4G, iPod (5th generation) and mini follow Apple's
+  dimensional drawings: screen and Click Wheel sizes and positions, and
+  where each port is (the classic's and 5th generation's jack is on top,
+  8.1 mm from the right; the nano's beside an off-centre dock connector;
+  the mini's top right). Case holes moved to match.
+- Each Click Wheel iPod has the games it came with (the classic: Klondike,
+  Music Quiz and Vortex).
+- The nano 4G (Cover Flow, video, photos), the nano 7G (Rotate for Video)
+  and the iPod touch (video) lie down on the stage the same way the
+  Landscape button does, fit the screen better on their side, and stand
+  back up as they were when they're done.
+- On phones the view controls fold into one round button in the corner
+  (front, back, side, spin, landscape), giving the iPod the bottom of the
+  screen. Zoom with two fingers; double-tap empty space to face front at
+  100%.
+- An iPod Sock covers the headphone jack on the iPod touch and the nanos
+  (it's on the bottom, inside the sock): the EarPods come out when you put
+  one on and plug back in when it comes off, and the music plays on. The
+  shuffle, classic, iPod video and mini have their jack on top, outside
+  the sock.
+- With an iPod Sock on, the controls work as they would through the
+  fabric: the Click Wheel's buttons still press but the wheel can't be
+  turned, and the part of a touch screen inside the sock doesn't respond.
+  A short hint says to take the sock off. The keyboard still does
+  everything.
+- The Library's small tab switches (Songs & Videos / Playlists and the
+  others) slide their white thumb like the panel tabs.
+- Smoother on phones: the EarPods no longer measure the iPod and redraw
+  their canvases every frame when nothing moves, and a still iPod costs the
+  stage nothing a frame. In the chooser the iPods' own screen animations
+  pause.
+
+### Removed
+- Save image (the camera button with the view controls). Landscape took
+  its place.
+
+### Fixed
 - Settings that did nothing now work:
   - Audio Crossfade (iPod classic, nano 4G): the end of a song fades out
     over four seconds and the next fades in.
   - Mono Audio (iPod nano 7th generation): both ears get the same sound.
+  - Language on the Click Wheel iPods (see Added).
 - The iPod nano (7th generation) screen goes dark by itself after 30 seconds
   untouched, like the real one (not while a video plays).
 - The iPod touch's Camera has no flash button and Settings ▸ Control Center
   no Flashlight: the 7th generation has no flash.
-- An iPod Sock covers the headphone jack on the iPod touch and the nanos
-  (it's on the bottom, inside the sock): the EarPods come out when you put
-  one on, can't be plugged in while it's on, and the music plays on. They
-  plug back in when the sock comes off. The shuffle, classic, iPod video and
-  mini have their jack on top, outside the sock, and it still works.
-- With an iPod Sock on, the controls work as they would through the fabric:
-  the Click Wheel's buttons still press, but the wheel can't be turned, and
-  the part of a touch screen inside the sock doesn't respond. A short hint
-  says to take the sock off. The keyboard still does everything.
-- Smoother on phones: the EarPods no longer measure the iPod and redraw
-  their canvases every frame when nothing moves, and a still iPod costs the
-  stage nothing a frame. In the chooser the iPods' own screen animations pause.
 
 ## [1.2.0] - 2026-10-22
 
@@ -280,7 +268,8 @@ First release.
 - Apple-style minimal Liquid Glass interface on white; works on phones and
   installs as a web app.
 
-[Unreleased]: https://github.com/PongsakornNaklang/iport/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/PongsakornNaklang/iport/compare/v1.3.0...HEAD
+[1.3.0]: https://github.com/PongsakornNaklang/iport/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/PongsakornNaklang/iport/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/PongsakornNaklang/iport/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/PongsakornNaklang/iport/releases/tag/v1.0.0
