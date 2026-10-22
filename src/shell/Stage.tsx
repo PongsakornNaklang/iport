@@ -27,8 +27,8 @@ const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
 
 /** Space taken by the floating top bar and the view controls (px). */
 const TOP_BAR = 64;
-/** room for the view controls: along the bottom on phones, on the right edge otherwise (see app.css) */
-const BOTTOM_BAR = 76;
+/** room at the bottom: on phones the view controls are one button in the corner, so just a margin (see app.css) */
+const BOTTOM_BAR = 28;
 const SIDE_BAR = 68;
 const WIDE = 720;
 /** with a mouse the side controls hide off the edge until wanted (ViewControls.tsx), so they need no room */
@@ -321,9 +321,43 @@ export function Stage() {
     }
   };
 
+  // Two fingers on the stage zoom (phones have no wheel): where they are, and the pinch under way.
+  const fingers = useRef(new Map<number, { x: number; y: number }>());
+  const pinch = useRef<{ d0: number; z0: number } | null>(null);
+  const spread = () => {
+    const [a, b] = [...fingers.current.values()];
+    return Math.hypot(a.x - b.x, a.y - b.y);
+  };
+  // a double tap on the background faces the iPod front at 100% (iOS doesn't send dblclick here)
+  const tap = useRef<{ x: number; y: number; t: number; last: { x: number; y: number; t: number } | null }>({ x: 0, y: 0, t: 0, last: null });
+  const endFinger = (e: React.PointerEvent) => {
+    fingers.current.delete(e.pointerId);
+    if (fingers.current.size < 2) pinch.current = null;
+  };
+
   // Pointer handling for rotation.
   const onPointerDown = (e: React.PointerEvent) => {
     if (useOverview.getState().open) return;
+    if (e.pointerType === 'touch' && !(e.target as HTMLElement).closest('[data-no-stage]')) {
+      // the first finger of a new touch: forget any finger whose lift went unseen
+      if (e.isPrimary) {
+        fingers.current.clear();
+        pinch.current = null;
+      }
+      fingers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (!(e.target as HTMLElement).closest('[data-control]')) Object.assign(tap.current, { x: e.clientX, y: e.clientY, t: performance.now() });
+      else tap.current.t = 0;
+      if (fingers.current.size === 2) {
+        // a second finger: stop turning, start zooming
+        const s = st.current;
+        s.dragging = false;
+        s.vx = s.vy = 0;
+        pinch.current = { d0: Math.max(1, spread()), z0: useStage.getState().zoom };
+        (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+        e.preventDefault();
+        return;
+      }
+    }
     const t = e.target as HTMLElement;
     const force = e.shiftKey || e.altKey || e.button === 2;
     if (!force && t.closest('[data-control]')) return;
@@ -343,6 +377,11 @@ export function Stage() {
   };
   const onPointerMove = (e: React.PointerEvent) => {
     const s = st.current;
+    if (fingers.current.has(e.pointerId)) fingers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pinch.current) {
+      if (fingers.current.size >= 2) useStage.getState().setZoom((pinch.current.z0 * spread()) / pinch.current.d0);
+      return;
+    }
     const r = wrapRef.current?.getBoundingClientRect();
     if (r) {
       s.px = clamp(((e.clientX - r.left) / r.width) * 2 - 1, -1, 1);
@@ -364,7 +403,25 @@ export function Stage() {
     s.lastInteract = now;
   };
   const onPointerUp = (e: React.PointerEvent) => {
+    const wasPinch = !!pinch.current || fingers.current.size > 1;
+    endFinger(e);
+    const tp = tap.current;
+    const now = performance.now();
+    if (e.pointerType === 'touch' && !wasPinch && tp.t && now - tp.t < 250 && Math.hypot(e.clientX - tp.x, e.clientY - tp.y) < 10) {
+      const l = tp.last;
+      if (l && now - l.t < 350 && Math.hypot(e.clientX - l.x, e.clientY - l.y) < 40) {
+        tp.last = null;
+        useStage.getState().front();
+        useStage.getState().setZoom(1);
+      } else tp.last = { x: e.clientX, y: e.clientY, t: now };
+    }
     const s = st.current;
+    // lifting from a pinch doesn't fling the iPod round
+    if (wasPinch) {
+      s.dragging = false;
+      s.vx = s.vy = 0;
+      return;
+    }
     if (!s.dragging) return;
     s.dragging = false;
     s.lastInteract = performance.now();
@@ -379,6 +436,7 @@ export function Stage() {
     if (useOverview.getState().open) return;
     if ((e.target as HTMLElement).closest('[data-control]')) return;
     useStage.getState().front();
+    useStage.getState().setZoom(1);
   };
   const onWheel = (e: React.WheelEvent) => {
     if (useOverview.getState().open) return;

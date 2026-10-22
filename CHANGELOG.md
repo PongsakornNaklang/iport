@@ -26,6 +26,10 @@ The running app shows its version and build in the Help panel (?).
 - The model button is a round icon at the right of the top bar; the other
   controls step aside while you choose.
 
+- On phones the view bar folds into one round button in the corner (front,
+  back, side, spin, save image), giving the iPod the bottom of the screen.
+  Zoom with two fingers; double-tap empty space to face front at 100%.
+
 ### Fixed
 - Smoother on phones: the EarPods no longer measure the iPod and redraw
   their canvases every frame when nothing moves, and a still iPod costs the

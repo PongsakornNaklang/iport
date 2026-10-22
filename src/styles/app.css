@@ -1422,13 +1422,15 @@ textarea.input {
 
 /* while choosing an iPod, the panels' buttons and the view controls step aside */
 .topbar .tb-group,
-.view-controls {
+.view-controls,
+.view-menu {
   transition:
     opacity 260ms var(--ease),
     visibility 260ms;
 }
 .app.choosing .topbar .tb-group,
 .app.choosing .view-controls,
+.app.choosing .view-menu,
 .app.choosing .vc-grip {
   opacity: 0;
   visibility: hidden;
@@ -1458,3 +1460,89 @@ textarea.input {
 .ov-hits.carousel .ov-hit {
   transition: none;
 }
+
+/* ------------------------------------------------------------------ phone view menu */
+/* one round button in the corner; its views stack above it (ViewControls.tsx) */
+.view-menu {
+  position: absolute;
+  right: 14px;
+  bottom: max(16px, env(safe-area-inset-bottom));
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.view-menu button {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  color: var(--ui-text);
+  cursor: pointer;
+}
+.view-menu .lbl {
+  display: none;
+}
+.view-menu svg {
+  width: 20px;
+  height: 20px;
+}
+.vm-toggle {
+  width: 48px !important;
+  height: 48px !important;
+  transition: transform 200ms var(--ease);
+}
+.vm-toggle:active {
+  transform: scale(0.92);
+}
+.view-menu.open .vm-toggle {
+  color: var(--ui-accent);
+}
+.vm-toggle.spinning svg {
+  animation: vm-spin 2.4s linear infinite;
+}
+@keyframes vm-spin {
+  to {
+    rotate: 360deg;
+  }
+}
+.vm-items {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+}
+.vm-items button {
+  background: var(--glass-strong);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  box-shadow: var(--glass-shadow);
+  opacity: 0;
+  translate: 0 16px;
+  scale: 0.6;
+  transition:
+    opacity 180ms var(--ease),
+    translate 260ms var(--ease),
+    scale 260ms var(--ease);
+}
+.vm-items button.on {
+  color: var(--ui-accent);
+}
+.view-menu.open .vm-items {
+  pointer-events: auto;
+}
+.view-menu.open .vm-items button {
+  opacity: 1;
+  translate: 0 0;
+  scale: 1;
+}
+/* the one nearest the toggle comes first */
+.view-menu.open .vm-items button:nth-last-child(1) { transition-delay: 0ms; }
+.view-menu.open .vm-items button:nth-last-child(2) { transition-delay: 30ms; }
+.view-menu.open .vm-items button:nth-last-child(3) { transition-delay: 60ms; }
+.view-menu.open .vm-items button:nth-last-child(4) { transition-delay: 90ms; }
+.view-menu.open .vm-items button:nth-last-child(5) { transition-delay: 120ms; }

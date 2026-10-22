@@ -67,6 +67,13 @@ export const IconCamera = (p: P) => (
     <circle cx="12" cy="13" r="3.6" />
   </svg>
 );
+/** a box turning in 3D: the view menu on phones */
+export const IconView = (p: P) => (
+  <svg {...base(p)}>
+    <path d="M12 2.8 20 7.2v9.6l-8 4.4-8-4.4V7.2z" />
+    <path d="M4 7.2l8 4.4 8-4.4M12 11.6v9.6" />
+  </svg>
+);
 export const IconFront = (p: P) => (
   <svg {...base(p)}>
     <rect x="6" y="2.5" width="12" height="19" rx="2.5" />
