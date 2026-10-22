@@ -16,6 +16,7 @@ music (or stream from YouTube, SoundCloud and free sources), spin it around in
 | iPod nano (7th generation) | 2012 | Circular app icons, Music, Videos that turn the iPod sideways, FM-style Radio, Fitness, Photos, Clock, Podcasts, iTunes U |
 | iPod shuffle (4th generation) | 2010 | Clickable control pad, three-way switch, status light, VoiceOver with spoken playlists |
 | iPod classic (6th generation, 160GB) | 2009 | Click Wheel, Cover Flow, Now Playing with Genius and lyrics, On-The-Go, Extras, full Settings, five games |
+| iPod (5th generation, "iPod video", 30GB) | 2005 | Glossy white or black front (and the U2 Special Edition), headphone jack on top, the Click Wheel software from before Cover Flow and Genius |
 
 ### iPod classic
 
@@ -88,7 +89,7 @@ all your presets to a file.
 
 ```bash
 npm install
-npm run dev        # http://localhost:5173  (?model=classic|touch7|nano7|shuffle4)
+npm run dev        # http://localhost:5173  (?model=classic|video5|touch7|nano7|shuffle4)
 npm run build      # type-check + production build into dist/
 npm test           # unit tests
 ```

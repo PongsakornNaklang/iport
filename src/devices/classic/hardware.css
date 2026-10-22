@@ -37,6 +37,44 @@
   opacity: 0.55;
 }
 
+/* ------------------------------------------------------------------ glossy front (5th generation) */
+/*
+ * Polycarbonate under a clear layer: no grain, a deep even colour, a hard
+ * window-shaped reflection that slides with the tilt, and a darker rim
+ * where the clear layer rounds over the edge.
+ */
+.cl-front-gloss {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 40%, rgba(0, 0, 0, 0.05) 100%),
+    var(--al);
+  background-blend-mode: normal;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.5),
+    inset 0 0 6px 2px rgba(0, 0, 0, 0.1),
+    inset 0 0 0 3px rgba(0, 0, 0, 0.04);
+}
+.cl-front-gloss.cl-front-dark {
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.16),
+    inset 0 0 8px 2px rgba(0, 0, 0, 0.5);
+}
+.cl-front-gloss .cl-front-sheen {
+  background:
+    /* a studio window, reflected: sharp-edged and bright */
+    linear-gradient(
+        calc(118deg + var(--lx, 0) * 25deg),
+        rgba(255, 255, 255, 0) 0 22%,
+        rgba(255, 255, 255, 0.34) 22.5% 31%,
+        rgba(255, 255, 255, 0.1) 31.5% 36%,
+        rgba(255, 255, 255, 0) 36.5% 100%
+      )
+      calc(50% - var(--lx, 0) * 60%) calc(50% + var(--ly, 0) * 40%) / 220% 220% no-repeat,
+    radial-gradient(70% 40% at calc(50% - var(--lx, 0) * 80%) calc(6% + var(--ly, 0) * 50%), rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0) 70%);
+}
+.cl-front-gloss.cl-front-dark .cl-front-sheen {
+  opacity: 0.8;
+}
+
 /* ------------------------------------------------------------------ screen window */
 .cl-window {
   position: absolute;

@@ -227,6 +227,81 @@ export const MODELS: DeviceModel[] = [
     },
     load: () => import('./classic'),
   },
+  {
+    id: 'video5',
+    name: 'iPod video',
+    generation: '5th generation · 30GB',
+    year: 2005,
+    blurb: 'The one in the ads: glossy white or black, a 2.5" colour screen, and video for the first time.',
+    family: 'clickwheel',
+    // 61.8 × 103.5 × 11 mm @ 6.3 px/mm (320 × 240 screen)
+    size: { width: 389, height: 652, depth: 69 },
+    colorSlots: [
+      { key: 'front', label: 'Front' },
+      { key: 'wheel', label: 'Click Wheel' },
+      { key: 'labels', label: 'Wheel labels' },
+      { key: 'center', label: 'Center button' },
+      { key: 'back', label: 'Back' },
+    ],
+    options: [
+      {
+        key: 'backMaterial',
+        label: 'Back material',
+        type: 'select',
+        choices: [
+          { value: 'chrome', label: 'Polished stainless steel' },
+          { value: 'matte', label: 'Brushed / matte' },
+          { value: 'painted', label: 'Painted (uses Back color)' },
+        ],
+      },
+      {
+        key: 'theme',
+        label: 'Screen theme',
+        type: 'select',
+        choices: [
+          { value: 'classic', label: 'Classic blue' },
+          { value: 'graphite', label: 'Graphite' },
+          { value: 'red', label: 'Red' },
+          { value: 'green', label: 'Green' },
+        ],
+      },
+    ],
+    finishes: [
+      {
+        id: 'white',
+        name: 'White',
+        swatch: '#f6f6f4',
+        colors: { front: '#f6f6f4', wheel: '#fdfdfd', labels: '#b4b6ba', center: '#f4f4f2', back: '#c9cbce' },
+        options: { backMaterial: 'chrome', theme: 'classic' },
+      },
+      {
+        id: 'black',
+        name: 'Black',
+        swatch: '#161618',
+        colors: { front: '#161618', wheel: '#232325', labels: '#8e9095', center: '#1a1a1c', back: '#c9cbce' },
+        options: { backMaterial: 'chrome', theme: 'classic' },
+      },
+      {
+        id: 'u2',
+        name: 'U2 Special Edition',
+        swatch: '#c0151f',
+        colors: { front: '#121213', wheel: '#c0151f', labels: '#2a0a0c', center: '#121213', back: '#c9cbce' },
+        options: { backMaterial: 'chrome', theme: 'red' },
+      },
+    ],
+    engravable: true,
+    jack: { x: 124, y: -326, z: 0, ny: -1, pxPerMm: 6.3 },
+    cover: {
+      radius: 42,
+      cases: true,
+      holes: [
+        { side: 'top', at: -130.5, len: 46, thick: 22, z: 2 }, // Hold switch
+        { side: 'top', at: 124, len: 38, thick: 34 }, // headphone jack
+        { side: 'bottom', at: 0, len: 150, thick: 26 }, // dock connector
+      ],
+    },
+    load: () => import('./video5'),
+  },
 ];
 
 export const MODELS_BY_ID: Record<string, DeviceModel> = Object.fromEntries(MODELS.map((m) => [m.id, m]));

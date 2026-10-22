@@ -16,6 +16,7 @@ export function ClassicBack({
   decals,
   capacity,
   model,
+  modelNo = 'A1238',
 }: {
   material: string;
   color: string;
@@ -23,6 +24,7 @@ export function ClassicBack({
   decals?: Decal[];
   capacity: string;
   model: string;
+  modelNo?: string;
 }) {
   const style = { ['--paint' as string]: color, ['--paint-hi' as string]: shade(color, 0.25), ['--paint-lo' as string]: shade(color, -0.3) } as CSSProperties;
   const lines = engraving.filter((l) => l && l.trim());
@@ -59,7 +61,7 @@ export function ClassicBack({
       <div className="cl-back-print">
         <div>Designed by Apple in California. Assembled in China.</div>
         <div>
-          Model No.: A1238 &nbsp;EMC No.: 2173 &nbsp;{capacity}
+          Model No.: {modelNo} &nbsp;{capacity}
         </div>
         <div className="cl-back-marks">
           <Marks />

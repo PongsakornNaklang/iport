@@ -14,6 +14,14 @@ The running app shows its version and build in the Help panel (?).
 
 ## [Unreleased]
 
+### Added
+- A fifth iPod: the iPod (5th generation, 2005), "iPod video". Glossy white
+  or black polycarbonate front, or the U2 Special Edition with its red
+  Click Wheel; the stainless steel back; Hold switch and headphone jack on
+  top, so the EarPods plug in there (an iPod Sock leaves them free); the
+  Click Wheel software from before Cover Flow and Genius, with the plain
+  full-width main menu. Cases, socks, stickers and engraving all fit it.
+
 ### Changed
 - A new model chooser: click the iPod's name and every iPod floats up on
   the stage, live and 3D, in your colors and at their real sizes. Point at
