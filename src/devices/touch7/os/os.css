@@ -2146,9 +2146,10 @@
   pointer-events: none;
   z-index: 2;
 }
-/* a long text (Notes) stays above the keyboard */
-.t7-screen.kb-inset .t7-app {
-  bottom: 251px;
+/* a long text (Notes) or a message bar stays above the keyboard (--kb-h: Keyboard.tsx) */
+.t7-screen.kb-inset .t7-app,
+.t7-screen.kb-inset .t7-sheet-wrap {
+  bottom: var(--kb-h, 251px);
 }
 .t7-kb-globe {
   flex: 0 0 40px;

@@ -592,7 +592,7 @@ export function BannerOverlay() {
         if (d.dy < -20) os.dismissBanner();
         else if (Math.abs(d.dy) < 6) {
           os.dismissBanner();
-          os.openApp(shown.app);
+          os.openNotification(shown);
         }
       }}
     >

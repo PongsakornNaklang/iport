@@ -138,7 +138,7 @@ export function Screen({ appearance }: { appearance: Appearance }) {
   return (
     <div
       ref={ref}
-      className={`t7-screen ${dark ? 't7-dark' : 't7-light'} ${landscape ? 'is-landscape' : ''} ${field ? 'kb-open' : ''} ${field instanceof HTMLTextAreaElement ? 'kb-inset' : ''}`}
+      className={`t7-screen ${dark ? 't7-dark' : 't7-light'} ${landscape ? 'is-landscape' : ''} ${field ? 'kb-open' : ''} ${field && (field instanceof HTMLTextAreaElement || field.closest('[data-kb-lift]')) ? 'kb-inset' : ''}`}
       data-control=""
       onPointerDownCapture={onDown}
       onPointerMoveCapture={onMove}

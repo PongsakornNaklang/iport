@@ -104,6 +104,9 @@ function steelColor(u: number, material: string, back: string): string {
 
 const turnBlocked = () => sockHint('Take off the sock to turn the wheel');
 
+/** depth bands (0 front … 1 back) of the mini's end caps */
+const CAP_STRIPS: [number, number][] = Array.from({ length: 12 }, (_, i) => [0.06 + (i * 0.88) / 12, 0.06 + ((i + 1) * 0.88) / 12]);
+
 export function ClickWheelIpod({ model, appearance, spec }: DeviceProps & { spec: ClickWheelSpec }) {
   const FRONT_T = spec.frontT;
   const L = model.clickWheel ?? CLASSIC_LAYOUT;
@@ -347,12 +350,32 @@ export function ClickWheelIpod({ model, appearance, spec }: DeviceProps & { spec
               <div className="cl-jack" />
             </EdgePlane>
             {/* ---- the mini's plastic end caps ---- */}
+            {/* The tube's ends curve with its rounded sides, so each cap is laid on in strips that follow the curve. */}
             {spec.endCaps &&
-              (['top', 'bottom'] as const).map((side) => (
-                <EdgePlane key={side} x={0} y={side === 'top' ? -H / 2 - 0.2 : H / 2 + 0.2} z={0} w={W - 2 * RADIUS * 0.6} h={D * 0.72} side={side}>
-                  <div className="cl-endcap" style={{ ['--cap' as string]: colors.caps ?? shade(front, -0.05) } as CSSProperties} />
-                </EdgePlane>
-              ))}
+              (['top', 'bottom'] as const).flatMap((side) =>
+                CAP_STRIPS.map(([t0, t1], i) => {
+                  const tc = (t0 + t1) / 2;
+                  const at = onEdge(tc, 0.2);
+                  const len = ((t1 - t0) * D) / Math.cos((at.tilt * Math.PI) / 180) + 0.8;
+                  const cap = colors.caps ?? shade(front, -0.05);
+                  // lit from the front, darker as it turns towards the back
+                  const tone = shade(cap, 0.05 - tc * 0.12);
+                  return (
+                    <EdgePlane
+                      key={`${side}${i}`}
+                      x={0}
+                      y={side === 'top' ? -H / 2 + at.inset : H / 2 - at.inset}
+                      z={at.z}
+                      w={W - 2 * RADIUS - 2}
+                      h={len}
+                      side={side}
+                      tilt={at.tilt}
+                    >
+                      <div className="cl-endcap" style={{ ['--cap' as string]: tone } as CSSProperties} />
+                    </EdgePlane>
+                  );
+                }),
+              )}
             {/* ---- bottom edge: dock connector ---- */}
             <EdgePlane x={L.dockX ?? 0} y={H / 2 - port.inset} z={port.z} w={L.dockW} h={20} side="bottom" tilt={port.tilt}>
               <div className="cl-dock">

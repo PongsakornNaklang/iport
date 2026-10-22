@@ -9,7 +9,7 @@
  * The keys never take the focus, so the field keeps its caret. Typed text
  * goes in with setRangeText plus an input event, which React sees as typing.
  */
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { playTap } from '../../../core/sound/click';
 import { usePrefs } from './store';
 
@@ -105,6 +105,12 @@ export function Keyboard({ field }: { field: Field | null }) {
     };
   }, [field]);
   useEffect(() => () => stopRepeat(), []);
+  // how tall it is (Thai has a row more), for what must stay above it
+  const box = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const k = box.current;
+    if (k) (k.closest('.t7-screen') as HTMLElement | null)?.style.setProperty('--kb-h', `${k.offsetHeight}px`);
+  });
 
   const tap = () => clicks && playTap();
   const type = (k: string) => {
@@ -197,7 +203,7 @@ export function Keyboard({ field }: { field: Field | null }) {
   const go = el instanceof HTMLInputElement && (el.type === 'url' || el.enterKeyHint === 'go');
   const word = currentWord(el);
   return (
-    <div className={`t7-kb ${field ? 'on' : ''} ${rows.length > 3 ? 't7-kb-th' : ''}`} onPointerDown={hold} onContextMenu={(e) => e.preventDefault()}>
+    <div ref={box} className={`t7-kb ${field ? 'on' : ''} ${rows.length > 3 ? 't7-kb-th' : ''}`} onPointerDown={hold} onContextMenu={(e) => e.preventDefault()}>
       <div className="t7-kb-qt">
         <span />
         <span className="t7-kb-qt-word">{word ? `“${word}”` : ''}</span>

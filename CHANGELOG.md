@@ -82,6 +82,8 @@ The running app shows its version and build in the Help panel (?).
   others) slide their white thumb like the panel tabs.
 
 ### Fixed
+- The iPod mini's end caps no longer stick out past its rounded ends:
+  they follow the curve of the tube.
 - iPod touch:
   - Hold Sleep/Wake for "slide to power off", with Cancel; switched off,
     hold it again to start up (the Apple, then the Lock Screen).
@@ -101,6 +103,12 @@ The running app shows its version and build in the Help panel (?).
     own keyboard stays down. The globe key switches to the Thai keyboard
     (Kedmanee in four rows, Shift for its second page), and it remembers
     which one you used.
+  - Messages works: start a conversation with a contact (suggested as you
+    type) or any name or number, and they read it, type for a moment and
+    answer, in Thai or English like you wrote. Delivered and Read, the
+    typing bubble, bubbles with tails, timestamps, unread dots, search and
+    Edit to delete. An answer that comes while you're elsewhere arrives as
+    a notification that opens the conversation. Kept on the iPod.
 - Settings that did nothing now work:
   - Audio Crossfade (iPod classic, nano 4G): the end of a song fades out
     over four seconds and the next fades in.

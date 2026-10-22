@@ -128,7 +128,7 @@ export function LockScreen({ wall, dark }: { wall: string; dark: boolean }) {
         <div className="t7-lock-list">
           {hasTrack && <NowPlayingWidget />}
           {notifs.map((n) => (
-            <NotifCard key={n.id} n={n} onOpen={() => os.openFromLock(n.app)} />
+            <NotifCard key={n.id} n={n} onOpen={() => os.openFromLock(n)} />
           ))}
         </div>
         <div className="t7-lock-hint">Press home to unlock</div>
@@ -358,7 +358,7 @@ export function NotificationCenter({ wall, dark }: { wall: string; dark: boolean
               n={n}
               onOpen={() => {
                 os.setOverlay(null);
-                os.openApp(n.app);
+                os.openNotification(n);
               }}
             />
           ))}

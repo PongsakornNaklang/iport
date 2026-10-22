@@ -436,11 +436,7 @@
 .cl-endcap {
   position: absolute;
   inset: 0;
-  border-radius: 999px;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0) 45%, rgba(0, 0, 0, 0.12)),
-    var(--cap);
-  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+  background: var(--cap);
 }
 
 /* the nano's oval body: the front turns away at its sides */

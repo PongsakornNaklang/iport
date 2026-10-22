@@ -218,7 +218,7 @@ export const prefs = () => usePrefs.getState();
 // ------------------------------------------------------------------ actions
 
 let notifSeq = 0;
-let openAfterUnlock: string | null = null;
+let openAfterUnlock: Notif | null = null;
 // the top and Home buttons, for holds and the screenshot chord
 let topHeld = false;
 let homeHeld = false;
@@ -258,18 +258,18 @@ export const os = {
   passcodeOK() {
     S({ locked: false, passcode: false });
     if (openAfterUnlock) {
-      const id = openAfterUnlock;
+      const n = openAfterUnlock;
       openAfterUnlock = null;
-      os.openApp(id);
+      os.openNotification(n);
     }
   },
   /** a notification tapped on the Lock Screen: unlock (passcode first), then open its app */
-  openFromLock(app: string) {
-    openAfterUnlock = app;
+  openFromLock(n: Notif) {
+    openAfterUnlock = n;
     os.unlock();
     if (!G().locked) {
       openAfterUnlock = null;
-      os.openApp(app);
+      os.openNotification(n);
     }
   },
   openApp(id: string, fromIcon = false) {
@@ -318,6 +318,11 @@ export const os = {
     // in use: it drops down as a banner (not over the app it comes from)
     const banner = st.screenOn && !st.locked && st.power === 'on' && st.app !== app ? n : st.banner;
     S({ notifications: [n, ...st.notifications].slice(0, 30), banner });
+  },
+  /** a notification tapped: its app (a message opens its conversation) */
+  openNotification(n: Notif) {
+    if (n.app === 'messages') os.openAppWith('messages', n.title);
+    else os.openApp(n.app);
   },
   dismissBanner() {
     S({ banner: null });
