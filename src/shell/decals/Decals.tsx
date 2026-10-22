@@ -14,10 +14,17 @@ import { useCustomize } from '../../core/customize/store';
 import type { Decal } from '../../devices/types';
 import './decals.css';
 
-/** which decal is being edited (Customize highlights it, the iPod outlines it) */
-export const useDecalSelection = create<{ selected: string | null; select(id: string | null): void }>((set) => ({
+/**
+ * Which decal is being edited (Customize highlights it, the iPod outlines
+ * it), and whether decals can be edited at all: only while Customize shows
+ * them. The rest of the time they are locked: a drag over one turns the
+ * iPod, and a tap goes through to whatever is under it.
+ */
+export const useDecalSelection = create<{ selected: string | null; editing: boolean; select(id: string | null): void; setEditing(on: boolean): void }>((set) => ({
   selected: null,
+  editing: false,
   select: (selected) => set({ selected }),
+  setEditing: (editing) => set(editing ? { editing } : { editing, selected: null }),
 }));
 
 export const DECAL_FONTS: Record<NonNullable<Decal['font']>, { label: string; family: string }> = {
@@ -36,10 +43,11 @@ export const DECAL_FONTS: Record<NonNullable<Decal['font']>, { label: string; fa
 export function Decals({ decals, side = 'back', ink, shadow }: { decals?: Decal[]; side?: 'front' | 'back'; ink?: string; shadow?: string }) {
   const layer = useRef<HTMLDivElement>(null);
   const selected = useDecalSelection((s) => s.selected);
+  const editing = useDecalSelection((s) => s.editing);
   const mine = decals?.filter((d) => (d.side ?? 'back') === side);
   if (!mine?.length) return null;
   return (
-    <div ref={layer} className={`dc-layer dc-${side}`} style={{ ['--dc-ink' as string]: ink, ['--dc-shadow' as string]: shadow } as CSSProperties}>
+    <div ref={layer} className={`dc-layer dc-${side} ${editing ? 'dc-editing' : ''}`} style={{ ['--dc-ink' as string]: ink, ['--dc-shadow' as string]: shadow } as CSSProperties}>
       <i className="dc-mark" />
       <i className="dc-mark" style={{ left: 100 }} />
       <i className="dc-mark" style={{ top: 100 }} />

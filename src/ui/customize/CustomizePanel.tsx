@@ -193,8 +193,11 @@ function DecalSection() {
   const select = useDecalSelection.getState().select;
   const [side, setSide] = useState<'back' | 'front'>('back');
   const turnTo = (s: 'back' | 'front') => (s === 'front' ? useStage.getState().front() : useStage.getState().back());
-  // stop outlining a decal once the panel closes
-  useEffect(() => () => select(null), [select]);
+  // decals can be moved while this is on screen; locked again once it goes
+  useEffect(() => {
+    useDecalSelection.getState().setEditing(true);
+    return () => useDecalSelection.getState().setEditing(false);
+  }, []);
 
   const add = (d: Omit<Decal, 'id'>) => {
     const id = addDecal(d);
@@ -214,7 +217,7 @@ function DecalSection() {
       <div className="section-title">Stickers &amp; engraving</div>
       <p className="tiny" style={{ marginTop: -2 }}>
         Put them anywhere: drag them on the iPod. To resize and turn one, pinch it, drag its corner handle, or scroll over it (Shift
-        to turn).
+        to turn). They stay put once you close Customize.
       </p>
       <SegTabs
         className="cz-seg"

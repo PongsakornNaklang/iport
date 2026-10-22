@@ -25,7 +25,9 @@ The running app shows its version and build in the Help panel (?).
   arrows in Customize. A drag, a pinch or a slider move is one step.
 - Stickers on phones and tablets: pinch to resize, twist to turn. A selected
   sticker or engraving has a corner handle to resize and turn it and a ×
-  to remove it.
+  to remove it. Stickers only move while Customize is open; the rest of the
+  time a drag over one turns the iPod, and a tap goes through to the
+  screen or button under it.
 
 ## [1.1.0] - 2026-10-22
 
