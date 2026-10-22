@@ -13,7 +13,13 @@ import { toast } from '../ui/toast';
  * `sockMouth`: when the iPod wears a sock, the y of its opening (px from the
  * body's centre). Everything below it is inside the fabric.
  */
-export const BodySlotContext = createContext<{ before?: ReactNode; after?: ReactNode; sockMouth?: number | null }>({});
+export const BodySlotContext = createContext<{
+  before?: ReactNode;
+  after?: ReactNode;
+  sockMouth?: number | null;
+  /** hand a pointer to the stage to pull the sock off (see cover/sockPull) */
+  pullSock?: (pointerId: number, y0: number) => void;
+}>({});
 
 export function BodyExtras({ after = false }: { after?: boolean }) {
   const slot = useContext(BodySlotContext);

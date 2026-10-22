@@ -24,6 +24,8 @@ export interface ClickWheelProps {
   className?: string;
   /** set when the wheel can't be turned (inside a sock): presses still work, a turn calls this instead */
   onBlockedTurn?: () => void;
+  /** while blocked, a drag down hands the pointer over to this (pulling the sock off) */
+  onPullDown?: (pointerId: number, y0: number) => void;
 }
 
 function zoneOf(angleDeg: number): Exclude<WheelButton, 'select'> {
@@ -70,6 +72,7 @@ export function ClickWheel({
   style,
   className,
   onBlockedTurn,
+  onPullDown,
 }: ClickWheelProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [pressed, setPressed] = useState<WheelButton | null>(null);
@@ -83,10 +86,14 @@ export function ClickWheel({
     scrolling: false,
     stepTimes: [] as number[],
     wheelAcc: 0,
+    downX: 0,
+    downY: 0,
   });
 
   const blocked = useRef(onBlockedTurn);
   blocked.current = onBlockedTurn;
+  const pullDown = useRef(onPullDown);
+  pullDown.current = onPullDown;
 
   const center = () => {
     const r = ref.current!.getBoundingClientRect();
@@ -122,6 +129,8 @@ export function ClickWheel({
     s.acc = 0;
     s.scrolling = false;
     s.lastAngle = (Math.atan2(dy, dx) * 180) / Math.PI;
+    s.downX = e.clientX;
+    s.downY = e.clientY;
     const inner = centerSize / size;
     const zone: WheelButton = dist < inner ? 'select' : zoneOf(s.lastAngle);
     s.zone = zone;
@@ -134,6 +143,25 @@ export function ClickWheel({
   const onPointerMove = (e: React.PointerEvent) => {
     const s = g.current;
     if (!s.active || e.pointerId !== s.pointerId) return;
+    if (blocked.current && pullDown.current && !s.scrolling) {
+      // inside a sock: a drag down grabs the sock instead
+      const mx = e.clientX - s.downX;
+      const my = e.clientY - s.downY;
+      if (Math.hypot(mx, my) > 8 && my > 1.5 * Math.abs(mx)) {
+        if (s.zone) bus.cancel(s.zone);
+        s.active = false;
+        s.zone = null;
+        setPressed(null);
+        bus.emit({ type: 'touch', active: false });
+        try {
+          ref.current!.releasePointerCapture(e.pointerId);
+        } catch {
+          /* not captured */
+        }
+        pullDown.current(e.pointerId, s.downY);
+        return;
+      }
+    }
     const { cx, cy, radius } = center();
     const dx = e.clientX - cx;
     const dy = e.clientY - cy;

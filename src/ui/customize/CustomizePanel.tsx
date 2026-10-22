@@ -415,7 +415,7 @@ function CoverSection({ model }: { model: DeviceModel }) {
       )}
       {current === 'sock' && (
         <p className="tiny" style={{ marginTop: 8 }}>
-          Apple’s knitted socks from 2004. The buttons still press through the fabric, but the wheel won’t turn and a covered touch screen won’t respond.
+          Apple’s knitted socks from 2004. The buttons still press through the fabric, but the wheel won’t turn and a covered touch screen won’t respond. Drag it down to pull it off.
         </p>
       )}
     </div>

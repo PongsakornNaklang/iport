@@ -7,6 +7,7 @@ import { JackMarkers, useEarPods } from './earpods/EarPods';
 import { BodySlotContext } from './bodySlot';
 import { Cover, type CoverInfo } from './cover/Cover';
 import { coverGeometry } from './cover/geometry';
+import { onSock, useSockPull } from './cover/sockPull';
 import { useModelSwitch } from './modelSwitch';
 import { pickModel, useOverview } from './overview';
 import { isTypingTarget } from './keyboard';
@@ -212,6 +213,8 @@ export function Stage() {
     tween: null as null | { fromX: number; fromY: number; toX: number; toY: number; t0: number; dur: number },
     px: 0,
     py: 0,
+    /** a press on the sock that may yet become a pull (see onPointerMove) */
+    maybePull: null as null | { id: number; x: number; y: number },
   });
 
   // Fit to the available area (minus any side panel).
@@ -370,6 +373,8 @@ export function Stage() {
     if (t.closest('[data-no-stage]')) return;
     if (e.button !== 0 && e.button !== 2) return;
     const s = st.current;
+    // on the sock: a drag down pulls it off, any other drag turns the iPod
+    s.maybePull = !force && sockMouthRef.current != null && onSock(rotRef.current, e.clientX, e.clientY) ? { id: e.pointerId, x: e.clientX, y: e.clientY } : null;
     s.dragging = true;
     s.tween = null;
     s.vx = s.vy = 0;
@@ -394,6 +399,24 @@ export function Stage() {
       s.py = clamp(((e.clientY - r.top) / r.height) * 2 - 1, -1, 1);
     }
     if (!s.dragging) return;
+    const mp = s.maybePull;
+    if (mp && mp.id === e.pointerId) {
+      const mx = e.clientX - mp.x;
+      const my = e.clientY - mp.y;
+      if (Math.hypot(mx, my) < 8) return; // not sure yet
+      s.maybePull = null;
+      if (my > 1.5 * Math.abs(mx)) {
+        s.dragging = false;
+        s.vx = s.vy = 0;
+        try {
+          (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
+        } catch {
+          /* not captured */
+        }
+        pullSock(e.pointerId, mp.y);
+        return;
+      }
+    }
     const now = performance.now();
     const dx = e.clientX - s.lastX;
     const dy = e.clientY - s.lastY;
@@ -458,6 +481,10 @@ export function Stage() {
     return coverGeometry(cover.fit, 'sock', cover.pxPerMm, cover.size).sock?.mouth ?? null;
   }, [cover]);
   const jackCovered = sockMouth != null && !!model.jack && model.jack.y > sockMouth;
+  const sockMouthRef = useRef(sockMouth);
+  sockMouthRef.current = sockMouth;
+  const scaleRef = useRef(1);
+  const pullSock = useSockPull(rotRef, scaleRef, model.size.height);
   useEarPods({ wrap: wrapRef, back: backCanvas, front: frontCanvas, markers: jackRef, model, enabled: scene.earpods !== false && !jackCovered });
 
   const Device = useMemo(() => deviceComponent(model), [model]);
@@ -472,10 +499,12 @@ export function Stage() {
       ),
       after: cover && <Cover info={cover} after />,
       sockMouth,
+      pullSock,
     }),
-    [cover, model, sockMouth],
+    [cover, model, sockMouth, pullSock],
   );
   const scale = fit * zoom;
+  scaleRef.current = scale;
   const shiftX = (inset.left - inset.right - bars.right) / 2;
   const centerY = (TOP_BAR - (inset.bottom || bars.bottom)) / 2;
 

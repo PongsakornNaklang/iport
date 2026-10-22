@@ -5,9 +5,9 @@
  * much of the edge the front covers, where the headphone jack is, what
  * the back says and what the software can do.
  */
-import { useEffect, useMemo, useState, type CSSProperties } from 'react';
+import { useContext, useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { Box3D, Device3D, type EdgeSlice } from '../../shell/Device3D';
-import { BodyExtras, sockHint, useSockMouth } from '../../shell/bodySlot';
+import { BodyExtras, BodySlotContext, sockHint, useSockMouth } from '../../shell/bodySlot';
 import { Decals } from '../../shell/decals/Decals';
 import { isTypingTarget } from '../../shell/keyboard';
 import { useSettings } from '../../core/settings/store';
@@ -128,6 +128,7 @@ export function ClickWheelIpod({ model, appearance, spec }: DeviceProps & { spec
   // inside a sock the buttons press through the fabric, but the wheel can't be turned
   const mouth = useSockMouth();
   const wheelCovered = mouth != null && WHEEL.cy - H / 2 > mouth;
+  const pullSock = useContext(BodySlotContext).pullSock;
   const [hold, setHold] = useState(false);
   const clicker = useSettings((s) => s.clicker) !== 'off';
   useWheelKeyboard(bus, true, clicker);
@@ -252,6 +253,7 @@ export function ClickWheelIpod({ model, appearance, spec }: DeviceProps & { spec
               centerColor={colors.center ?? '#d9dadc'}
               clicker={clicker}
               onBlockedTurn={wheelCovered ? turnBlocked : undefined}
+              onPullDown={pullSock}
               style={{ position: 'absolute', left: 2, top: 2 }}
             />
           </div>
