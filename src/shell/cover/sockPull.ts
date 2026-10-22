@@ -19,6 +19,8 @@ const OFF_AT = 0.28;
 /** a flick down this fast (screen px per ms) takes it off sooner */
 const FLICK = 0.6;
 const EASE = 'cubic-bezier(0.3, 0.7, 0.4, 1)';
+/** the most it rides up (iPod px) when pushed the wrong way */
+const UP_GIVE = 6;
 
 /** Is (x, y) on the sock, as drawn on screen? */
 export function onSock(root: HTMLElement | null, x: number, y: number): boolean {
@@ -70,7 +72,8 @@ export function useSockPull(root: RefObject<HTMLElement | null>, scale: RefObjec
       const move = (e: PointerEvent) => {
         if (e.pointerId !== id) return;
         const raw = (e.clientY - y0) / k;
-        d = raw > 0 ? raw : raw * 0.15; // it hardly goes up: it's already on
+        // it can't go up: the iPod sits at the bottom of it. Just a little give, which stops.
+        d = raw > 0 ? raw : -UP_GIVE * (1 - Math.exp(raw / (UP_GIVE * 6)));
         const now = performance.now();
         v = 0.6 * v + 0.4 * ((e.clientY - lastY) / Math.max(1, now - lastT));
         lastY = e.clientY;
