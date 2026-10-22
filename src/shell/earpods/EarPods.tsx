@@ -11,7 +11,7 @@ import { useEffect, useRef, type RefObject } from 'react';
 import { player, usePlayer } from '../../core/player/player';
 import { playTone } from '../../core/sound/click';
 import type { DeviceModel } from '../../devices/types';
-import { useStage } from '../stageStore';
+import { liveOrientation, useStage } from '../stageStore';
 import { Rope, type RopeOptions } from './rope';
 
 // EarPods dimensions in millimetres
@@ -324,7 +324,7 @@ export function useEarPods({
       }
       // let go of an unplugged plug: the EarPods leave the screen
       if (s.phase === 'free') beginRetract();
-      };
+    };
     el.addEventListener('pointerdown', down, true);
     el.addEventListener('pointermove', move);
     el.addEventListener('pointerup', up);
@@ -380,17 +380,69 @@ export function useEarPods({
       return { p, aMm, mm, dz };
     };
 
+    /*
+     * Keeping the frame budget on phones: finding the jack makes the browser
+     * lay out the 3D iPod, and the canvases cover the whole stage. So the
+     * jack is looked up only while something may have moved it (the view
+     * turned, zoomed or resized, and for a moment after), and once the
+     * cable has come to rest the canvases keep their last picture.
+     */
+    let drawn = false;
+    let lastSig = '';
+    /** look the jack up every frame until then */
+    let lively = 0;
+    let lastRead = -Infinity;
+    /** frames the cable has been at rest */
+    let still = 0;
+    const signature = () => {
+      const host = wrap.current;
+      const center = host?.querySelector<HTMLElement>('.stage-center:not(.ov-item)');
+      return `${liveOrientation.rx.toFixed(2)} ${liveOrientation.ry.toFixed(2)} ${useStage.getState().zoom} ${host?.clientWidth} ${host?.clientHeight} ${center?.style.transform} ${modelRef.current.id}`;
+    };
+    const moved = (a: Jack | null, b: Jack | null) =>
+      !a || !b || Math.abs(a.p.x - b.p.x) > 0.3 || Math.abs(a.p.y - b.p.y) > 0.3 || Math.abs(a.dz - b.dz) > 0.01 || Math.abs(a.mm - b.mm) > 0.01;
+
     const loop = (now: number) => {
       raf = requestAnimationFrame(loop);
       const s = sim.current;
       const dt = Math.min(1 / 30, (now - last) / 1000);
       last = now;
-      const j = readJack();
-      if (j) s.lastJack = j;
+      const hidden = s.phase === 'hidden' || !s.rope;
+      const sig = signature();
+      if (sig !== lastSig) {
+        lastSig = sig;
+        lively = now + 700; // transitions (fit, zoom, the model chooser) run on a little
+      }
+      const busy = now < lively || s.phase === 'entering' || s.phase === 'retracting' || !!s.drag;
+      // at rest, a slow check still catches anything else that moves the iPod
+      if (busy || !s.lastJack || now - lastRead > (hidden ? 500 : 250)) {
+        lastRead = now;
+        const j = readJack();
+        if (!busy && moved(j, s.lastJack)) lively = now + 700;
+        if (j) s.lastJack = j;
+      }
+
+      // No EarPods in, no sound: a play request waits for the plug's click.
+      // (Not while the plug just moves to another iPod's jack, and never for
+      // long: if the jack can't be found the music plays anyway.)
+      const canPlug = enabledRef.current && !!modelRef.current.jack;
+      const waiting = s.phase === 'entering' && s.forPlay && now - s.t0 < 2500;
+      player.setOutputHold(canPlug && (s.phase === 'hidden' || s.phase === 'free' || waiting));
+
       const cb = back.current;
       const cf = front.current;
       const host = wrap.current;
       if (!cb || !cf || !host) return;
+      if (hidden) {
+        if (drawn) {
+          cb.getContext('2d')!.clearRect(0, 0, cb.width, cb.height);
+          cf.getContext('2d')!.clearRect(0, 0, cf.width, cf.height);
+          drawn = false;
+        }
+        return;
+      }
+      // plugged in, left alone and settled: nothing to redraw
+      if (s.phase === 'plugged' && !busy && now >= lively && still > 40 && drawn) return;
       const W = host.clientWidth;
       const H = host.clientHeight;
       sizeCanvas(cb, W, H);
@@ -402,15 +454,8 @@ export function useEarPods({
       gf.setTransform(dpr, 0, 0, dpr, 0, 0);
       gb.clearRect(0, 0, W, H);
       gf.clearRect(0, 0, W, H);
-
-      // No EarPods in, no sound: a play request waits for the plug's click.
-      // (Not while the plug just moves to another iPod's jack, and never for
-      // long: if the jack can't be found the music plays anyway.)
-      const canPlug = enabledRef.current && !!modelRef.current.jack;
-      const waiting = s.phase === 'entering' && s.forPlay && now - s.t0 < 2500;
-      player.setOutputHold(canPlug && (s.phase === 'hidden' || s.phase === 'free' || waiting));
-
-      if (s.phase === 'hidden' || !s.rope) return;
+      drawn = true;
+      if (!s.rope) return;
       const r = s.rope;
       const jk = s.lastJack;
       const mm = jk?.mm ?? 3;
@@ -529,23 +574,30 @@ export function useEarPods({
         const reach = len(sub(tail, s.anchor));
         const p1 = add(s.anchor, { x: 0, y: -reach * 0.4 });
         const p2 = add(tail, mul(axis, reach * 0.35));
-        r.blendTo((i) => {
-          const t = i / (n - 1);
-          const a = (1 - t) ** 3;
-          const b = 3 * (1 - t) ** 2 * t;
-          const c = 3 * (1 - t) * t * t;
-          const d = t ** 3;
-          return {
-            x: a * s.anchor.x + b * p1.x + c * p2.x + d * tail.x,
-            y: a * s.anchor.y + b * p1.y + c * p2.y + d * tail.y,
-          };
-        }, s.phase === 'plugged' ? 0.05 : 0.03);
+        r.blendTo(
+          (i) => {
+            const t = i / (n - 1);
+            const a = (1 - t) ** 3;
+            const b = 3 * (1 - t) ** 2 * t;
+            const c = 3 * (1 - t) * t * t;
+            const d = t ** 3;
+            return {
+              x: a * s.anchor.x + b * p1.x + c * p2.x + d * tail.x,
+              y: a * s.anchor.y + b * p1.y + c * p2.y + d * tail.y,
+            };
+          },
+          s.phase === 'plugged' ? 0.05 : 0.03,
+        );
       }
 
       if (s.phase === 'free' || s.phase === 'retracting') {
         axis = plugAxis();
         axisMm = mul(axis, mm);
       }
+
+      let motion = 0;
+      for (const q of r.pts) motion = Math.max(motion, Math.abs(q.x - q.px) + Math.abs(q.y - q.py));
+      still = motion < 0.04 ? still + 1 : 0;
 
       // The cable lives behind the iPod. It comes in front when the jack's
       // opening faces the camera, or while you hold it.

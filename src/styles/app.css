@@ -1434,3 +1434,27 @@ textarea.input {
   visibility: hidden;
   pointer-events: none;
 }
+
+/* in the chooser the iPods only float: their own screens' animations wait (a phone has four iPods to draw) */
+.ov-float *,
+.stage.overview .device-enter * {
+  animation-play-state: paused !important;
+}
+
+/* the phone carousel: one iPod in the middle, its neighbours peeking in at the edges */
+.ov-hits.carousel {
+  touch-action: none;
+}
+.stage.swiping .ov-item,
+.stage.swiping .stage-center {
+  transition: none;
+}
+.ov-hits.carousel .ov-label {
+  transition: opacity 220ms var(--ease);
+}
+.ov-hits.carousel .ov-hit:not(.on) .ov-label {
+  opacity: 0;
+}
+.ov-hits.carousel .ov-hit {
+  transition: none;
+}

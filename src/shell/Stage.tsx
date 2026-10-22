@@ -46,15 +46,48 @@ interface Slot {
   /** its cell */
   cellW: number;
   cellH: number;
+  /** extra scale: lifted under the pointer, or smaller beside the middle of the carousel */
+  s: number;
 }
 
+/** narrower than this, the chooser is a carousel you swipe */
+const CAROUSEL_W = 760;
+
 /**
- * Where each iPod floats in the chooser: a row of cells (two rows on narrow
- * screens) over the free part of the stage, all at one scale so they keep
- * their real sizes next to each other.
+ * Where each iPod floats in the chooser, over the free part of the stage,
+ * all at one scale so they keep their real sizes next to each other.
+ *
+ * Wide screens: a row, `focus` lifted. Narrow ones: a carousel, `focus`
+ * big in the middle and its neighbours peeking in half from the edges;
+ * `drag` is how far a finger has pulled it.
  */
-function overviewLayout(area: { w: number; h: number }, cx: number, cy: number): { k: number; cols: number; slots: Slot[] } {
-  const cols = area.w >= 760 ? MODELS.length : 2;
+function overviewLayout(
+  area: { w: number; h: number },
+  cx: number,
+  cy: number,
+  focus: number,
+  drag: number,
+): { k: number; cols: number; carousel: boolean; step: number; slots: Slot[] } {
+  if (area.w < CAROUSEL_W) {
+    const step = area.w * 0.5; // a neighbour's middle sits at the screen edge: half of it shows
+    const cellH = area.h;
+    const k = Math.min(...MODELS.map((m) => Math.min((area.w * 0.5) / m.size.width, ((cellH - LABEL) * 0.78) / m.size.height)));
+    const at = focus - drag / step; // where the carousel is, in iPods
+    const slots = MODELS.map((m, i) => {
+      const d = Math.min(1, Math.abs(i - at));
+      return {
+        x: cx + (i - at) * step,
+        y: cy - area.h / 2 + (cellH - LABEL) / 2,
+        w: m.size.width * k,
+        h: m.size.height * k,
+        cellW: step,
+        cellH,
+        s: 1 - 0.22 * d,
+      };
+    });
+    return { k, cols: 1, carousel: true, step, slots };
+  }
+  const cols = MODELS.length;
   const rows = Math.ceil(MODELS.length / cols);
   const cellW = area.w / cols;
   const cellH = area.h / rows;
@@ -66,8 +99,9 @@ function overviewLayout(area: { w: number; h: number }, cx: number, cy: number):
     h: m.size.height * k,
     cellW,
     cellH,
+    s: i === focus ? 1.08 : 1,
   }));
-  return { k, cols, slots };
+  return { k, cols, carousel: false, step: cellW, slots };
 }
 
 /** A case or sock the iPod is wearing. */
@@ -85,7 +119,7 @@ function useCoverInfo(model: DeviceModel, appearance: Appearance): CoverInfo | n
 const FRONT_VARS = { '--rx': 0, '--ry': 0, '--lx': 0, '--ly': 0, '--elx': 0, '--ely': 0, '--vx': 0, '--vy': 0, '--vz': -1 } as React.CSSProperties;
 
 /** One of the other iPods in the chooser: live, but it can't be used. */
-function OverviewItem({ model, slot, index, hovered, out }: { model: DeviceModel; slot: Slot; index: number; hovered: boolean; out: boolean }) {
+function OverviewItem({ model, slot, index, out }: { model: DeviceModel; slot: Slot; index: number; out: boolean }) {
   const appearance = useAppearance(model.id);
   const cover = useCoverInfo(model, appearance);
   const Device = useMemo(() => deviceComponent(model), [model]);
@@ -94,7 +128,7 @@ function OverviewItem({ model, slot, index, hovered, out }: { model: DeviceModel
   return (
     <div
       className={`stage-center ov-item ${out ? 'ov-out' : ''}`}
-      style={{ transform: `translate(${slot.x}px, ${slot.y}px) scale(${k * (hovered ? 1.08 : 1)})`, ['--ov-i' as string]: index }}
+      style={{ transform: `translate(${slot.x}px, ${slot.y}px) scale(${k * slot.s})`, ['--ov-i' as string]: index }}
       inert
       aria-hidden="true"
     >
@@ -250,9 +284,14 @@ export function Stage() {
     return () => cancelAnimationFrame(raf);
   }, []);
 
+  // what was last written, so a still iPod costs nothing a frame
+  const applied = useRef({ el: null as HTMLElement | null, key: '' });
   const apply = (rx: number, ry: number) => {
     const el = rotRef.current;
     if (!el) return;
+    const key = `${rx.toFixed(2)} ${ry.toFixed(2)} ${sizeRef.current.width} ${sizeRef.current.depth} ${shadowRef.current ? 1 : 0}`;
+    if (applied.current.el === el && applied.current.key === key) return;
+    applied.current = { el, key };
     el.style.transform = `rotateX(${rx.toFixed(2)}deg) rotateY(${ry.toFixed(2)}deg)`;
     liveOrientation.rx = rx;
     liveOrientation.ry = ry;
@@ -369,17 +408,24 @@ export function Stage() {
   const centerY = (TOP_BAR - (inset.bottom || bars.bottom)) / 2;
 
   // The chooser: where everything floats, and the keys while it's up.
+  const index = MODELS.findIndex((m) => m.id === model.id);
+  const focus = hover < 0 ? index : hover;
+  // a finger pulling the carousel (px), and where it started
+  const [drag, setDrag] = useState(0);
+  const swallow = useRef(false);
+  const swipe = useRef<{ x: number; y: number; id: number; moved: boolean; bg: boolean } | null>(null);
   const layout = useMemo(
     () =>
       overviewLayout(
         { w: Math.max(200, box.w - inset.left - inset.right - bars.right), h: Math.max(200, box.h - TOP_BAR - (inset.bottom || bars.bottom)) },
         shiftX,
         centerY,
+        focus,
+        drag,
       ),
-    [box, inset, bars, shiftX, centerY],
+    [box, inset, bars, shiftX, centerY, focus, drag],
   );
   const showOverview = overview || !!closing;
-  const index = MODELS.findIndex((m) => m.id === model.id);
   const mySlot = layout.slots[index];
   // an iPod that has been in the chooser doesn't play its entrance again when it leaves
   const quietFor = useRef('');
@@ -396,8 +442,8 @@ export function Stage() {
       const move = (d: number) => useOverview.setState({ hover: (cur + d + n) % n });
       if (e.key === 'ArrowLeft') move(-1);
       else if (e.key === 'ArrowRight') move(1);
-      else if (e.key === 'ArrowUp') move(-layout.cols);
-      else if (e.key === 'ArrowDown') move(layout.cols);
+      else if (e.key === 'ArrowUp' && layout.cols > 1) move(-layout.cols);
+      else if (e.key === 'ArrowDown' && layout.cols > 1) move(layout.cols);
       else if (e.key === 'Enter' || e.key === ' ') pickModel(MODELS[cur].id);
       else if (e.key === 'Escape') pickModel();
       // every other key too: none of the iPods takes keys while you choose
@@ -417,13 +463,13 @@ export function Stage() {
   }, [overview, index, layout.cols]);
   const centerTransform =
     overview && mySlot
-      ? `translate(${mySlot.x}px, ${mySlot.y}px) scale(${(mySlot.w / model.size.width) * (hover === index ? 1.08 : 1)})`
+      ? `translate(${mySlot.x}px, ${mySlot.y}px) scale(${(mySlot.w / model.size.width) * mySlot.s})`
       : `translate(${shiftX}px, ${centerY}px) scale(${scale})`;
 
   return (
     <div
       ref={wrapRef}
-      className={`stage backdrop-${scene.backdrop} ${overview ? 'overview' : ''}`}
+      className={`stage backdrop-${scene.backdrop} ${overview ? 'overview' : ''} ${drag ? 'swiping' : ''}`}
       style={{ ['--bg1' as string]: scene.color1, ['--bg2' as string]: scene.color2 }}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
@@ -444,9 +490,7 @@ export function Stage() {
       {/* EarPods cable behind the iPod (and on top when the jack faces the camera) */}
       <canvas ref={backCanvas} className="ep-canvas" aria-hidden="true" />
       {showOverview &&
-        MODELS.map((m, i) =>
-          m.id === model.id ? null : <OverviewItem key={m.id} model={m} slot={layout.slots[i]} index={i} hovered={hover === i && overview} out={!overview} />,
-        )}
+        MODELS.map((m, i) => (m.id === model.id ? null : <OverviewItem key={m.id} model={m} slot={layout.slots[i]} index={i} out={!overview} />))}
       <div className="stage-center" key={model.id} style={{ transform: centerTransform, ['--ov-i' as string]: index }}>
         <div className="stage-rot" ref={rotRef} inert={overview}>
           <div
@@ -465,10 +509,55 @@ export function Stage() {
       <canvas ref={frontCanvas} className="ep-canvas" aria-hidden="true" />
       {overview && (
         <div
-          className="ov-hits"
+          className={`ov-hits ${layout.carousel ? 'carousel' : ''}`}
           data-no-stage=""
           onPointerDown={(e) => {
-            if (e.target === e.currentTarget) pickModel();
+            const bg = e.target === e.currentTarget;
+            if (!layout.carousel) {
+              if (bg) pickModel();
+              return;
+            }
+            // the carousel follows a finger; a tap still picks
+            swipe.current = { x: e.clientX, y: e.clientY, id: e.pointerId, moved: false, bg };
+          }}
+          onPointerMove={(e) => {
+            const sw = swipe.current;
+            if (!sw || sw.id !== e.pointerId) return;
+            const dx = e.clientX - sw.x;
+            if (!sw.moved && Math.abs(dx) > 8) {
+              sw.moved = true;
+              (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+            }
+            if (!sw.moved) return;
+            // past the first or last iPod it gives, like a rubber band
+            const end = (dx > 0 && focus === 0) || (dx < 0 && focus === MODELS.length - 1);
+            setDrag(end ? dx * 0.3 : dx);
+          }}
+          onPointerUp={(e) => {
+            const sw = swipe.current;
+            if (!sw || sw.id !== e.pointerId) return;
+            swipe.current = null;
+            if (sw.moved) {
+              swallow.current = true;
+              setTimeout(() => (swallow.current = false), 0);
+            }
+            if (!sw.moved) {
+              if (sw.bg) pickModel();
+              return;
+            }
+            const dx = e.clientX - sw.x;
+            let steps = Math.round(-dx / layout.step);
+            if (steps === 0 && Math.abs(dx) > 40) steps = dx < 0 ? 1 : -1;
+            useOverview.setState({ hover: Math.max(0, Math.min(MODELS.length - 1, focus + steps)) });
+            setDrag(0);
+          }}
+          onPointerCancel={() => {
+            swipe.current = null;
+            setDrag(0);
+          }}
+          onClickCapture={(e) => {
+            // the click that ends a swipe isn't a tap
+            if (swallow.current || swipe.current?.moved) e.stopPropagation();
           }}
         >
           <div className="ov-title" style={{ top: TOP_BAR + 6, left: `calc(50% + ${shiftX}px)` }}>
@@ -480,7 +569,7 @@ export function Stage() {
             return (
               <button
                 key={m.id}
-                className={`ov-hit ${hover === i ? 'on' : ''} ${m.id === model.id ? 'current' : ''}`}
+                className={`ov-hit ${focus === i ? 'on' : ''} ${m.id === model.id ? 'current' : ''}`}
                 style={{
                   left: `calc(50% + ${s.x - s.cellW / 2}px)`,
                   top: `calc(50% + ${top}px)`,
@@ -490,8 +579,12 @@ export function Stage() {
                   ['--ov-floor' as string]: `${s.y + s.h / 2 - top + 10}px`,
                   ['--ov-w' as string]: `${s.w}px`,
                 }}
-                onPointerEnter={() => useOverview.setState({ hover: i })}
-                onClick={() => pickModel(m.id)}
+                onPointerEnter={(e) => e.pointerType === 'mouse' && !layout.carousel && useOverview.setState({ hover: i })}
+                onClick={() => {
+                  // in the carousel, a tap on a neighbour brings it to the middle first
+                  if (layout.carousel && i !== focus) useOverview.setState({ hover: i });
+                  else pickModel(m.id);
+                }}
               >
                 <i className="ov-shadow" />
                 <span className="ov-label">

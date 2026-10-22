@@ -21,6 +21,15 @@ The running app shows its version and build in the Help panel (?).
   ↑ ↓ on phones) move between them, Enter picks, Esc keeps the one you have.
 - Changing iPods turns the old one away and the new one in.
 - Shift ← → steps to the previous or next iPod at any time.
+- On phones the chooser is a carousel: one iPod big in the middle, its
+  neighbours peeking in at the edges; swipe to move, tap the middle to pick.
+- The model button is a round icon at the right of the top bar; the other
+  controls step aside while you choose.
+
+### Fixed
+- Smoother on phones: the EarPods no longer measure the iPod and redraw
+  their canvases every frame when nothing moves, and a still iPod costs the
+  stage nothing a frame. In the chooser the iPods' own screen animations pause.
 
 ## [1.2.0] - 2026-10-22
 
