@@ -5,7 +5,7 @@
   "type": "module",
   "description": "iPod simulator for the web — multiple models, real OS feel, 3D, customizable.",
   "author": "Pongsakorn Naklang",
-  "license": "UNLICENSED",
+  "license": "PolyForm-Noncommercial-1.0.0",
   "homepage": "https://github.com/PongsakornNaklang/iport",
   "repository": {
     "type": "git",

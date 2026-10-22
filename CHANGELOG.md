@@ -14,6 +14,11 @@ The running app shows its version and build in the Help panel (?).
 
 ## [Unreleased]
 
+### Changed
+- iPort's license is now the PolyForm Noncommercial License 1.0.0: anyone
+  may use, change and share it for noncommercial purposes; commercial use
+  needs a separate license. It was "all rights reserved" before.
+
 ### Fixed
 - In the model chooser an iPod coming near the middle no longer jumps when
   it turns from a picture into the live iPod: it keeps floating without a
