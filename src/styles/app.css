@@ -1520,9 +1520,25 @@ textarea.input {
     display: none;
   }
 }
-/* far iPods are pictures: no 3D to keep in order */
-.ov-pic .device-enter {
-  transform-style: flat;
+/* an iPod's picture in the chooser, laid on the front of the live one while it comes alive (Stage.tsx OverviewSlot) */
+.ov-art {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transition:
+    opacity 360ms var(--ease),
+    visibility 0s;
+  pointer-events: none;
+}
+.ov-art svg {
+  display: block;
+}
+.ov-art.gone {
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 360ms var(--ease),
+    visibility 0s 360ms;
 }
 .ov-hits.carousel .ov-hit {
   transition: none;

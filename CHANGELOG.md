@@ -14,6 +14,12 @@ The running app shows its version and build in the Help panel (?).
 
 ## [Unreleased]
 
+### Fixed
+- In the model chooser an iPod coming near the middle no longer jumps when
+  it turns from a picture into the live iPod: it keeps floating without a
+  restart, and the picture fades away once the live iPod has drawn (and
+  fades back over it as it moves away).
+
 ## [1.3.0] - 2026-10-22
 
 ### Added

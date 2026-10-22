@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useMemo, useRef, useState, type ComponentType, type LazyExoticComponent } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type ComponentType, type LazyExoticComponent } from 'react';
 import { useAppearance, useCustomize } from '../core/customize/store';
 import { getModel } from '../devices/registry';
 import type { DeviceModel, DeviceProps } from '../devices/types';
@@ -109,32 +109,51 @@ function useCoverInfo(model: DeviceModel, appearance: Appearance): CoverInfo | n
 /** the light and view the device styles read, for an iPod facing front (the stage sets them live on its own) */
 const FRONT_VARS = { '--rx': 0, '--ry': 0, '--lx': 0, '--ly': 0, '--elx': 0, '--ely': 0, '--vx': 0, '--vy': 0, '--vz': -1 } as React.CSSProperties;
 
-/** An iPod far out in the chooser: its picture, floating where the live one would. */
-function OverviewPicture({ model, slot, index, out }: { model: DeviceModel; slot: Slot; index: number; out: boolean }) {
-  const appearance = useAppearance(model.id);
-  const k = slot.w / model.size.width;
-  return (
-    <div
-      className={`stage-center ov-item ov-pic ${out ? 'ov-out' : ''}`}
-      style={{ transform: `translate(${slot.x}px, ${slot.y}px) scale(${k * slot.s})`, ['--ov-i' as string]: index }}
-      aria-hidden="true"
-    >
-      <div className="stage-rot">
-        <div className="device-enter ov-float" style={{ width: model.size.width, height: model.size.height }}>
-          <ModelArt model={model} appearance={appearance} height={model.size.height} />
-        </div>
-      </div>
-    </div>
-  );
+/** how far from the middle (in iPods) an iPod in the chooser comes alive, and how far it must go to become a picture again */
+const LIVE_ENTER = LIVE_RANGE + 0.5;
+const LIVE_LEAVE = LIVE_RANGE + 1;
+/** the cross-fade between an iPod's picture and its live self (ms, as in app.css) */
+const ART_FADE = 360;
+
+/** Tells its parent once the lazily loaded device inside the same Suspense has drawn. */
+function Ready({ onReady }: { onReady: () => void }) {
+  useEffect(() => {
+    // a frame for the device to paint its first look
+    const r = requestAnimationFrame(() => requestAnimationFrame(onReady));
+    return () => cancelAnimationFrame(r);
+  }, [onReady]);
+  return null;
 }
 
-/** One of the other iPods in the chooser: live, but it can't be used. */
-function OverviewItem({ model, slot, index, out }: { model: DeviceModel; slot: Slot; index: number; out: boolean }) {
+/**
+ * One of the other iPods in the chooser. Far from the middle it is only its
+ * picture (a phone can't draw seven live iPods); near the middle the live
+ * iPod is put underneath, and once it has drawn the picture fades away, so
+ * it seems to come alive rather than be swapped. Moving away, the picture
+ * fades back over it before it goes. It is one floating element throughout,
+ * so its drift and entrance carry on unbroken. It can't be used.
+ */
+function OverviewSlot({ model, slot, index, out, dist }: { model: DeviceModel; slot: Slot; index: number; out: boolean; dist: number }) {
   const appearance = useAppearance(model.id);
   const cover = useCoverInfo(model, appearance);
   const Device = useMemo(() => deviceComponent(model), [model]);
   const extras = useMemo(() => ({ before: cover && <Cover info={cover} />, after: cover && <Cover info={cover} after /> }), [cover]);
+  // pic: picture only · loading: live underneath, still hidden · live: shown · leaving: picture fading back
+  const [phase, setPhase] = useState<'pic' | 'loading' | 'live' | 'leaving'>(() => (dist <= LIVE_ENTER ? 'loading' : 'pic'));
+  const near = dist <= LIVE_ENTER;
+  const far = dist > LIVE_LEAVE;
+  useEffect(() => {
+    if (near && (phase === 'pic' || phase === 'leaving')) setPhase(phase === 'pic' ? 'loading' : 'live');
+    else if (far && (phase === 'live' || phase === 'loading')) setPhase('leaving');
+  }, [near, far, phase]);
+  useEffect(() => {
+    if (phase !== 'leaving') return;
+    const t = window.setTimeout(() => setPhase('pic'), ART_FADE + 40);
+    return () => window.clearTimeout(t);
+  }, [phase]);
+  const onReady = useCallback(() => setPhase((p) => (p === 'loading' ? 'live' : p)), []);
   const k = slot.w / model.size.width;
+  const hasLive = phase !== 'pic';
   return (
     <div
       className={`stage-center ov-item ${out ? 'ov-out' : ''}`}
@@ -144,11 +163,21 @@ function OverviewItem({ model, slot, index, out }: { model: DeviceModel; slot: S
     >
       <div className="stage-rot" style={FRONT_VARS}>
         <div className="device-enter ov-float" style={{ width: model.size.width, height: model.size.height }}>
-          <Suspense fallback={<div className="device-loading" style={{ width: model.size.width, height: model.size.height }} />}>
-            <BodySlotContext.Provider value={extras}>
-              <Device model={model} appearance={appearance} />
-            </BodySlotContext.Provider>
-          </Suspense>
+          {hasLive && (
+            <Suspense fallback={null}>
+              <BodySlotContext.Provider value={extras}>
+                <Device model={model} appearance={appearance} />
+              </BodySlotContext.Provider>
+              <Ready onReady={onReady} />
+            </Suspense>
+          )}
+          {/* on the front face (alone, or over the live iPod until it has drawn), so it never moves when the live one comes or goes */}
+          <div
+            className={`ov-art ${phase === 'live' ? 'gone' : ''}`}
+            style={{ width: model.size.width, height: model.size.height, transform: `translateZ(${model.size.depth / 2 + 1}px)` }}
+          >
+            <ModelArt model={model} appearance={appearance} height={model.size.height} />
+          </div>
         </div>
       </div>
     </div>
@@ -634,13 +663,8 @@ export function Stage() {
       {showOverview &&
         MODELS.map((m, i) => {
           if (m.id === model.id) return null;
-          // live 3D only near the middle: the rest are pictures (a phone can't draw seven iPods)
-          const near = Math.abs(i - Math.round(layout.at)) <= LIVE_RANGE;
-          return near ? (
-            <OverviewItem key={m.id} model={m} slot={layout.slots[i]} index={i} out={!overview} />
-          ) : (
-            <OverviewPicture key={m.id} model={m} slot={layout.slots[i]} index={i} out={!overview} />
-          );
+          // live 3D only near the middle: the rest are pictures (see OverviewSlot)
+          return <OverviewSlot key={m.id} model={m} slot={layout.slots[i]} index={i} out={!overview} dist={Math.abs(i - layout.at)} />;
         })}
       <div className="stage-center" key={model.id} style={{ transform: centerTransform, ['--ov-i' as string]: index }}>
         <div className="stage-rot" ref={rotRef} inert={overview}>
