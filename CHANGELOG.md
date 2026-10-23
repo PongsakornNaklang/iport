@@ -27,9 +27,12 @@ The running app shows its version and build in the Help panel (?).
   (orange's is golden). The six colors match Apple's.
 
 ### Fixed
-- iPod Socks run much smoother: they are built from about 240 pieces
-  instead of 420, each now fitted exactly to its part of the sock, so the
-  toe curves more smoothly than before with fewer of them.
+- iPod Socks no longer slow the iPod down as it turns:
+  - The sock is drawn in a 3D space of its own over the iPod. Sharing the
+    iPod's, every frame the browser cut its pieces along the iPod's
+    hundreds of surfaces to sort them, which halved the frame rate.
+  - It is built from about 160 pieces instead of 420, each now fitted
+    exactly to its part of the sock, so the toe still curves smoothly.
 - Smoother on phones, most of all with a case on:
   - The light and view the stage passes the iPod every frame now go only
     to the few sheens and edges that use them. Before, every element of

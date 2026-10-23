@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type ComponentType, type LazyExoticComponent } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ComponentType, type LazyExoticComponent } from 'react';
 import { useAppearance, useCustomize } from '../core/customize/store';
 import { getModel } from '../devices/registry';
 import type { DeviceModel, DeviceProps } from '../devices/types';
@@ -126,12 +126,20 @@ const ART_FADE = 360;
  * once, the spin would run while the page is still busy putting the iPod
  * together, and its first half would be lost (on a phone, most of it).
  */
-function EnterWhenDrawn() {
+function EnterWhenDrawn({ onDrawn }: { onDrawn?: () => void }) {
   const ref = useRef<HTMLSpanElement>(null);
+  const drawn = useRef(onDrawn);
+  drawn.current = onDrawn;
   useEffect(() => {
     const host = ref.current?.closest('.device-enter');
     let r2 = 0;
-    const r1 = requestAnimationFrame(() => (r2 = requestAnimationFrame(() => host?.classList.remove('wait'))));
+    const r1 = requestAnimationFrame(
+      () =>
+        (r2 = requestAnimationFrame(() => {
+          host?.classList.remove('wait');
+          drawn.current?.();
+        })),
+    );
     return () => {
       cancelAnimationFrame(r1);
       cancelAnimationFrame(r2);
@@ -232,6 +240,10 @@ export function Stage() {
 
   const wrapRef = useRef<HTMLDivElement>(null);
   const rotRef = useRef<HTMLDivElement>(null);
+  // an iPod Sock's own 3D space, laid over the iPod's (see SOCK LAYER below)
+  const sockRotRef = useRef<HTMLDivElement>(null);
+  const enterRef = useRef<HTMLDivElement>(null);
+  const sockEnterRef = useRef<HTMLDivElement>(null);
   const edgeLight = useRef({ x: '', y: '', shown: false });
   // the light values go onto the elements that read them, not the whole iPod (see lightVars)
   const lit = useMemo(() => new LightVars(), []);
@@ -416,15 +428,16 @@ export function Stage() {
     lit.set('--ely', e.y);
   };
   // what was last written, so a still iPod costs nothing a frame
-  const applied = useRef({ el: null as HTMLElement | null, key: '' });
+  const applied = useRef({ el: null as HTMLElement | null, sock: null as HTMLElement | null, key: '' });
   const apply = (rx: number, ry: number, roll: number) => {
     const el = rotRef.current;
     if (!el) return;
     const m = sizeRef.current;
     const key = `${rx.toFixed(2)} ${ry.toFixed(2)} ${roll.toFixed(2)} ${m.width} ${m.height} ${m.depth} ${shadowRef.current ? 1 : 0}`;
     lit.attach(el);
-    if (applied.current.el === el && applied.current.key === key) return;
-    applied.current = { el, key };
+    const sockEl = sockRotRef.current;
+    if (applied.current.el === el && applied.current.sock === sockEl && applied.current.key === key) return;
+    applied.current = { el, sock: sockEl, key };
     lit.tick();
     // while it turns, effects that would be redrawn every frame wait (app.css .stage.moving)
     moving.current.t = performance.now();
@@ -434,6 +447,7 @@ export function Stage() {
     }
     // the roll turns the iPod in its own plane first, then the view turns it in 3D
     el.style.transform = `rotateX(${rx.toFixed(2)}deg) rotateY(${ry.toFixed(2)}deg)${roll ? ` rotateZ(${roll.toFixed(2)}deg)` : ''}`;
+    if (sockEl) sockEl.style.transform = el.style.transform;
     liveOrientation.rx = rx;
     liveOrientation.ry = ry;
     liveOrientation.roll = roll;
@@ -518,7 +532,7 @@ export function Stage() {
     if (e.button !== 0 && e.button !== 2) return;
     const s = st.current;
     // on the sock: a drag up or down moves it along the iPod, a sideways one turns the iPod
-    s.maybePull = !force && sockMouthRef.current != null && !useStage.getState().roll && onSock(rotRef.current, rawPoint(e).x, rawPoint(e).y) ? { id: e.pointerId, x: rawPoint(e).x, y: rawPoint(e).y } : null;
+    s.maybePull = !force && sockMouthRef.current != null && !useStage.getState().roll && onSock(sockRotRef.current, rawPoint(e).x, rawPoint(e).y) ? { id: e.pointerId, x: rawPoint(e).x, y: rawPoint(e).y } : null;
     s.dragging = true;
     s.tween = null;
     s.vx = s.vy = 0;
@@ -637,7 +651,7 @@ export function Stage() {
     }),
     [model, sock],
   );
-  const pullSock = useSockPull(rotRef, scaleRef, sockSpan);
+  const pullSock = useSockPull(sockRotRef, scaleRef, sockSpan, rotRef);
   useEarPods({ wrap: wrapRef, back: backCanvas, front: frontCanvas, markers: jackRef, model, enabled: scene.earpods !== false && !jackCovered });
 
   const Device = useMemo(() => deviceComponent(model), [model]);
@@ -646,17 +660,49 @@ export function Stage() {
     () => ({
       before: (
         <>
-          {cover && <Cover info={cover} />}
+          {cover && !sock && <Cover info={cover} />}
           <JackMarkers model={model} markerRef={jackRef} />
         </>
       ),
-      after: cover && <Cover info={cover} after />,
+      // a sock is drawn over the iPod (SOCK LAYER below), all but the rim its opening is threaded through
+      after: cover && (sock ? <Cover info={cover} after rim="only" /> : <Cover info={cover} after />),
       sockMouth,
       // on its side the sock can't be pulled along the iPod
       pullSock: roll ? undefined : pullSock,
     }),
-    [cover, model, sockMouth, pullSock, roll],
+    [cover, model, sock, sockMouth, pullSock, roll],
   );
+  const enterKey = `${model.id}:${turn}`;
+  // the sock waits for the iPod it goes on to be drawn
+  const [drawn, setDrawn] = useState('');
+  const onDrawn = useCallback(() => setDrawn(enterKey), [enterKey]);
+  const sockShown = !!sock && drawn === enterKey;
+  // The sock's copy of the iPod's entrance (and its float in the chooser):
+  // the same classes, so the same animations, caught up to where the
+  // iPod's are when the sock goes on later.
+  useLayoutEffect(() => {
+    const main = enterRef.current;
+    const copy = sockEnterRef.current;
+    if (!sockShown || !main || !copy) return;
+    const sync = () => {
+      if (copy.className !== main.className) copy.className = main.className;
+    };
+    sync();
+    const theirs = main.getAnimations();
+    for (const a of copy.getAnimations()) {
+      const name = (a as CSSAnimation).animationName;
+      const m = theirs.find((x) => (x as CSSAnimation).animationName === name);
+      try {
+        if (m) a.currentTime = m.currentTime;
+        else a.finish();
+      } catch {
+        /* an endless one the iPod isn't running: leave it */
+      }
+    }
+    const mo = new MutationObserver(sync);
+    mo.observe(main, { attributes: true, attributeFilter: ['class'] });
+    return () => mo.disconnect();
+  }, [sockShown, enterKey]);
   const scale = fit * zoom;
   scaleRef.current = scale;
   const shiftX = (inset.left - inset.right - bars.right) / 2;
@@ -760,18 +806,40 @@ export function Stage() {
         <div className="stage-rot" ref={rotRef} inert={overview}>
           <div
             className={`device-enter ${leaving ? 'device-leave' : ''} ${quiet ? 'quiet' : 'wait'}`}
-            key={`${model.id}:${turn}`}
+            key={enterKey}
+            ref={enterRef}
             style={{ width: model.size.width, height: model.size.height }}
           >
             <Suspense fallback={<div className="device-loading" style={{ width: model.size.width, height: model.size.height }} />}>
               <BodySlotContext.Provider value={bodyExtras}>
                 <Device model={model} appearance={appearance} />
               </BodySlotContext.Provider>
-              <EnterWhenDrawn />
+              <EnterWhenDrawn onDrawn={onDrawn} />
             </Suspense>
           </div>
         </div>
       </div>
+      {/*
+       * SOCK LAYER. The browser depth-sorts everything in one 3D space by
+       * cutting pieces along each other's planes, every frame it moves: in the
+       * iPod's own space the body's hundreds of planes would slice the sock's
+       * pieces again and again (a sock made it drop to half the frame rate).
+       * So the sock has a space of its own, turned with the iPod and drawn
+       * over it. Only the sides of the fabric facing the camera are drawn
+       * (cover.css), and the iPod is inside or above it, never in front of it.
+       */}
+      {sockShown && cover && (
+        <div className="stage-center stage-sock" key={`sock:${model.id}`} style={{ transform: centerTransform, ['--ov-i' as string]: index }} aria-hidden="true">
+          <div className="stage-rot" ref={sockRotRef} inert>
+            <div className="device-enter" key={enterKey} ref={sockEnterRef} style={{ width: model.size.width, height: model.size.height }}>
+              <div className="stage-sock-host" style={{ width: model.size.width, height: model.size.height }}>
+                <Cover info={cover} />
+                <Cover info={cover} after rim="none" />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       <canvas ref={frontCanvas} className="ep-canvas" aria-hidden="true" />
       {overview && (
         <div

@@ -50,7 +50,7 @@ export interface SockSpan {
  * pull; it follows that pointer on the window until it lifts. `scale` is
  * screen px per iPod px.
  */
-export function useSockPull(root: RefObject<HTMLElement | null>, scale: RefObject<number>, span: SockSpan) {
+export function useSockPull(root: RefObject<HTMLElement | null>, scale: RefObject<number>, span: SockSpan, device?: RefObject<HTMLElement | null>) {
   const busy = useRef(false);
   const size = useRef(span);
   size.current = span;
@@ -62,7 +62,9 @@ export function useSockPull(root: RefObject<HTMLElement | null>, scale: RefObjec
       const below = rest?.querySelector<HTMLElement>('.cv-pull-below');
       if (!r || !gather || !rest || !below || busy.current) return;
       busy.current = true;
-      const shift = [...rest.querySelectorAll<HTMLElement>('.cv-pull-shift')];
+      // the rim of the opening may be drawn with the iPod rather than the sock (Stage.tsx)
+      const mouth = device?.current?.querySelector<HTMLElement>('.cv-sock-mouth') ?? null;
+      const shift = [...rest.querySelectorAll<HTMLElement>('.cv-pull-shift'), ...(mouth?.querySelectorAll<HTMLElement>('.cv-pull-shift') ?? [])];
       const toe = [...rest.querySelectorAll<HTMLElement>('.cv-pull-toe')];
       const fill = [...rest.querySelectorAll<HTMLElement>('.cv-pull-fill')];
       const moving = [gather, rest, below, ...shift, ...toe, ...fill];
@@ -79,7 +81,10 @@ export function useSockPull(root: RefObject<HTMLElement | null>, scale: RefObjec
         below.style.transform = `scaleY(${((B - up) / B).toFixed(4)})`;
         shift.forEach((el) => (el.style.transform = px(down - up)));
         toe.forEach((el) => (el.style.transform = px(down)));
-        fill.forEach((el) => (el.style.transform = `scaleY(${(down / PULL_FILL).toFixed(4)})`));
+        fill.forEach((el) => {
+          el.style.transform = `scaleY(${(down / PULL_FILL).toFixed(4)})`;
+          if (down > 0) el.style.visibility = 'visible';
+        });
       };
       moving.forEach((el) => (el.style.transition = 'none'));
       let d = 0;
@@ -108,6 +113,7 @@ export function useSockPull(root: RefObject<HTMLElement | null>, scale: RefObjec
           show(L, H * 0.6);
           gather.classList.add('cv-leaving');
           rest.classList.add('cv-leaving');
+          mouth?.classList.add('cv-leaving');
           window.setTimeout(() => {
             busy.current = false;
             const c = useCustomize.getState();
@@ -123,6 +129,7 @@ export function useSockPull(root: RefObject<HTMLElement | null>, scale: RefObjec
               el.style.transition = '';
               el.style.transform = '';
             });
+            fill.forEach((el) => (el.style.visibility = ''));
           }, 320);
         }
       };

@@ -115,7 +115,7 @@ export function coverGeometry(fit: CoverFit, kind: Exclude<CoverKind, 'none'>, p
     y += hang;
     // …and closes in a flat seam
     const end = 0.045 * H;
-    const seam = 4;
+    const seam = 3;
     for (let i = 1; i <= seam; i++) {
       const k = i / seam;
       rows.push(row(y + end * k, tw, Math.max(1, td * 0.8 * Math.sqrt(Math.max(0, 1 - k * k)))));

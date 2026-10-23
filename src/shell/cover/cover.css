@@ -71,11 +71,14 @@
 }
 .cv-pull-fill {
   transform: scaleY(0);
+  /* not drawn at all until it is pulled (sockPull.ts) */
+  visibility: hidden;
 }
 /* sliding off at the end: the pieces fade, each on its own (opacity on a group would flatten it) */
 .cv-sock.cv-leaving .d3-facet,
 .cv-sock.cv-leaving .cv-sock-tag,
-.cv-sock.cv-leaving .cv-sock-rim {
+.cv-sock.cv-leaving .cv-sock-rim,
+.cv-sock-mouth.cv-leaving .cv-sock-rim {
   opacity: 0;
   transition: opacity 280ms ease-in;
 }
@@ -83,8 +86,10 @@
   left: 0;
   top: 0;
   inset: auto;
-  background: var(--cv-cuff) border-box;
-  filter: brightness(0.92);
+  /* a ring: the iPod comes up through the middle */
+  background: none;
+  border-style: solid;
+  border-color: color-mix(in srgb, var(--cv-cuff) 92%, #000);
 }
 /* the woven Apple tag in the left seam */
 .cv-sock-tag {
@@ -103,11 +108,7 @@
   height: 52%;
   fill: color-mix(in srgb, var(--cv) 85%, #000);
 }
-.cv-sock .d3-facet,
-.cv-sock .d3-facet i,
-.cv-sock .d3-face,
-.cv-sock-tag,
-.cv-sock-rim {
+.cv-sock-tag {
   backface-visibility: visible;
   -webkit-backface-visibility: visible;
 }
@@ -148,4 +149,15 @@
 }
 .cv-clear .cv-stitch {
   display: none;
+}
+
+/*
+ * An iPod Sock is drawn in a 3D space of its own, over the iPod (Stage.tsx,
+ * SOCK LAYER): only the outside of the fabric facing the camera, as the far
+ * side would be drawn over the iPod. The tag is a flap and shows both sides.
+ */
+.cv-sock .d3-facet,
+.cv-sock-rim {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }

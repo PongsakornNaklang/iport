@@ -41,11 +41,16 @@ const SOFT = { bandPx: 20, curveTol: 2, corner: 5 };
 const mix = (c: string, other: string, pct: number) => `color-mix(in srgb, ${c} ${100 - pct}%, ${other})`;
 
 /** The case or sock on the device (rendered through shell/bodySlot). */
-export function Cover({ info, after = false }: { info: CoverInfo; after?: boolean }) {
+/**
+ * `rim`, for a sock drawn in a 3D space of its own over the iPod (Stage.tsx):
+ * 'only' draws just the rim of its opening (the iPod comes up through it, so
+ * it stays in the iPod's space), 'none' all the rest.
+ */
+export function Cover({ info, after = false, rim = 'with' }: { info: CoverInfo; after?: boolean; rim?: 'with' | 'none' | 'only' }) {
   const { fit, choice, pxPerMm, size } = info;
   const kind = choice.kind === 'none' ? 'silicone' : choice.kind;
   const g = useMemo(() => coverGeometry(fit, kind, pxPerMm, size), [fit, kind, pxPerMm, size]);
-  if (g.sock) return <Sock s={g.sock} color={choice.color} pxPerMm={pxPerMm} after={after} />;
+  if (g.sock) return <Sock s={g.sock} color={choice.color} pxPerMm={pxPerMm} after={after} rim={rim} />;
   return after ? null : <Case g={g} fit={fit} kind={kind} color={choice.color} pxPerMm={pxPerMm} />;
 }
 
@@ -205,28 +210,32 @@ const RIB = (() => {
 /** one tile (a rib and a purl stripe, two rows), mm, unstretched */
 const RIB_MM = [8.5, 1.4];
 /**
- * Pieces round each corner of the sock's cross-section. The corners are
- * soft and the shading baked in, so three read as smooth; every piece is a
- * 3D layer the browser sorts and draws each frame.
+ * Pieces round each corner of the sock's cross-section: every piece is a 3D
+ * layer the browser sorts and draws again each frame the iPod moves. Round
+ * the iPod the corners are soft and the shading baked in, so three read as
+ * smooth; the empty toe below is nearly flat, and one will do.
  */
 const CORNER = 3;
+const TOE_CORNER = 1;
 
 /** px the toe's sections reach up into the section above, to fill the gap a bend opens */
 const COLLAR = (d: number) => Math.min(6, d * 0.4);
 
-function Sock({ s, color, pxPerMm, after }: { s: SockGeometry; color: string; pxPerMm: number; after: boolean }) {
+function Sock({ s, color, pxPerMm, after, rim }: { s: SockGeometry; color: string; pxPerMm: number; after: boolean; rim: 'with' | 'none' | 'only' }) {
   const cuff = sockCuff(color);
   // The rows, cut at the hinges: [0] hangs on the iPod, the others bend.
   const sections = useMemo(() => {
-    const relaxed = girth(s.rows[s.hinges[s.hinges.length - 1]], CORNER);
+    const loose = s.rows[s.hinges[s.hinges.length - 1]];
     const cuts = [0, ...s.hinges, s.rows.length - 1];
     return cuts.slice(0, -1).map((from, k) => {
-      const facets = sockMesh(s.rows.slice(from, cuts[k + 1] + 1), relaxed, CORNER, from);
+      const corner = k > 0 ? TOE_CORNER : CORNER;
+      const relaxed = girth(loose, corner);
+      const facets = sockMesh(s.rows.slice(from, cuts[k + 1] + 1), relaxed, corner, from);
       if (k > 0) {
         // a collar just inside the section above, hidden until the toe bends
         const h = s.rows[from];
         const inside = { ...h, w: h.w - 1.2, d: Math.max(0.5, h.d - 1.2), r: Math.max(0, h.r - 0.6) };
-        facets.push(...sockMesh([{ ...inside, y: h.y - COLLAR(h.d) }, inside], relaxed, CORNER, 100 + k * 10));
+        facets.push(...sockMesh([{ ...inside, y: h.y - COLLAR(h.d) }, inside], relaxed, corner, 100 + k * 10));
       }
       return { y: s.rows[from].y, facets };
     });
@@ -236,11 +245,11 @@ function Sock({ s, color, pxPerMm, after }: { s: SockGeometry; color: string; px
   // as narrow as the toe's top, is stretched to fill that length.
   const filler = useMemo(() => {
     const r = s.rows[s.hinges[0]];
-    const relaxed = girth(s.rows[s.hinges[s.hinges.length - 1]], CORNER);
-    return { y: r.y, facets: sockMesh([r, { ...r, y: r.y + PULL_FILL }], relaxed, CORNER, 200) };
+    const relaxed = girth(s.rows[s.hinges[s.hinges.length - 1]], TOE_CORNER);
+    return { y: r.y, facets: sockMesh([r, { ...r, y: r.y + PULL_FILL }], relaxed, TOE_CORNER, 200) };
   }, [s]);
   const hinges = useRef<(HTMLDivElement | null)[]>([]);
-  useSway(after, hinges);
+  useSway(after && rim !== 'only', hinges);
   const vars = {
     ['--cv' as string]: color,
     ['--cv-cuff' as string]: cuff,
@@ -295,6 +304,25 @@ function Sock({ s, color, pxPerMm, after }: { s: SockGeometry; color: string; px
       </div>
     );
   const top = s.rows[0];
+  // the folded edge of the opening, seen from above
+  const ring = (
+    <div
+      className="cv-ring cv-sock-rim"
+      style={{
+        width: top.w,
+        height: top.d,
+        borderRadius: top.r,
+        borderWidth: 1.4 * pxPerMm,
+        transform: `translate3d(${-top.w / 2}px, ${s.mouth - top.d / 2}px, 0) rotateX(90deg)`,
+      }}
+    />
+  );
+  if (rim === 'only')
+    return (
+      <div className="cv cv-sock-mouth" style={vars} aria-hidden="true">
+        <div className="cv-pull-shift">{ring}</div>
+      </div>
+    );
   return (
     <div className="cv cv-sock" style={vars} aria-hidden="true">
       {/* below the iPod: pushed up, it gets shorter (scaled about the iPod's bottom) */}
@@ -303,17 +331,7 @@ function Sock({ s, color, pxPerMm, after }: { s: SockGeometry; color: string; px
         {nest(1)}
       </div>
       <div className="cv-pull-shift">
-        {/* the folded edge of the opening, seen from above */}
-        <div
-          className="cv-ring cv-sock-rim"
-          style={{
-            width: top.w,
-            height: top.d,
-            borderRadius: top.r,
-            borderWidth: 1.4 * pxPerMm,
-            transform: `translate3d(${-top.w / 2}px, ${s.mouth - top.d / 2}px, 0) rotateX(90deg)`,
-          }}
-        />
+        {rim === 'with' && ring}
         <div className="cv-sock-tag" style={{ left: s.tag.x, top: s.tag.y, width: s.tag.w, height: s.tag.h }}>
           <svg viewBox="0 0 170 170" aria-hidden="true">
             <path d={APPLE_LOGO} />
