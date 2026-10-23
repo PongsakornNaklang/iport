@@ -22,8 +22,14 @@ The running app shows its version and build in the Help panel (?).
 - iPort's license is now the PolyForm Noncommercial License 1.0.0: anyone
   may use, change and share it for noncommercial purposes; commercial use
   needs a separate license. It was "all rights reserved" before.
+- iPod Socks look like Apple's swatches: broad stripes in two shades, a knit
+  rib of Vs beside a paler purl stripe, and each sock's own cuff color
+  (orange's is golden). The six colors match Apple's.
 
 ### Fixed
+- iPod Socks run much smoother: they are built from about 240 pieces
+  instead of 420, each now fitted exactly to its part of the sock, so the
+  toe curves more smoothly than before with fewer of them.
 - Smoother on phones, most of all with a case on:
   - The light and view the stage passes the iPod every frame now go only
     to the few sheens and edges that use them. Before, every element of

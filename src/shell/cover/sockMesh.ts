@@ -10,10 +10,9 @@
  * Every cross-section is walked the same way: the same straight sides and
  * the same corner angles. So between two neighbouring cross-sections each
  * piece of outline has a parallel twin, and the strip between them is a
- * flat trapezoid: one CSS 3D facet. It is drawn as a rectangle of the
- * trapezoid's mean width: the rows are close enough together that its
- * corners are off by a pixel or so, and a clip-path on a 3D layer is very
- * slow to draw (each becomes a mask layer). The knit is laid out by distance around
+ * flat trapezoid: one CSS 3D facet, a box mapped exactly onto it by a
+ * projective matrix3d (a clip-path on a 3D layer is very slow to draw: each
+ * becomes a mask layer). The knit is laid out by distance around
  * the sock from the middle of the front (u) and down it (v), so the ribs
  * run on unbroken from facet to facet, over the edges and down the toe.
  *
@@ -123,7 +122,8 @@ export function sockMesh(rows: SockRow[], relaxed: number, k = 4, rowBase = 0): 
   for (let i = 0; i < rows.length - 1; i++) {
     const A = rings[i];
     const B = rings[i + 1];
-    const stretch = Math.max(0.5, (girths[i] + girths[i + 1]) / 2 / relaxed);
+    // the knit is laid out along the top edge and narrows with the piece
+    const stretch = Math.max(0.5, girths[i] / relaxed);
     for (let j = 0; j < A.length - 1; j++) {
       const fa = quad(A[j].p, A[j + 1].p, B[j].p, B[j + 1].p, A[j].u, rows[i].y);
       if (fa) out.push({ ...fa, key: `${rowBase + i}-${j}`, row: rowBase + i, stretch });
@@ -132,7 +132,14 @@ export function sockMesh(rows: SockRow[], relaxed: number, k = 4, rowBase = 0): 
   return out;
 }
 
-/** The flat trapezoid P0 P1 (top) – Q0 Q1 (bottom), P0P1 ∥ Q0Q1. */
+/**
+ * The flat trapezoid P0 P1 (top) – Q0 Q1 (bottom), P0P1 ∥ Q0Q1.
+ *
+ * The facet is a w × h box (w the top edge's length) mapped onto the
+ * trapezoid exactly by a projective matrix3d (one with a w row), so the
+ * pieces meet edge to edge however much a row narrows, and the knit drawn on
+ * the box narrows with it.
+ */
 function quad(P0: V3, P1: V3, Q0: V3, Q1: V3, u0: number, top: number): Omit<SockFacet, 'key' | 'row' | 'stretch'> | null {
   const lp = len(sub(P1, P0));
   const lq = len(sub(Q1, Q0));
@@ -151,22 +158,62 @@ function quad(P0: V3, P1: V3, Q0: V3, Q1: V3, u0: number, top: number): Omit<Soc
   // outwards: away from the sock's axis
   const mid = mul(add(Mp, Mq), 0.5);
   const flip = dot(N, [mid[0], 0, mid[2]]) < 0;
+  // the corners in the facet's plane (x along U, y along V, from Mp)
   let xs = { p0: -lp / 2, p1: lp / 2, q0: off - lq / 2, q1: off + lq / 2 };
   if (flip) {
     U = mul(U, -1);
     N = mul(N, -1);
     xs = { p0: lp / 2, p1: -lp / 2, q0: -off + lq / 2, q1: -off - lq / 2 };
   }
-  // a rectangle of the mean width, centred between the two edges' middles
-  const mean = (lp + lq) / 2;
-  const centre = ((xs.p0 + xs.p1) / 2 + (xs.q0 + xs.q1) / 2) / 2;
-  const minX = centre - mean / 2 - OVER;
-  const w = mean + 2 * OVER;
+  // left and right as the box is drawn, each reaching OVER past its edge
+  const [tl, tr, bl, br] = flip ? [xs.p1, xs.p0, xs.q1, xs.q0] : [xs.p0, xs.p1, xs.q0, xs.q1];
+  const quadPts: [number, number][] = [
+    [tl - OVER, -OVER],
+    [tr + OVER, -OVER],
+    [br + OVER, h + OVER],
+    [bl - OVER, h + OVER],
+  ];
+  const w = Math.max(0.01, lp) + 2 * OVER;
   const H = h + 2 * OVER;
-  const O = sub(add(Mp, mul(U, minX)), mul(V, OVER));
-  const matrix = `matrix3d(${f(U[0])},${f(U[1])},${f(U[2])},0,${f(V[0])},${f(V[1])},${f(V[2])},0,${f(N[0])},${f(N[1])},${f(N[2])},0,${f(O[0])},${f(O[1])},${f(O[2])},1)`;
+  const [a, b, c, d, e, fy, g, k] = boxToQuad(quadPts, w, H);
+  // box (x, y, 0, 1) → plane (X, Y, W) → world: U X + V Y + N z + Mp W
+  const col = (sx: number, sy: number, sw: number): V3 => add(add(mul(U, sx), mul(V, sy)), mul(Mp, sw));
+  const cx = col(a, d, g);
+  const cy = col(b, e, k);
+  const ct = col(c, fy, 1);
+  const matrix = `matrix3d(${f(cx[0])},${f(cx[1])},${f(cx[2])},${fw(g)},${f(cy[0])},${f(cy[1])},${f(cy[2])},${fw(k)},${f(N[0])},${f(N[1])},${f(N[2])},0,${f(ct[0])},${f(ct[1])},${f(ct[2])},1)`;
   // knit coordinate along x: u, increasing from P0 towards P1 (flipped: the other way)
-  const x0 = xs.p0 - minX;
+  const x0 = flip ? w - OVER : OVER;
   const bx = flip ? x0 + u0 : x0 - u0;
   return { matrix, w, h: H, bx, by: OVER - top, flip, top, light: dot(N, LIGHT) };
+}
+
+/** the w row of a projective matrix: tiny, so keep more digits */
+const fw = (n: number) => (Math.abs(n) < 1e-9 ? '0' : n.toPrecision(6));
+
+/**
+ * The plane map taking a w × h box onto a quadrilateral (corners from the
+ * top left, clockwise): X = (a x + b y + c) / W, Y = (d x + e y + f) / W,
+ * W = g x + k y + 1. (Heckbert's square-to-quad, scaled to the box.)
+ */
+export function boxToQuad(q: [number, number][], w: number, h: number): [number, number, number, number, number, number, number, number] {
+  const [[x0, y0], [x1, y1], [x2, y2], [x3, y3]] = q;
+  const dx3 = x0 - x1 + x2 - x3;
+  const dy3 = y0 - y1 + y2 - y3;
+  let g = 0;
+  let k = 0;
+  if (Math.abs(dx3) > 1e-9 || Math.abs(dy3) > 1e-9) {
+    const dx1 = x1 - x2;
+    const dx2 = x3 - x2;
+    const dy1 = y1 - y2;
+    const dy2 = y3 - y2;
+    const det = dx1 * dy2 - dx2 * dy1;
+    g = (dx3 * dy2 - dx2 * dy3) / det;
+    k = (dx1 * dy3 - dx3 * dy1) / det;
+  }
+  const a = x1 - x0 + g * x1;
+  const b = x3 - x0 + k * x3;
+  const d = y1 - y0 + g * y1;
+  const e = y3 - y0 + k * y3;
+  return [a / w, b / h, x0, d / w, e / h, y0, g / w, k / h];
 }
