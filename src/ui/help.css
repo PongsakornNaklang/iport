@@ -65,3 +65,12 @@
 .help-link:hover {
   text-decoration: underline;
 }
+.help-fps {
+  display: block;
+  margin-top: 2px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  cursor: pointer;
+}

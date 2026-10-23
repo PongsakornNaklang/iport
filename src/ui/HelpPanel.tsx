@@ -2,6 +2,7 @@ import { useCustomize } from '../core/customize/store';
 import { getModel } from '../devices/registry';
 import { Panel } from './Panel';
 import { APP_COMMIT, APP_VERSION, BUILD_DATE, COPYRIGHT } from '../version';
+import { useFps } from './FpsMeter';
 import './help.css';
 
 function K({ children }: { children: string }) {
@@ -10,6 +11,7 @@ function K({ children }: { children: string }) {
 
 export default function HelpPanel({ onClose }: { onClose: () => void }) {
   const model = getModel(useCustomize((s) => s.modelId));
+  const fpsOn = useFps((s) => s.on);
   return (
     <Panel title="How to use iPort" side="right" onClose={onClose}>
       <div className="help">
@@ -208,6 +210,9 @@ export default function HelpPanel({ onClose }: { onClose: () => void }) {
           <a className="tiny help-link" href="third-party-notices.txt" target="_blank" rel="noreferrer">
             Open-source licenses
           </a>
+          <button className="tiny help-link help-fps" onClick={() => useFps.getState().toggle()}>
+            {fpsOn ? 'Hide frame rate' : 'Show frame rate'}
+          </button>
         </div>
 
         <p className="tiny" style={{ marginTop: 12 }}>

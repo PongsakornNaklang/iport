@@ -15,8 +15,8 @@ The running app shows its version and build in the Help panel (?).
 ## [Unreleased]
 
 ### Added
-- `?fps` in the address shows a frame counter, to see how smoothly the
-  stage runs on a device.
+- A frame counter, to see how smoothly the stage runs on a device: Help ▸
+  Show frame rate (it stays on until you hide it), or `?fps` in the address.
 
 ### Changed
 - iPort's license is now the PolyForm Noncommercial License 1.0.0: anyone

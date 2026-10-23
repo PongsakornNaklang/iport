@@ -1,12 +1,34 @@
 import { useEffect, useState } from 'react';
+import { create } from 'zustand';
+
+const KEY = 'iport.fps';
+
+/** Whether the frame counter shows: `?fps` in the address, or Help ▸ Show frame rate (remembered). */
+export const useFps = create<{ on: boolean; toggle(): void }>((set, get) => ({
+  on: (() => {
+    try {
+      return new URLSearchParams(location.search).has('fps') || localStorage.getItem(KEY) === '1';
+    } catch {
+      return false;
+    }
+  })(),
+  toggle() {
+    const on = !get().on;
+    try {
+      localStorage.setItem(KEY, on ? '1' : '0');
+    } catch {
+      /* private mode: just for now */
+    }
+    set({ on });
+  },
+}));
 
 /**
  * A frame counter for checking how smoothly the stage runs on a device:
- * add `?fps` to the address. Frames per second over the last half second,
- * and the slowest frame in it.
+ * frames per second over the last half second, and the slowest frame in it.
  */
 export function FpsMeter() {
-  const [on] = useState(() => typeof location !== 'undefined' && new URLSearchParams(location.search).has('fps'));
+  const on = useFps((s) => s.on);
   const [text, setText] = useState('');
   useEffect(() => {
     if (!on) return;
