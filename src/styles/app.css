@@ -397,6 +397,10 @@ button {
     transform: translate(-50%, -50%);
   }
 }
+/* …waiting at its first frame (unseen) until it has been drawn (Stage.tsx EnterWhenDrawn) */
+.device-enter.wait {
+  animation-play-state: paused;
+}
 /* an iPod that floated in the chooser doesn't make an entrance again */
 .device-enter.quiet {
   animation: none;

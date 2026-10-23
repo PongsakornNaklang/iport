@@ -20,6 +20,8 @@
  * top-left of the device box, z = 0 at mid-depth.
  */
 
+import { PHONE } from './phone';
+
 export interface ShellSlice {
   inset?: number;
   color: string;
@@ -113,12 +115,8 @@ const dot3 = (a: V3, b: V3) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
 const f = (n: number) => (Math.abs(n) < 5e-5 ? '0' : n.toFixed(4));
 
 const EPS = 1e-6;
-/**
- * A phone: a small screen turned by a finger. Every facet is a 3D layer the
- * browser sorts each frame, and at a phone's size half as many can't be told
- * apart, so the sides are built a little coarser there.
- */
-const PHONE = typeof window !== 'undefined' && !!window.matchMedia?.('(pointer: coarse) and (max-width: 900px)').matches;
+// Every facet is a 3D layer the browser sorts each frame, and at a phone's
+// size fewer can't be told apart, so the sides are built a little coarser there.
 /** longest band, px of depth (colors are sampled at band edges) */
 const BAND_PX = PHONE ? 8 : 5;
 /** split a band when its middle is this far off a straight line, px */

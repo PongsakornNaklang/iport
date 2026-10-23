@@ -5,6 +5,7 @@ import type { DeviceModel, DeviceProps } from '../devices/types';
 import { liveOrientation, ROLL_ANGLE, useStage } from './stageStore';
 import { installRollInput, rawPoint } from './rollInput';
 import { LightVars } from './lightVars';
+import { PHONE } from './phone';
 import { JackMarkers, useEarPods } from './earpods/EarPods';
 import { BodySlotContext } from './bodySlot';
 import { Cover, type CoverInfo } from './cover/Cover';
@@ -110,11 +111,34 @@ function useCoverInfo(model: DeviceModel, appearance: Appearance): CoverInfo | n
 /** the light and view the device styles read, for an iPod facing front (the stage sets them live on its own) */
 const FRONT_VARS = { '--rx': 0, '--ry': 0, '--lx': 0, '--ly': 0, '--elx': 0, '--ely': 0, '--vx': 0, '--vy': 0, '--vz': -1 } as React.CSSProperties;
 
-/** how far from the middle (in iPods) an iPod in the chooser comes alive, and how far it must go to become a picture again */
-const LIVE_ENTER = LIVE_RANGE + 0.5;
-const LIVE_LEAVE = LIVE_RANGE + 1;
+/**
+ * How far from the middle (in iPods) an iPod in the chooser comes alive, and
+ * how far it must go to become a picture again. On a phone only the one in
+ * the middle, and only once the carousel has come to rest (see `settled`).
+ */
+const LIVE_ENTER = PHONE ? 0.5 : LIVE_RANGE + 0.5;
+const LIVE_LEAVE = PHONE ? 0.6 : LIVE_RANGE + 1;
 /** the cross-fade between an iPod's picture and its live self (ms, as in app.css) */
 const ART_FADE = 360;
+
+/**
+ * A new iPod spins in only once it has been built and drawn: started at
+ * once, the spin would run while the page is still busy putting the iPod
+ * together, and its first half would be lost (on a phone, most of it).
+ */
+function EnterWhenDrawn() {
+  const ref = useRef<HTMLSpanElement>(null);
+  useEffect(() => {
+    const host = ref.current?.closest('.device-enter');
+    let r2 = 0;
+    const r1 = requestAnimationFrame(() => (r2 = requestAnimationFrame(() => host?.classList.remove('wait'))));
+    return () => {
+      cancelAnimationFrame(r1);
+      cancelAnimationFrame(r2);
+    };
+  }, []);
+  return <span ref={ref} hidden />;
+}
 
 /** Tells its parent once the lazily loaded device inside the same Suspense has drawn. */
 function Ready({ onReady }: { onReady: () => void }) {
@@ -134,14 +158,14 @@ function Ready({ onReady }: { onReady: () => void }) {
  * fades back over it before it goes. It is one floating element throughout,
  * so its drift and entrance carry on unbroken. It can't be used.
  */
-function OverviewSlot({ model, slot, index, out, dist }: { model: DeviceModel; slot: Slot; index: number; out: boolean; dist: number }) {
+function OverviewSlot({ model, slot, index, out, dist, settled }: { model: DeviceModel; slot: Slot; index: number; out: boolean; dist: number; settled: boolean }) {
   const appearance = useAppearance(model.id);
   const cover = useCoverInfo(model, appearance);
   const Device = useMemo(() => deviceComponent(model), [model]);
   const extras = useMemo(() => ({ before: cover && <Cover info={cover} />, after: cover && <Cover info={cover} after /> }), [cover]);
   // pic: picture only · loading: live underneath, still hidden · live: shown · leaving: picture fading back
-  const [phase, setPhase] = useState<'pic' | 'loading' | 'live' | 'leaving'>(() => (dist <= LIVE_ENTER ? 'loading' : 'pic'));
-  const near = dist <= LIVE_ENTER;
+  const [phase, setPhase] = useState<'pic' | 'loading' | 'live' | 'leaving'>(() => (dist <= LIVE_ENTER && settled ? 'loading' : 'pic'));
+  const near = dist <= LIVE_ENTER && settled;
   const far = dist > LIVE_LEAVE;
   useEffect(() => {
     if (near && (phase === 'pic' || phase === 'leaving')) setPhase(phase === 'pic' ? 'loading' : 'live');
@@ -256,6 +280,32 @@ export function Stage() {
     roll: 0,
     rollTween: null as null | { from: number; to: number; t0: number },
   });
+
+  // The other iPods' code, fetched while nothing else is happening, so changing
+  // iPods doesn't wait for it (on a phone, downloading and starting it was
+  // much of the pause).
+  useEffect(() => {
+    let cancelled = false;
+    const idle = (f: () => void) => {
+      const w = window as Window & { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number };
+      if (w.requestIdleCallback) w.requestIdleCallback(f, { timeout: 4000 });
+      else window.setTimeout(f, 1500);
+    };
+    const next = (i: number) => {
+      if (cancelled || i >= MODELS.length) return;
+      idle(() => {
+        void MODELS[i]
+          .load()
+          .catch(() => {})
+          .then(() => next(i + 1));
+      });
+    };
+    const t = window.setTimeout(() => next(0), 3000);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(t);
+    };
+  }, []);
 
   // Lying on its side (the view controls, or a device turning for video).
   useEffect(() => {
@@ -617,6 +667,16 @@ export function Stage() {
   const focus = hover < 0 ? index : hover;
   // a finger pulling the carousel (px), and where it started
   const [drag, setDrag] = useState(0);
+  // On a phone the chooser's iPods stay pictures while it moves; the one that
+  // comes to rest in the middle comes alive (one live iPod is all a phone can turn smoothly).
+  const [settled, setSettled] = useState(true);
+  useEffect(() => {
+    if (!PHONE) return;
+    setSettled(false);
+    if (drag) return;
+    const t = window.setTimeout(() => setSettled(true), 480);
+    return () => window.clearTimeout(t);
+  }, [focus, drag]);
   const swallow = useRef(false);
   const wheelAcc = useRef({ sum: 0, t: 0, last: 0 });
   const swipe = useRef<{ x: number; y: number; id: number; moved: boolean; bg: boolean } | null>(null);
@@ -693,12 +753,12 @@ export function Stage() {
         MODELS.map((m, i) => {
           if (m.id === model.id) return null;
           // live 3D only near the middle: the rest are pictures (see OverviewSlot)
-          return <OverviewSlot key={m.id} model={m} slot={layout.slots[i]} index={i} out={!overview} dist={Math.abs(i - layout.at)} />;
+          return <OverviewSlot key={m.id} model={m} slot={layout.slots[i]} index={i} out={!overview} dist={Math.abs(i - layout.at)} settled={settled} />;
         })}
       <div className="stage-center" key={model.id} style={{ transform: centerTransform, ['--ov-i' as string]: index }}>
         <div className="stage-rot" ref={rotRef} inert={overview}>
           <div
-            className={`device-enter ${leaving ? 'device-leave' : ''} ${quiet ? 'quiet' : ''}`}
+            className={`device-enter ${leaving ? 'device-leave' : ''} ${quiet ? 'quiet' : 'wait'}`}
             key={`${model.id}:${turn}`}
             style={{ width: model.size.width, height: model.size.height }}
           >
@@ -706,6 +766,7 @@ export function Stage() {
               <BodySlotContext.Provider value={bodyExtras}>
                 <Device model={model} appearance={appearance} />
               </BodySlotContext.Provider>
+              <EnterWhenDrawn />
             </Suspense>
           </div>
         </div>
