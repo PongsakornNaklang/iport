@@ -14,12 +14,54 @@ The running app shows its version and build in the Help panel (?).
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-10-23
+
+### Added
+- A frame counter, to see how smoothly the stage runs on a device: Help ▸
+  Show frame rate (it stays on until you hide it), or `?fps` in the address.
+
 ### Changed
 - iPort's license is now the PolyForm Noncommercial License 1.0.0: anyone
   may use, change and share it for noncommercial purposes; commercial use
   needs a separate license. It was "all rights reserved" before.
+- iPod Socks look like Apple's swatches: broad stripes in two shades, a knit
+  rib of Vs beside a paler purl stripe, and each sock's own cuff color
+  (orange's is golden). The six colors match Apple's.
 
 ### Fixed
+- iPod Socks no longer slow the iPod down as it turns:
+  - The sock is drawn in a 3D space of its own over the iPod. Sharing the
+    iPod's, every frame the browser cut its pieces along the iPod's
+    hundreds of surfaces to sort them, which halved the frame rate. Seen
+    from high above (where the iPod's top can hide parts of the sock) it
+    goes back into the iPod's space, and its tag is drawn with whichever
+    it sits in front of.
+  - It is built from about 160 pieces instead of 420, each now fitted
+    exactly to its part of the sock, so the toe still curves smoothly.
+- Smoother on phones, most of all with a case on:
+  - The light and view the stage passes the iPod every frame now go only
+    to the few sheens and edges that use them. Before, every element of
+    the iPod restyled itself every frame while it turned (the whole iOS
+    screen on the iPod touch): on a phone-sized test that was 34 ms a frame
+    on the iPod touch, now 3 ms.
+  - Cases are built from fewer, larger pieces (about 240 instead of 530):
+    each piece is a 3D layer the browser sorts every frame, and a soft
+    case looks the same with fewer.
+  - On phones, the iPods' own edges use about a third fewer pieces, where
+    the difference can't be seen.
+  - iPod touch: the light on the screen glass and on the back is a band
+    that slides as the iPod turns instead of a gradient repainted (and
+    blended over the whole screen) every frame; the hidden keyboard and
+    volume indicator no longer draw their frosted glass.
+  - While the iPod turns, frosted glass and the screens' own animations
+    wait, and the shading of the edges catches up when it stops: each of
+    those would otherwise be redrawn every frame.
+  - In the model chooser on a phone, only the iPod resting in the middle
+    is live, once the carousel has been still for a moment; while it moves
+    (stepping through several iPods too) they are all pictures.
+  - Changing iPods: the other iPods' code is fetched in the background
+    after the page loads, and the new iPod spins in once it has been
+    drawn, so the spin isn't lost to the moment it takes to build it.
 - In the model chooser an iPod coming near the middle no longer jumps when
   it turns from a picture into the live iPod: it keeps floating without a
   restart, and the picture fades away once the live iPod has drawn (and
@@ -279,7 +321,8 @@ First release.
 - Apple-style minimal Liquid Glass interface on white; works on phones and
   installs as a web app.
 
-[Unreleased]: https://github.com/PongsakornNaklang/iport/compare/v1.3.0...HEAD
+[Unreleased]: https://github.com/PongsakornNaklang/iport/compare/v1.4.0...HEAD
+[1.4.0]: https://github.com/PongsakornNaklang/iport/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/PongsakornNaklang/iport/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/PongsakornNaklang/iport/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/PongsakornNaklang/iport/compare/v1.0.0...v1.1.0

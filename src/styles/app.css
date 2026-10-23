@@ -350,6 +350,16 @@ button {
   background: none;
 }
 
+/*
+ * While the iPod turns (the stage adds .moving, see Stage.tsx), what a phone
+ * would have to redraw every frame waits: frosted glass blurs what is behind
+ * it again for each new angle, and the screens' own animations repaint.
+ */
+.stage.moving .stage-rot * {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  animation-play-state: paused !important;
+}
 .stage-center {
   position: absolute;
   left: 50%;
@@ -366,6 +376,33 @@ button {
   width: 0;
   height: 0;
   transform-style: preserve-3d;
+}
+.cv-slow {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  pointer-events: none;
+}
+/*
+ * One of an iPod Sock's two copies at a time (Stage.tsx SOCK LAYER), and
+ * of its tag's. The one in the iPod's space is rarely needed: left out
+ * altogether until then, so it costs nothing while the iPod turns.
+ */
+.stage:not(.sock-steep) .cv-slow {
+  display: none;
+}
+.stage.sock-steep .stage-sock,
+.stage:not(.sock-tag-near) .cv-tag-near,
+.stage.sock-tag-near:not(.sock-steep) .cv-tag-far {
+  visibility: hidden;
+}
+.stage-sock-host {
+  position: relative;
+  transform-style: preserve-3d;
+  pointer-events: none;
 }
 .device-enter {
   position: absolute;
@@ -386,6 +423,10 @@ button {
     opacity: 1;
     transform: translate(-50%, -50%);
   }
+}
+/* …waiting at its first frame (unseen) until it has been drawn (Stage.tsx EnterWhenDrawn) */
+.device-enter.wait {
+  animation-play-state: paused;
 }
 /* an iPod that floated in the chooser doesn't make an entrance again */
 .device-enter.quiet {
@@ -1629,3 +1670,18 @@ textarea.input {
 .view-menu.open .vm-items button:nth-last-child(3) { transition-delay: 60ms; }
 .view-menu.open .vm-items button:nth-last-child(4) { transition-delay: 90ms; }
 .view-menu.open .vm-items button:nth-last-child(5) { transition-delay: 120ms; }
+
+/* ?fps (ui/FpsMeter.tsx) */
+.fps-meter {
+  position: fixed;
+  left: 50%;
+  top: max(8px, env(safe-area-inset-top));
+  translate: -50% 0;
+  z-index: 9999;
+  padding: 3px 9px;
+  border-radius: 9px;
+  background: rgba(0, 0, 0, 0.72);
+  color: #fff;
+  font: 600 12px/1.3 ui-monospace, Menlo, monospace;
+  pointer-events: none;
+}

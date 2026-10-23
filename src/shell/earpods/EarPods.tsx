@@ -398,10 +398,17 @@ export function useEarPods({
     let lastRead = -Infinity;
     /** frames the cable has been at rest */
     let still = 0;
+    // The stage's size, kept by an observer: reading it every frame would make
+    // the browser lay the page out there and then (while a new iPod mounts,
+    // that is the whole iPod, every frame).
+    let hostSize = '';
+    const ro = typeof ResizeObserver !== 'undefined' && wrap.current ? new ResizeObserver(([e]) => (hostSize = `${e.contentRect.width} ${e.contentRect.height}`)) : null;
+    if (ro && wrap.current) ro.observe(wrap.current);
+    let center: HTMLElement | null = null;
     const signature = () => {
       const host = wrap.current;
-      const center = host?.querySelector<HTMLElement>('.stage-center:not(.ov-item)');
-      return `${liveOrientation.rx.toFixed(2)} ${liveOrientation.ry.toFixed(2)} ${liveOrientation.roll.toFixed(2)} ${useStage.getState().zoom} ${host?.clientWidth} ${host?.clientHeight} ${center?.style.transform} ${modelRef.current.id}`;
+      if (!center?.isConnected) center = host?.querySelector<HTMLElement>('.stage-center:not(.ov-item)') ?? null;
+      return `${liveOrientation.rx.toFixed(2)} ${liveOrientation.ry.toFixed(2)} ${liveOrientation.roll.toFixed(2)} ${useStage.getState().zoom} ${hostSize} ${center?.style.transform} ${modelRef.current.id}`;
     };
     const moved = (a: Jack | null, b: Jack | null) =>
       !a || !b || Math.abs(a.p.x - b.p.x) > 0.3 || Math.abs(a.p.y - b.p.y) > 0.3 || Math.abs(a.dz - b.dz) > 0.01 || Math.abs(a.mm - b.mm) > 0.01;
@@ -631,6 +638,7 @@ export function useEarPods({
     };
     raf = requestAnimationFrame(loop);
     return () => {
+      ro?.disconnect();
       cancelAnimationFrame(raf);
       player.setOutputHold(false);
     };

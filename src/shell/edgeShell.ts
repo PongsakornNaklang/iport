@@ -20,6 +20,8 @@
  * top-left of the device box, z = 0 at mid-depth.
  */
 
+import { PHONE } from './phone';
+
 export interface ShellSlice {
   inset?: number;
   color: string;
@@ -113,10 +115,14 @@ const dot3 = (a: V3, b: V3) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
 const f = (n: number) => (Math.abs(n) < 5e-5 ? '0' : n.toFixed(4));
 
 const EPS = 1e-6;
+// Every facet is a 3D layer the browser sorts each frame, and at a phone's
+// size fewer can't be told apart, so the sides are built a little coarser there.
 /** longest band, px of depth (colors are sampled at band edges) */
-const BAND_PX = 5;
+const BAND_PX = PHONE ? 8 : 5;
 /** split a band when its middle is this far off a straight line, px */
-const CURVE_TOL = 0.2;
+const CURVE_TOL = PHONE ? 0.35 : 0.2;
+/** most facets per rounded corner */
+const CORNER_MAX = PHONE ? 6 : 8;
 /** how far a merged band may stray from the true profile, px */
 const LINEAR_TOL = 0.15;
 /**
@@ -141,6 +147,8 @@ export interface ShellDetail {
   curveTol?: number;
   /** leave the top wall (and its corners) out: an open top, like a sock's mouth */
   open?: 'top';
+  /** at most this many facets per rounded corner (fewer, longer pieces for soft materials) */
+  corner?: number;
 }
 
 export function makeBands(edge: (t: number) => ShellSlice, depth: number, breaks: number[] = [], detail: ShellDetail = {}): Band[] {
@@ -214,7 +222,7 @@ function straight(inset: (t: number) => number, ta: number, tb: number, ia: numb
 export function liningSlices(edge: (t: number) => ShellSlice, depth: number, radius: Radius): { t: number; inset: number; color: string }[] {
   const n = Math.max(3, Math.min(8, Math.round(depth / 10)));
   const R = maxCurvatureRadius(radius);
-  const margin = 0.6 + R * (1 - Math.cos(Math.PI / 4 / cornerFacets(R))); // clear of the corner chords
+  const margin = 0.6 + R * (1 - Math.cos(Math.PI / 4 / Math.min(CORNER_MAX, cornerFacets(R)))); // clear of the corner chords
   const out: { t: number; inset: number; color: string }[] = [];
   for (let k = 0; k < n; k++) {
     const t = (k + 0.5) / n;
@@ -249,7 +257,7 @@ export function buildShell(
   const { x: rx, y: ry } = cornerRadii(radius);
   const facets: Facet[] = [];
   // corner centres (the same at every inset) and the quarter each one covers
-  const corner = (c: V2, a0: number, cx: number, cy: number) => ({ c, a0, rx: cx, ry: cy, K: cornerFacets(Math.max(cx, cy)) });
+  const corner = (c: V2, a0: number, cx: number, cy: number) => ({ c, a0, rx: cx, ry: cy, K: Math.min(detail?.corner ?? CORNER_MAX, cornerFacets(Math.max(cx, cy))) });
   const corners = [
     corner([rx[0], ry[0]], Math.PI, rx[0], ry[0]), // top-left: 180°..270°
     corner([W - rx[1], ry[1]], Math.PI * 1.5, rx[1], ry[1]), // top-right

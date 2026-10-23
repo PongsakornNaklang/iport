@@ -291,14 +291,19 @@ export default function IpodTouch({ model, appearance }: DeviceProps) {
               onPointerCancel={home.cancel}
               onContextMenu={(e) => e.preventDefault()}
             />
-            <div className="t7-front-glare" />
+            {/* the glare is a fixed band that slides with the light: moved, never repainted */}
+            <div className="t7-front-glare">
+              <i />
+            </div>
             <Decals decals={appearance.decals} side="front" />
           </div>
         }
         back={
           <div className={`t7-backside ${luminance(back) > 0.55 ? 'lightback' : ''}`} style={{ background: back, ['--t7-back' as string]: back }}>
             <div className="t7-back-tex" />
-            <div className="t7-back-sheen" />
+            <div className="t7-back-sheen">
+              <i />
+            </div>
             <div className="t7-rear-cam">
               <div className="t7-rear-lens" />
             </div>

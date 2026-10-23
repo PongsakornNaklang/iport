@@ -20,6 +20,7 @@ import { redo, undo, useHistory } from '../../core/customize/history';
 import { toast } from '../toast';
 import { SHOWCASE_PRESETS } from './showcase';
 import './customize.css';
+import { SOCK_COLORS } from '../../shell/cover/sockColors';
 
 type Tab = 'design' | 'scene' | 'presets';
 
@@ -357,14 +358,7 @@ const COVER_COLORS: Record<Exclude<CoverKind, 'none'>, { name: string; color: st
     { name: 'Oxblood', color: '#5c1f25' },
   ],
   // the six in the 2004 iPod Socks box
-  sock: [
-    { name: 'Grey', color: '#8e9196' },
-    { name: 'Purple', color: '#7a57a5' },
-    { name: 'Blue', color: '#3a7fc4' },
-    { name: 'Green', color: '#6eb14b' },
-    { name: 'Orange', color: '#ee8936' },
-    { name: 'Pink', color: '#eb8fb2' },
-  ],
+  sock: SOCK_COLORS.map(({ name, color }) => ({ name, color })),
 };
 
 function CoverSection({ model }: { model: DeviceModel }) {

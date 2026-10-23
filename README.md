@@ -6,7 +6,7 @@ music (or stream from YouTube, SoundCloud and free sources), spin it around in
 
 ![iPod touch, iPod nano, iPod shuffle and iPod classic shown side by side at their real relative sizes](docs/screenshots/lineup.png)
 
-**Current version:** 1.3.0 · see [CHANGELOG.md](CHANGELOG.md)
+**Current version:** 1.4.0 · see [CHANGELOG.md](CHANGELOG.md)
 
 ## Models
 
@@ -66,7 +66,8 @@ its side, and everything still works as it would in your hand.
 
 Every colored part, the materials, wallpapers, screen theme, engraving on the
 back and the backdrop. Put it in a silicone, leather or clear case, or in one
-of Apple's knitted iPod Socks (drag the sock down to pull it off), and cover
+of Apple's knitted iPod Socks in their six original colors (drag the sock down
+to pull it off), and cover
 the front and back in stickers and the back in engraved text, wherever you like. Undo and
 redo every change. Save a design as a preset, share it as a link, or export
 all your presets to a file.
@@ -94,6 +95,8 @@ all your presets to a file.
 - Equalizer with all iPod presets, Sound Check, synced lyrics, sleep timer,
   alarms, and keyboard / lock-screen media keys.
 - Works on phones and installs as a web app.
+- A frame counter to see how smoothly it runs: Help ▸ Show frame rate, or `?fps`
+  in the address.
 
 ## Develop
 

@@ -20,6 +20,7 @@ import type { Facet } from '../edgeShell';
 import { PULL_FILL } from './sockPull';
 import { coverGeometry, holeMask, holesOnFacet, roundedInset, type CoverGeometry, type SockGeometry } from './geometry';
 import { girth, sockMesh, type SockFacet } from './sockMesh';
+import { sockCuff } from './sockColors';
 import { liveOrientation } from '../stageStore';
 import './cover.css';
 
@@ -30,17 +31,28 @@ export interface CoverInfo {
   size: { width: number; height: number; depth: number };
 }
 
-/** Fabric and silicone are soft: their sides need fewer, longer pieces than metal. */
-const SOFT = { bandPx: 9, curveTol: 0.5 };
+/**
+ * Fabric and silicone are soft: their sides need fewer, longer pieces than
+ * metal. Each piece is a 3D layer the browser sorts every frame, so this
+ * keeps a case to about 250 of them (a phone turning an iPod in one feels it).
+ */
+const SOFT = { bandPx: 20, curveTol: 2, corner: 5 };
 
 const mix = (c: string, other: string, pct: number) => `color-mix(in srgb, ${c} ${100 - pct}%, ${other})`;
 
 /** The case or sock on the device (rendered through shell/bodySlot). */
-export function Cover({ info, after = false }: { info: CoverInfo; after?: boolean }) {
+/**
+ * `rim`, for a sock drawn in a 3D space of its own over the iPod (Stage.tsx):
+ * 'only' draws just the rim of its opening and its tag, in the iPod's space
+ * (the iPod comes up through the rim, and can hide the tag); 'none' all the
+ * rest, with a second tag for when it is seen from the tag's side (the
+ * stage shows one tag or the other).
+ */
+export function Cover({ info, after = false, rim = 'with' }: { info: CoverInfo; after?: boolean; rim?: 'with' | 'none' | 'only' }) {
   const { fit, choice, pxPerMm, size } = info;
   const kind = choice.kind === 'none' ? 'silicone' : choice.kind;
   const g = useMemo(() => coverGeometry(fit, kind, pxPerMm, size), [fit, kind, pxPerMm, size]);
-  if (g.sock) return <Sock s={g.sock} color={choice.color} pxPerMm={pxPerMm} after={after} />;
+  if (g.sock) return <Sock s={g.sock} color={choice.color} pxPerMm={pxPerMm} after={after} rim={rim} />;
   return after ? null : <Case g={g} fit={fit} kind={kind} color={choice.color} pxPerMm={pxPerMm} />;
 }
 
@@ -158,61 +170,74 @@ function CaseBack({ g, fit }: { g: CoverGeometry; fit: CoverFit }) {
 // ------------------------------------------------------------------ socks
 
 /**
- * Apple's rib knit: wide raised ribs (lit in the middle, shaded into the
- * groove between them), each made of fine knitted Vs. One tile is 5 mm of
- * rib and groove by two rows of stitches (1.2 mm).
+ * Apple's knit, as on their swatches: broad stripes of two stitches side by
+ * side, nearly as wide as each other. The knit rib (the sock's color) is
+ * columns of Vs; the purl stripe beside it, rows of little sideways bumps,
+ * catches more light and looks paler. One tile is one rib and one purl
+ * stripe, 11 stitches across (5 + 6), by two rows of stitches. Only light
+ * and shade are drawn: the color under it shows through.
  */
 const RIB = (() => {
-  const v = (cx: number, y: number) =>
-    `<ellipse cx='${cx - 2}' cy='${y}' rx='2.1' ry='3.5' transform='rotate(-30 ${cx - 2} ${y})'/>` +
-    `<ellipse cx='${cx + 2}' cy='${y}' rx='2.1' ry='3.5' transform='rotate(30 ${cx + 2} ${y})'/>`;
-  const stitches = [5.5, 14, 22.5, 31].flatMap((cx) => [v(cx, 3), v(cx, 9)]).join('');
+  const W = 110;
+  const H = 16;
+  let knit = '';
+  for (let c = 0; c < 5; c++)
+    for (let r = 0; r < 2; r++) {
+      const x = 5 + c * 10;
+      const y = 4 + r * 8;
+      knit +=
+        `<ellipse cx='${x - 2.3}' cy='${y}' rx='2.3' ry='4.5' transform='rotate(-28 ${x - 2.3} ${y})'/>` +
+        `<ellipse cx='${x + 2.3}' cy='${y}' rx='2.3' ry='4.5' transform='rotate(28 ${x + 2.3} ${y})'/>`;
+    }
+  let purl = '';
+  for (let r = 0; r < 4; r++)
+    for (let c = 0; c < 7; c++) {
+      const x = 50 + c * 10 + (r % 2 ? 5 : 0);
+      if (x < 51 || x > 109) continue;
+      purl += `<ellipse cx='${x}' cy='${2 + r * 4}' rx='3.3' ry='1.25'/>`;
+    }
   const svg =
-    `<svg xmlns='http://www.w3.org/2000/svg' width='50' height='12' viewBox='0 0 50 12'>` +
-    `<defs><linearGradient id='r' x1='0' x2='1'>` +
-    `<stop offset='0' stop-color='#000' stop-opacity='.14'/><stop offset='.1' stop-color='#fff' stop-opacity='.05'/>` +
-    `<stop offset='.32' stop-color='#fff' stop-opacity='.14'/><stop offset='.56' stop-color='#fff' stop-opacity='.04'/>` +
-    `<stop offset='.7' stop-color='#000' stop-opacity='.1'/><stop offset='.8' stop-color='#000' stop-opacity='.22'/>` +
-    `<stop offset='.9' stop-color='#000' stop-opacity='.22'/><stop offset='1' stop-color='#000' stop-opacity='.14'/></linearGradient></defs>` +
-    `<rect width='50' height='12' fill='url(#r)'/>` +
-    `<g fill='#fff' fill-opacity='.16' stroke='#000' stroke-opacity='.2' stroke-width='.55'>${stitches}</g>` +
-    `<g fill='#000' fill-opacity='.12'><ellipse cx='40' cy='3' rx='2.6' ry='1.4'/><ellipse cx='46' cy='9' rx='2.6' ry='1.4'/></g>` +
+    `<svg xmlns='http://www.w3.org/2000/svg' width='${W}' height='${H}' viewBox='0 0 ${W} ${H}' preserveAspectRatio='none'>` +
+    // the purl stripe, softly edged
+    `<defs><linearGradient id='p' x1='0' x2='1'>` +
+    `<stop offset='0' stop-color='#fff' stop-opacity='0'/><stop offset='.44' stop-color='#fff' stop-opacity='0'/>` +
+    `<stop offset='.48' stop-color='#fff' stop-opacity='.24'/><stop offset='.97' stop-color='#fff' stop-opacity='.24'/>` +
+    `<stop offset='1' stop-color='#fff' stop-opacity='0'/></linearGradient></defs>` +
+    `<rect width='${W}' height='${H}' fill='url(#p)'/>` +
+    `<g fill='#fff' fill-opacity='.13' stroke='#000' stroke-opacity='.2' stroke-width='.6'>${knit}</g>` +
+    `<g fill='#fff' fill-opacity='.2' stroke='#000' stroke-opacity='.07' stroke-width='.5'>${purl}</g>` +
     `</svg>`;
   return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
 })();
+/** one tile (a rib and a purl stripe, two rows), mm, unstretched */
+const RIB_MM = [8.5, 1.4];
 /**
- * A little unevenness, as yarn has: specks of light and shade, scattered
- * the same way every time (no SVG filter: those come out black when the
- * iPod is saved as a picture).
+ * Pieces round each corner of the sock's cross-section: every piece is a 3D
+ * layer the browser sorts and draws again each frame the iPod moves. Round
+ * the iPod the corners are soft and the shading baked in, so three read as
+ * smooth; the empty toe below is nearly flat, and one will do.
  */
-const YARN = (() => {
-  let seed = 7;
-  const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
-  let dots = '';
-  for (let i = 0; i < 140; i++) {
-    const light = rnd() > 0.5;
-    dots += `<circle cx='${(rnd() * 40).toFixed(1)}' cy='${(rnd() * 40).toFixed(1)}' r='${(0.3 + rnd() * 0.7).toFixed(2)}' fill='${light ? '#fff' : '#000'}' fill-opacity='${(0.05 + rnd() * 0.1).toFixed(2)}'/>`;
-  }
-  return `url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40'>${dots}</svg>`)}")`;
-})();
-const RIB_MM = [5, 1.2];
+const CORNER = 3;
+const TOE_CORNER = 1;
 
 /** px the toe's sections reach up into the section above, to fill the gap a bend opens */
 const COLLAR = (d: number) => Math.min(6, d * 0.4);
 
-function Sock({ s, color, pxPerMm, after }: { s: SockGeometry; color: string; pxPerMm: number; after: boolean }) {
-  const cuff = mix(color, '#fff', 34);
+function Sock({ s, color, pxPerMm, after, rim }: { s: SockGeometry; color: string; pxPerMm: number; after: boolean; rim: 'with' | 'none' | 'only' }) {
+  const cuff = sockCuff(color);
   // The rows, cut at the hinges: [0] hangs on the iPod, the others bend.
   const sections = useMemo(() => {
-    const relaxed = girth(s.rows[s.hinges[s.hinges.length - 1]]);
+    const loose = s.rows[s.hinges[s.hinges.length - 1]];
     const cuts = [0, ...s.hinges, s.rows.length - 1];
     return cuts.slice(0, -1).map((from, k) => {
-      const facets = sockMesh(s.rows.slice(from, cuts[k + 1] + 1), relaxed, 4, from);
+      const corner = k > 0 ? TOE_CORNER : CORNER;
+      const relaxed = girth(loose, corner);
+      const facets = sockMesh(s.rows.slice(from, cuts[k + 1] + 1), relaxed, corner, from);
       if (k > 0) {
         // a collar just inside the section above, hidden until the toe bends
         const h = s.rows[from];
         const inside = { ...h, w: h.w - 1.2, d: Math.max(0.5, h.d - 1.2), r: Math.max(0, h.r - 0.6) };
-        facets.push(...sockMesh([{ ...inside, y: h.y - COLLAR(h.d) }, inside], relaxed, 4, 100 + k * 10));
+        facets.push(...sockMesh([{ ...inside, y: h.y - COLLAR(h.d) }, inside], relaxed, corner, 100 + k * 10));
       }
       return { y: s.rows[from].y, facets };
     });
@@ -222,11 +247,11 @@ function Sock({ s, color, pxPerMm, after }: { s: SockGeometry; color: string; px
   // as narrow as the toe's top, is stretched to fill that length.
   const filler = useMemo(() => {
     const r = s.rows[s.hinges[0]];
-    const relaxed = girth(s.rows[s.hinges[s.hinges.length - 1]]);
-    return { y: r.y, facets: sockMesh([r, { ...r, y: r.y + PULL_FILL }], relaxed, 4, 200) };
+    const relaxed = girth(s.rows[s.hinges[s.hinges.length - 1]], TOE_CORNER);
+    return { y: r.y, facets: sockMesh([r, { ...r, y: r.y + PULL_FILL }], relaxed, TOE_CORNER, 200) };
   }, [s]);
   const hinges = useRef<(HTMLDivElement | null)[]>([]);
-  useSway(after, hinges);
+  useSway(after && rim !== 'only', hinges);
   const vars = {
     ['--cv' as string]: color,
     ['--cv-cuff' as string]: cuff,
@@ -245,7 +270,7 @@ function Sock({ s, color, pxPerMm, after }: { s: SockGeometry; color: string; px
           width: fa.w,
           height: fa.h,
           transform: fa.matrix,
-          background: `linear-gradient(${shade}, ${shade}), ${YARN} ${fa.bx.toFixed(1)}px ${fa.by.toFixed(1)}px / 40px 40px, ${RIB} ${fa.bx.toFixed(2)}px ${fa.by.toFixed(2)}px / ${size}, ${base}`,
+          background: `linear-gradient(${shade}, ${shade}), ${RIB} ${fa.bx.toFixed(2)}px ${fa.by.toFixed(2)}px / ${size}, ${base}`,
         }}
       />
     );
@@ -281,6 +306,35 @@ function Sock({ s, color, pxPerMm, after }: { s: SockGeometry; color: string; px
       </div>
     );
   const top = s.rows[0];
+  // the folded edge of the opening, seen from above
+  const ring = (
+    <div
+      className="cv-ring cv-sock-rim"
+      style={{
+        width: top.w,
+        height: top.d,
+        borderRadius: top.r,
+        borderWidth: 1.4 * pxPerMm,
+        transform: `translate3d(${-top.w / 2}px, ${s.mouth - top.d / 2}px, 0) rotateX(90deg)`,
+      }}
+    />
+  );
+  const tag = (
+    <div className={`cv-sock-tag ${rim === 'none' ? 'cv-tag-near' : rim === 'only' ? 'cv-tag-far' : ''}`} style={{ left: s.tag.x, top: s.tag.y, width: s.tag.w, height: s.tag.h }}>
+      <svg viewBox="0 0 170 170" aria-hidden="true">
+        <path d={APPLE_LOGO} />
+      </svg>
+    </div>
+  );
+  if (rim === 'only')
+    return (
+      <div className="cv cv-sock-mouth" style={vars} aria-hidden="true">
+        <div className="cv-pull-shift">
+          {ring}
+          {tag}
+        </div>
+      </div>
+    );
   return (
     <div className="cv cv-sock" style={vars} aria-hidden="true">
       {/* below the iPod: pushed up, it gets shorter (scaled about the iPod's bottom) */}
@@ -289,22 +343,8 @@ function Sock({ s, color, pxPerMm, after }: { s: SockGeometry; color: string; px
         {nest(1)}
       </div>
       <div className="cv-pull-shift">
-        {/* the folded edge of the opening, seen from above */}
-        <div
-          className="cv-ring cv-sock-rim"
-          style={{
-            width: top.w,
-            height: top.d,
-            borderRadius: top.r,
-            borderWidth: 1.4 * pxPerMm,
-            transform: `translate3d(${-top.w / 2}px, ${s.mouth - top.d / 2}px, 0) rotateX(90deg)`,
-          }}
-        />
-        <div className="cv-sock-tag" style={{ left: s.tag.x, top: s.tag.y, width: s.tag.w, height: s.tag.h }}>
-          <svg viewBox="0 0 170 170" aria-hidden="true">
-            <path d={APPLE_LOGO} />
-          </svg>
-        </div>
+        {rim === 'with' && ring}
+        {tag}
       </div>
     </div>
   );

@@ -102,7 +102,8 @@ export function coverGeometry(fit: CoverFit, kind: Exclude<CoverKind, 'none'>, p
     const narrow = 0.17 * H;
     const tw = sw * 0.8;
     const td = sd * 0.3;
-    const steps = 10; // fine enough that each piece is nearly a rectangle (sockMesh.ts)
+    // enough for a smooth curve: every piece is a 3D layer of its own to draw
+    const steps = 6;
     for (let i = 1; i <= steps; i++) {
       const k = smooth(i / steps);
       rows.push(row(y + narrow * (i / steps), sw + (tw - sw) * k, sd + (td - sd) * k));
@@ -114,8 +115,9 @@ export function coverGeometry(fit: CoverFit, kind: Exclude<CoverKind, 'none'>, p
     y += hang;
     // …and closes in a flat seam
     const end = 0.045 * H;
-    for (let i = 1; i <= 6; i++) {
-      const k = i / 6;
+    const seam = 3;
+    for (let i = 1; i <= seam; i++) {
+      const k = i / seam;
       rows.push(row(y + end * k, tw, Math.max(1, td * 0.8 * Math.sqrt(Math.max(0, 1 - k * k)))));
     }
     const toeEnd = y + end;
@@ -136,8 +138,8 @@ export function coverGeometry(fit: CoverFit, kind: Exclude<CoverKind, 'none'>, p
       sock: {
         rows,
         sleeve: 1,
-        // the narrowing ends at rows[11]; the toe bends there and at the next two rows
-        hinges: [11, 12, 13],
+        // the narrowing ends at rows[1 + steps]; the toe bends there and at the next two rows
+        hinges: [1 + steps, 2 + steps, 3 + steps],
         mouth,
         cuffEnd: mouth + 0.24 * (toeEnd - mouth),
         tag: { x: -sw / 2 - tagW, y: mouth + 1.5 * pxPerMm, w: tagW + 2, h: MM.tagH * pxPerMm },

@@ -50,22 +50,25 @@ export interface SockSpan {
  * pull; it follows that pointer on the window until it lifts. `scale` is
  * screen px per iPod px.
  */
-export function useSockPull(root: RefObject<HTMLElement | null>, scale: RefObject<number>, span: SockSpan) {
+export function useSockPull(roots: RefObject<HTMLElement | null>[], scale: RefObject<number>, span: SockSpan) {
   const busy = useRef(false);
   const size = useRef(span);
   size.current = span;
   return useCallback(
     (id: number, y0: number) => {
-      const r = root.current;
-      const gather = r?.querySelector<HTMLElement>('.cv-sock-sleeve');
-      const rest = r?.querySelector<HTMLElement>('.cv-sock:not(.cv-sock-sleeve)');
-      const below = rest?.querySelector<HTMLElement>('.cv-pull-below');
-      if (!r || !gather || !rest || !below || busy.current) return;
+      // The sock may be drawn more than once (its own 3D space and the
+      // iPod's, see Stage.tsx), with the rim of its opening apart: move them all.
+      const all = (sel: string) => roots.flatMap((r) => [...(r.current?.querySelectorAll<HTMLElement>(sel) ?? [])]);
+      const gather = all('.cv-sock-sleeve');
+      const rest = all('.cv-sock:not(.cv-sock-sleeve)');
+      const below = all('.cv-sock .cv-pull-below');
+      const mouth = all('.cv-sock-mouth');
+      if (!gather.length || !rest.length || !below.length || busy.current) return;
       busy.current = true;
-      const shift = [...rest.querySelectorAll<HTMLElement>('.cv-pull-shift')];
-      const toe = [...rest.querySelectorAll<HTMLElement>('.cv-pull-toe')];
-      const fill = [...rest.querySelectorAll<HTMLElement>('.cv-pull-fill')];
-      const moving = [gather, rest, below, ...shift, ...toe, ...fill];
+      const shift = all('.cv-pull-shift');
+      const toe = all('.cv-pull-toe');
+      const fill = all('.cv-pull-fill');
+      const moving = [...gather, ...rest, ...below, ...shift, ...toe, ...fill];
       const { height: H, sleeve: L, below: B } = size.current;
       // screen px per iPod px along the iPod's length (shorter as it tilts away)
       const k = Math.max(0.05, scale.current * Math.max(0.35, Math.cos((liveOrientation.rx * Math.PI) / 180)));
@@ -74,14 +77,18 @@ export function useSockPull(root: RefObject<HTMLElement | null>, scale: RefObjec
       const show = (d: number, off = 0) => {
         const down = Math.max(0, Math.min(d, L * 0.96));
         const up = Math.max(0, Math.min(-d, B * 0.97));
-        gather.style.transform = `${px(off)} scaleY(${((L - down + up) / L).toFixed(4)})`;
-        rest.style.transform = px(off);
-        below.style.transform = `scaleY(${((B - up) / B).toFixed(4)})`;
+        gather.forEach((el) => (el.style.transform = `${px(off)} scaleY(${((L - down + up) / L).toFixed(4)})`));
+        rest.forEach((el) => (el.style.transform = px(off)));
+        mouth.forEach((el) => (el.style.transform = px(off)));
+        below.forEach((el) => (el.style.transform = `scaleY(${((B - up) / B).toFixed(4)})`));
         shift.forEach((el) => (el.style.transform = px(down - up)));
         toe.forEach((el) => (el.style.transform = px(down)));
-        fill.forEach((el) => (el.style.transform = `scaleY(${(down / PULL_FILL).toFixed(4)})`));
+        fill.forEach((el) => {
+          el.style.transform = `scaleY(${(down / PULL_FILL).toFixed(4)})`;
+          if (down > 0) el.classList.add('on');
+        });
       };
-      moving.forEach((el) => (el.style.transition = 'none'));
+      [...moving, ...mouth].forEach((el) => (el.style.transition = 'none'));
       let d = 0;
       let v = 0;
       let lastY = y0;
@@ -102,12 +109,11 @@ export function useSockPull(root: RefObject<HTMLElement | null>, scale: RefObjec
         window.removeEventListener('pointercancel', up, true);
         if (performance.now() - lastT > 100) v = 0;
         const off = e.type === 'pointerup' && (d > OFF_AT * H || (v > FLICK && d > 0.06 * H));
-        moving.forEach((el) => (el.style.transition = `transform 300ms ${EASE}`));
+        [...moving, ...mouth].forEach((el) => (el.style.transition = `transform 300ms ${EASE}`));
         if (off) {
           // it slides off the bottom, fading as it goes
           show(L, H * 0.6);
-          gather.classList.add('cv-leaving');
-          rest.classList.add('cv-leaving');
+          [...gather, ...rest, ...mouth].forEach((el) => el.classList.add('cv-leaving'));
           window.setTimeout(() => {
             busy.current = false;
             const c = useCustomize.getState();
@@ -119,10 +125,11 @@ export function useSockPull(root: RefObject<HTMLElement | null>, scale: RefObjec
           show(0);
           window.setTimeout(() => {
             busy.current = false;
-            moving.forEach((el) => {
+            [...moving, ...mouth].forEach((el) => {
               el.style.transition = '';
               el.style.transform = '';
             });
+            fill.forEach((el) => el.classList.remove('on'));
           }, 320);
         }
       };
@@ -130,6 +137,7 @@ export function useSockPull(root: RefObject<HTMLElement | null>, scale: RefObjec
       window.addEventListener('pointerup', up, true);
       window.addEventListener('pointercancel', up, true);
     },
-    [root, scale],
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- the refs are stable
+    [scale],
   );
 }
