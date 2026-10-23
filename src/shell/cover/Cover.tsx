@@ -43,8 +43,10 @@ const mix = (c: string, other: string, pct: number) => `color-mix(in srgb, ${c} 
 /** The case or sock on the device (rendered through shell/bodySlot). */
 /**
  * `rim`, for a sock drawn in a 3D space of its own over the iPod (Stage.tsx):
- * 'only' draws just the rim of its opening (the iPod comes up through it, so
- * it stays in the iPod's space), 'none' all the rest.
+ * 'only' draws just the rim of its opening and its tag, in the iPod's space
+ * (the iPod comes up through the rim, and can hide the tag); 'none' all the
+ * rest, with a second tag for when it is seen from the tag's side (the
+ * stage shows one tag or the other).
  */
 export function Cover({ info, after = false, rim = 'with' }: { info: CoverInfo; after?: boolean; rim?: 'with' | 'none' | 'only' }) {
   const { fit, choice, pxPerMm, size } = info;
@@ -317,10 +319,20 @@ function Sock({ s, color, pxPerMm, after, rim }: { s: SockGeometry; color: strin
       }}
     />
   );
+  const tag = (
+    <div className={`cv-sock-tag ${rim === 'none' ? 'cv-tag-near' : rim === 'only' ? 'cv-tag-far' : ''}`} style={{ left: s.tag.x, top: s.tag.y, width: s.tag.w, height: s.tag.h }}>
+      <svg viewBox="0 0 170 170" aria-hidden="true">
+        <path d={APPLE_LOGO} />
+      </svg>
+    </div>
+  );
   if (rim === 'only')
     return (
       <div className="cv cv-sock-mouth" style={vars} aria-hidden="true">
-        <div className="cv-pull-shift">{ring}</div>
+        <div className="cv-pull-shift">
+          {ring}
+          {tag}
+        </div>
       </div>
     );
   return (
@@ -332,11 +344,7 @@ function Sock({ s, color, pxPerMm, after, rim }: { s: SockGeometry; color: strin
       </div>
       <div className="cv-pull-shift">
         {rim === 'with' && ring}
-        <div className="cv-sock-tag" style={{ left: s.tag.x, top: s.tag.y, width: s.tag.w, height: s.tag.h }}>
-          <svg viewBox="0 0 170 170" aria-hidden="true">
-            <path d={APPLE_LOGO} />
-          </svg>
-        </div>
+        {tag}
       </div>
     </div>
   );

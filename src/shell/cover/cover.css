@@ -74,11 +74,15 @@
   /* not drawn at all until it is pulled (sockPull.ts) */
   visibility: hidden;
 }
+.cv-pull-fill.on {
+  visibility: inherit;
+}
 /* sliding off at the end: the pieces fade, each on its own (opacity on a group would flatten it) */
 .cv-sock.cv-leaving .d3-facet,
 .cv-sock.cv-leaving .cv-sock-tag,
 .cv-sock.cv-leaving .cv-sock-rim,
-.cv-sock-mouth.cv-leaving .cv-sock-rim {
+.cv-sock-mouth.cv-leaving .cv-sock-rim,
+.cv-sock-mouth.cv-leaving .cv-sock-tag {
   opacity: 0;
   transition: opacity 280ms ease-in;
 }
@@ -155,9 +159,16 @@
  * An iPod Sock is drawn in a 3D space of its own, over the iPod (Stage.tsx,
  * SOCK LAYER): only the outside of the fabric facing the camera, as the far
  * side would be drawn over the iPod. The tag is a flap and shows both sides.
+ * The toe, below the iPod, shows its inside too: through the joins between
+ * its pieces you see the fabric beyond, not the page.
  */
 .cv-sock .d3-facet,
 .cv-sock-rim {
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
+}
+.cv-sock .cv-hinge .d3-facet,
+.cv-sock .cv-pull-fill .d3-facet {
+  backface-visibility: visible;
+  -webkit-backface-visibility: visible;
 }

@@ -108,6 +108,17 @@ function useCoverInfo(model: DeviceModel, appearance: Appearance): CoverInfo | n
   }, [model, coverKind, coverColor]);
 }
 
+/**
+ * How far the camera may look down on the iPod (the view's share along the
+ * iPod's length) before the sock goes back into the iPod's own 3D space.
+ */
+const SOCK_STEEP = 0.85;
+
+/** The sock in the iPod's own 3D space: correct from anywhere, slow; shown only from high above (Stage SOCK LAYER). */
+function SlowSock({ info, after = false }: { info: CoverInfo; after?: boolean }) {
+  return <div className="cv-slow">{after ? <Cover info={info} after rim="none" /> : <Cover info={info} />}</div>;
+}
+
 /** the light and view the device styles read, for an iPod facing front (the stage sets them live on its own) */
 const FRONT_VARS = { '--rx': 0, '--ry': 0, '--lx': 0, '--ly': 0, '--elx': 0, '--ely': 0, '--vx': 0, '--vy': 0, '--vz': -1 } as React.CSSProperties;
 
@@ -429,6 +440,8 @@ export function Stage() {
   };
   // what was last written, so a still iPod costs nothing a frame
   const applied = useRef({ el: null as HTMLElement | null, sock: null as HTMLElement | null, key: '' });
+  const steepRef = useRef(false);
+  const tagRef = useRef(false);
   const apply = (rx: number, ry: number, roll: number) => {
     const el = rotRef.current;
     if (!el) return;
@@ -476,6 +489,21 @@ export function Stage() {
     // Where the camera looks, in device coordinates (x right, y down, z out of
     // the front): lets holes and recesses show their inner walls (parallax).
     const [vx, vy] = own(Math.cos(rxRad) * Math.sin(ryRad), -Math.sin(rxRad));
+    // Seen from high above the iPod, the top of it hides parts of the sock,
+    // which its own space (drawn over the iPod) can't know: there, the sock
+    // in the iPod's space is shown instead (SOCK LAYER below).
+    const steep = vy > SOCK_STEEP;
+    if (steep !== steepRef.current) {
+      steepRef.current = steep;
+      wrapRef.current?.classList.toggle('sock-steep', steep);
+    }
+    // Its tag sticks out on the iPod's left: seen from that side it is in
+    // front of the sock (drawn with it); from the other, the iPod may hide it.
+    const tagNear = vx > 0;
+    if (tagNear !== tagRef.current) {
+      tagRef.current = tagNear;
+      wrapRef.current?.classList.toggle('sock-tag-near', tagNear);
+    }
     lit.set('--vx', vx.toFixed(3));
     lit.set('--vy', vy.toFixed(3));
     lit.set('--vz', (-Math.cos(rxRad) * Math.cos(ryRad)).toFixed(3));
@@ -651,7 +679,7 @@ export function Stage() {
     }),
     [model, sock],
   );
-  const pullSock = useSockPull(sockRotRef, scaleRef, sockSpan, rotRef);
+  const pullSock = useSockPull([rotRef, sockRotRef], scaleRef, sockSpan);
   useEarPods({ wrap: wrapRef, back: backCanvas, front: frontCanvas, markers: jackRef, model, enabled: scene.earpods !== false && !jackCovered });
 
   const Device = useMemo(() => deviceComponent(model), [model]);
@@ -660,12 +688,21 @@ export function Stage() {
     () => ({
       before: (
         <>
-          {cover && !sock && <Cover info={cover} />}
+          {cover && (sock ? <SlowSock info={cover} /> : <Cover info={cover} />)}
           <JackMarkers model={model} markerRef={jackRef} />
         </>
       ),
-      // a sock is drawn over the iPod (SOCK LAYER below), all but the rim its opening is threaded through
-      after: cover && (sock ? <Cover info={cover} after rim="only" /> : <Cover info={cover} after />),
+      // a sock is drawn over the iPod (SOCK LAYER below), all but the rim and tag; seen from high above, here instead
+      after:
+        cover &&
+        (sock ? (
+          <>
+            <SlowSock info={cover} after />
+            <Cover info={cover} after rim="only" />
+          </>
+        ) : (
+          <Cover info={cover} after />
+        )),
       sockMouth,
       // on its side the sock can't be pulled along the iPod
       pullSock: roll ? undefined : pullSock,

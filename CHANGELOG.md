@@ -30,7 +30,10 @@ The running app shows its version and build in the Help panel (?).
 - iPod Socks no longer slow the iPod down as it turns:
   - The sock is drawn in a 3D space of its own over the iPod. Sharing the
     iPod's, every frame the browser cut its pieces along the iPod's
-    hundreds of surfaces to sort them, which halved the frame rate.
+    hundreds of surfaces to sort them, which halved the frame rate. Seen
+    from high above (where the iPod's top can hide parts of the sock) it
+    goes back into the iPod's space, and its tag is drawn with whichever
+    it sits in front of.
   - It is built from about 160 pieces instead of 420, each now fitted
     exactly to its part of the sock, so the toe still curves smoothly.
 - Smoother on phones, most of all with a case on:
