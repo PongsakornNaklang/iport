@@ -14,6 +14,10 @@ The running app shows its version and build in the Help panel (?).
 
 ## [Unreleased]
 
+### Added
+- `?fps` in the address shows a frame counter, to see how smoothly the
+  stage runs on a device.
+
 ### Changed
 - iPort's license is now the PolyForm Noncommercial License 1.0.0: anyone
   may use, change and share it for noncommercial purposes; commercial use
@@ -31,6 +35,13 @@ The running app shows its version and build in the Help panel (?).
     case looks the same with fewer.
   - On phones, the iPods' own edges use about a third fewer pieces, where
     the difference can't be seen.
+  - iPod touch: the light on the screen glass and on the back is a band
+    that slides as the iPod turns instead of a gradient repainted (and
+    blended over the whole screen) every frame; the hidden keyboard and
+    volume indicator no longer draw their frosted glass.
+  - While the iPod turns, frosted glass and the screens' own animations
+    wait, and the shading of the edges catches up when it stops: each of
+    those would otherwise be redrawn every frame.
 - In the model chooser an iPod coming near the middle no longer jumps when
   it turns from a picture into the live iPod: it keeps floating without a
   restart, and the picture fades away once the live iPod has drawn (and

@@ -208,7 +208,7 @@ export function Stage() {
 
   const wrapRef = useRef<HTMLDivElement>(null);
   const rotRef = useRef<HTMLDivElement>(null);
-  const edgeLight = useRef({ x: '', y: '' });
+  const edgeLight = useRef({ x: '', y: '', shown: false });
   // the light values go onto the elements that read them, not the whole iPod (see lightVars)
   const lit = useMemo(() => new LightVars(), []);
   useEffect(() => () => lit.detach(), [lit]);
@@ -346,11 +346,25 @@ export function Stage() {
         py = s.py * 4;
       }
       apply(s.rx - py, s.ry + px, s.roll);
+      // a moment after it stops turning, the paused effects come back
+      const mv = moving.current;
+      if (mv.on && now - mv.t > 220) {
+        mv.on = false;
+        wrapRef.current?.classList.remove('moving');
+        flushEdgeLight();
+      }
     };
     raf = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(raf);
   }, []);
 
+  const moving = useRef({ on: false, t: 0 });
+  const flushEdgeLight = () => {
+    const e = edgeLight.current;
+    e.shown = true;
+    lit.set('--elx', e.x);
+    lit.set('--ely', e.y);
+  };
   // what was last written, so a still iPod costs nothing a frame
   const applied = useRef({ el: null as HTMLElement | null, key: '' });
   const apply = (rx: number, ry: number, roll: number) => {
@@ -362,6 +376,12 @@ export function Stage() {
     if (applied.current.el === el && applied.current.key === key) return;
     applied.current = { el, key };
     lit.tick();
+    // while it turns, effects that would be redrawn every frame wait (app.css .stage.moving)
+    moving.current.t = performance.now();
+    if (!moving.current.on) {
+      moving.current.on = true;
+      wrapRef.current?.classList.add('moving');
+    }
     // the roll turns the iPod in its own plane first, then the view turns it in 3D
     el.style.transform = `rotateX(${rx.toFixed(2)}deg) rotateY(${ry.toFixed(2)}deg)${roll ? ` rotateZ(${roll.toFixed(2)}deg)` : ''}`;
     liveOrientation.rx = rx;
@@ -384,8 +404,11 @@ export function Stage() {
     // pieces, which only need repainting when the light has moved a step.
     const elx = (Math.round(lx * 20) / 20).toFixed(2);
     const ely = (Math.round(-nly * 20) / 20).toFixed(2);
-    if (elx !== edgeLight.current.x) lit.set('--elx', (edgeLight.current.x = elx));
-    if (ely !== edgeLight.current.y) lit.set('--ely', (edgeLight.current.y = ely));
+    // Those hundreds of pieces repaint together whenever it steps, so while
+    // the iPod turns it waits, and catches up when it stops (see the loop).
+    edgeLight.current.x = elx;
+    edgeLight.current.y = ely;
+    if (!edgeLight.current.shown) flushEdgeLight();
     // Where the camera looks, in device coordinates (x right, y down, z out of
     // the front): lets holes and recesses show their inner walls (parallax).
     const [vx, vy] = own(Math.cos(rxRad) * Math.sin(ryRad), -Math.sin(rxRad));

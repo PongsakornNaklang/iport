@@ -1311,12 +1311,25 @@
   backdrop-filter: blur(20px);
   opacity: 0;
   transform: translateX(-60px);
+  /* out of sight it isn't drawn at all (its blur would be, every frame) */
+  visibility: hidden;
   transition:
     opacity 260ms,
     transform 360ms var(--t7-ease),
     width 360ms var(--t7-ease),
-    border-radius 360ms;
+    border-radius 360ms,
+    visibility 0s 360ms;
   pointer-events: none;
+}
+.t7-vhud.big,
+.t7-vhud.slim {
+  visibility: visible;
+  transition:
+    opacity 260ms,
+    transform 360ms var(--t7-ease),
+    width 360ms var(--t7-ease),
+    border-radius 360ms,
+    visibility 0s;
 }
 .t7-vhud.big {
   opacity: 1;
@@ -2022,7 +2035,11 @@
   -webkit-backdrop-filter: blur(20px);
   backdrop-filter: blur(20px);
   transform: translateY(100%);
-  transition: transform 280ms var(--t7-ease);
+  /* put away it isn't drawn at all (its blur would be, every frame) */
+  visibility: hidden;
+  transition:
+    transform 280ms var(--t7-ease),
+    visibility 0s 280ms;
   touch-action: none;
   user-select: none;
   -webkit-user-select: none;
@@ -2036,6 +2053,10 @@
 }
 .t7-kb.on {
   transform: none;
+  visibility: visible;
+  transition:
+    transform 280ms var(--t7-ease),
+    visibility 0s;
 }
 .t7-kb-qt {
   display: flex;

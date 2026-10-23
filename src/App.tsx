@@ -5,6 +5,7 @@ import { decodePreset, useCustomize } from './core/customize/store';
 import { Stage } from './shell/Stage';
 import { ModelPicker } from './ui/ModelPicker';
 import { ViewControls } from './ui/ViewControls';
+import { FpsMeter } from './ui/FpsMeter';
 import { IconBrush, IconHelp, IconLogo, IconMusic } from './ui/icons';
 import { toast, useToast } from './ui/toast';
 import { isTypingTarget } from './shell/keyboard';
@@ -142,6 +143,7 @@ export function App() {
       <main className="main">
         <Stage />
         <ViewControls />
+        <FpsMeter />
         <Suspense fallback={null}>
           {panel === 'library' && <LibraryPanel onClose={() => setPanel(null)} />}
           {panel === 'customize' && <CustomizePanel onClose={() => setPanel(null)} />}
