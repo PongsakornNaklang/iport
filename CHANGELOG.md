@@ -14,6 +14,8 @@ The running app shows its version and build in the Help panel (?).
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-10-23
+
 ### Added
 - A frame counter, to see how smoothly the stage runs on a device: Help ▸
   Show frame rate (it stays on until you hide it), or `?fps` in the address.
@@ -319,7 +321,8 @@ First release.
 - Apple-style minimal Liquid Glass interface on white; works on phones and
   installs as a web app.
 
-[Unreleased]: https://github.com/PongsakornNaklang/iport/compare/v1.3.0...HEAD
+[Unreleased]: https://github.com/PongsakornNaklang/iport/compare/v1.4.0...HEAD
+[1.4.0]: https://github.com/PongsakornNaklang/iport/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/PongsakornNaklang/iport/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/PongsakornNaklang/iport/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/PongsakornNaklang/iport/compare/v1.0.0...v1.1.0
