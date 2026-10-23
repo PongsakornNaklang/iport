@@ -43,7 +43,8 @@ The running app shows its version and build in the Help panel (?).
     wait, and the shading of the edges catches up when it stops: each of
     those would otherwise be redrawn every frame.
   - In the model chooser on a phone, only the iPod resting in the middle
-    is live; while the carousel moves they are all pictures.
+    is live, once the carousel has been still for a moment; while it moves
+    (stepping through several iPods too) they are all pictures.
   - Changing iPods: the other iPods' code is fetched in the background
     after the page loads, and the new iPod spins in once it has been
     drawn, so the spin isn't lost to the moment it takes to build it.

@@ -674,7 +674,8 @@ export function Stage() {
     if (!PHONE) return;
     setSettled(false);
     if (drag) return;
-    const t = window.setTimeout(() => setSettled(true), 480);
+    // long enough that stepping through several iPods doesn't build the ones passed on the way
+    const t = window.setTimeout(() => setSettled(true), 800);
     return () => window.clearTimeout(t);
   }, [focus, drag]);
   const swallow = useRef(false);
