@@ -20,6 +20,17 @@ The running app shows its version and build in the Help panel (?).
   needs a separate license. It was "all rights reserved" before.
 
 ### Fixed
+- Smoother on phones, most of all with a case on:
+  - The light and view the stage passes the iPod every frame now go only
+    to the few sheens and edges that use them. Before, every element of
+    the iPod restyled itself every frame while it turned (the whole iOS
+    screen on the iPod touch): on a phone-sized test that was 34 ms a frame
+    on the iPod touch, now 3 ms.
+  - Cases are built from fewer, larger pieces (about 240 instead of 530):
+    each piece is a 3D layer the browser sorts every frame, and a soft
+    case looks the same with fewer.
+  - On phones, the iPods' own edges use about a third fewer pieces, where
+    the difference can't be seen.
 - In the model chooser an iPod coming near the middle no longer jumps when
   it turns from a picture into the live iPod: it keeps floating without a
   restart, and the picture fades away once the live iPod has drawn (and

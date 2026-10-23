@@ -30,8 +30,12 @@ export interface CoverInfo {
   size: { width: number; height: number; depth: number };
 }
 
-/** Fabric and silicone are soft: their sides need fewer, longer pieces than metal. */
-const SOFT = { bandPx: 9, curveTol: 0.5 };
+/**
+ * Fabric and silicone are soft: their sides need fewer, longer pieces than
+ * metal. Each piece is a 3D layer the browser sorts every frame, so this
+ * keeps a case to about 250 of them (a phone turning an iPod in one feels it).
+ */
+const SOFT = { bandPx: 20, curveTol: 2, corner: 5 };
 
 const mix = (c: string, other: string, pct: number) => `color-mix(in srgb, ${c} ${100 - pct}%, ${other})`;
 

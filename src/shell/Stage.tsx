@@ -4,6 +4,7 @@ import { getModel } from '../devices/registry';
 import type { DeviceModel, DeviceProps } from '../devices/types';
 import { liveOrientation, ROLL_ANGLE, useStage } from './stageStore';
 import { installRollInput, rawPoint } from './rollInput';
+import { LightVars } from './lightVars';
 import { JackMarkers, useEarPods } from './earpods/EarPods';
 import { BodySlotContext } from './bodySlot';
 import { Cover, type CoverInfo } from './cover/Cover';
@@ -208,6 +209,9 @@ export function Stage() {
   const wrapRef = useRef<HTMLDivElement>(null);
   const rotRef = useRef<HTMLDivElement>(null);
   const edgeLight = useRef({ x: '', y: '' });
+  // the light values go onto the elements that read them, not the whole iPod (see lightVars)
+  const lit = useMemo(() => new LightVars(), []);
+  useEffect(() => () => lit.detach(), [lit]);
   const shadowRef = useRef<HTMLDivElement>(null);
   const backCanvas = useRef<HTMLCanvasElement>(null);
   const frontCanvas = useRef<HTMLCanvasElement>(null);
@@ -354,8 +358,10 @@ export function Stage() {
     if (!el) return;
     const m = sizeRef.current;
     const key = `${rx.toFixed(2)} ${ry.toFixed(2)} ${roll.toFixed(2)} ${m.width} ${m.height} ${m.depth} ${shadowRef.current ? 1 : 0}`;
+    lit.attach(el);
     if (applied.current.el === el && applied.current.key === key) return;
     applied.current = { el, key };
+    lit.tick();
     // the roll turns the iPod in its own plane first, then the view turns it in 3D
     el.style.transform = `rotateX(${rx.toFixed(2)}deg) rotateY(${ry.toFixed(2)}deg)${roll ? ` rotateZ(${roll.toFixed(2)}deg)` : ''}`;
     liveOrientation.rx = rx;
@@ -370,22 +376,22 @@ export function Stage() {
     const rs = Math.sin(rr);
     const own = (x: number, y: number) => [x * rc + y * rs, -x * rs + y * rc];
     const [lx, nly] = own(Math.sin(ryRad), -Math.sin(rxRad));
-    el.style.setProperty('--rx', rx.toFixed(1));
-    el.style.setProperty('--ry', ((((ry % 360) + 540) % 360) - 180).toFixed(1));
-    el.style.setProperty('--lx', lx.toFixed(3));
-    el.style.setProperty('--ly', (-nly).toFixed(3));
+    lit.set('--rx', rx.toFixed(1));
+    lit.set('--ry', ((((ry % 360) + 540) % 360) - 180).toFixed(1));
+    lit.set('--lx', lx.toFixed(3));
+    lit.set('--ly', (-nly).toFixed(3));
     // A coarse copy for the device edges: their surface is hundreds of small
     // pieces, which only need repainting when the light has moved a step.
     const elx = (Math.round(lx * 20) / 20).toFixed(2);
     const ely = (Math.round(-nly * 20) / 20).toFixed(2);
-    if (elx !== edgeLight.current.x) el.style.setProperty('--elx', (edgeLight.current.x = elx));
-    if (ely !== edgeLight.current.y) el.style.setProperty('--ely', (edgeLight.current.y = ely));
+    if (elx !== edgeLight.current.x) lit.set('--elx', (edgeLight.current.x = elx));
+    if (ely !== edgeLight.current.y) lit.set('--ely', (edgeLight.current.y = ely));
     // Where the camera looks, in device coordinates (x right, y down, z out of
     // the front): lets holes and recesses show their inner walls (parallax).
     const [vx, vy] = own(Math.cos(rxRad) * Math.sin(ryRad), -Math.sin(rxRad));
-    el.style.setProperty('--vx', vx.toFixed(3));
-    el.style.setProperty('--vy', vy.toFixed(3));
-    el.style.setProperty('--vz', (-Math.cos(rxRad) * Math.cos(ryRad)).toFixed(3));
+    lit.set('--vx', vx.toFixed(3));
+    lit.set('--vy', vy.toFixed(3));
+    lit.set('--vz', (-Math.cos(rxRad) * Math.cos(ryRad)).toFixed(3));
     const sh = shadowRef.current;
     if (sh) {
       const across = Math.abs(rc) * m.width + Math.abs(rs) * m.height;
